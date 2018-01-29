@@ -44,7 +44,7 @@ $eqLogics = eqLogic::byType('clientSIP');
 		<div class="eqLogicThumbnailContainer">
 			<?php
 			if (count($eqLogics) == 0) {
-				echo "<br/><br/><br/><center><span style='color:#767676;font-size:1.2em;font-weight: bold;'>{{Vous n'avez pas encore de module KNX, cliquez sur Ajouter pour commencer}}</span></center>";
+				echo "<br/><br/><br/><center><span style='color:#767676;font-size:1.2em;font-weight: bold;'>{{Vous n'avez pas encore de module SIP, cliquez sur Ajouter pour commencer}}</span></center>";
 			} else {
 				foreach ($eqLogics as $eqLogic) {
 					echo '<div class="eqLogicDisplayCard cursor" data-eqLogic_id="' . $eqLogic->getId() . '" style="background-color : #ffffff; height : 200px;margin-bottom : 10px;padding : 5px;border-radius: 2px;width : 160px;margin-left : 10px;" >';
