@@ -217,7 +217,7 @@ $eqLogics = eqLogic::byType('clientSIP');
 									<div class="input-group">
 										<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="PlayTTS" placeholder="{{Equipement PlayTTS}}"/>
 										<span class="input-group-btn">
-											<a class="btn btn-success btn-sm listEquipement>
+											<a class="btn btn-success btn-sm listEquipement">
 												<i class="fa fa-list-alt"></i>
 											</a>
 										</span>
