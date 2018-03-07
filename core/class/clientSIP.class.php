@@ -335,68 +335,6 @@ class clientSIP extends eqLogic {
 		$Commande->save();
 		return $Commande;
 	}
-	public function sendCommand( $id, $type, $option ) {
-		log::add('clientSIP', 'debug', 'Lecture : ' . $type . ' ' . $option);
-		$playtts = self::byId($id, 'clientSIP');
-		if ($type == 'tts') {
-			$hash = hash('md5', $option);
-			$file = '/tmp/' . $hash . '.mp3';
-		} else {
-			$file = $option;
-		}
-		log::add('clientSIP', 'debug', 'File : ' .  $file);
-		if ($playtts->getConfiguration('maitreesclave') == 'deporte'){
-			$ip=$playtts->getConfiguration('addressip');
-			$this->_Port=$playtts->getConfiguration('portssh');
-			$user=$playtts->getConfiguration('user');
-			$pass=$playtts->getConfiguration('password');
-			if (!$connection = ssh2_connect($ip,$this->_Port)) {
-				log::add('clientSIP', 'error', 'connexion SSH KO');
-			}else{
-				if (!ssh2_auth_password($connection,$user,$pass)){
-					log::add('clientSIP', 'error', 'Authentification SSH KO');
-				}else{
-					log::add('clientSIP', 'debug', 'Commande par SSH');
-					if ($type == 'tts') {
-						$lang = $playtts->getConfiguration('lang');
-						if ($lang == '') {
-							$lang == 'fr-FR';
-						}
-						$pico = ssh2_exec($connection,"pico2wave -l " . $lang . " -w /tmp/voice.wav \"" . $option . "\"");						
-						stream_set_blocking($pico, true);
-						$result = stream_get_contents($pico);						
-						
-						$sox = ssh2_exec($connection,"sox /tmp/voice.wav -r 48k " . $file);
-						stream_set_blocking($sox, true);
-						$result = stream_get_contents($sox);						
-					}
-					$result = ssh2_exec($connection,'mplayer ' . $playtts->getConfiguration('opt') . ' ' . $file);
-					stream_set_blocking($result, true);
-					$result = stream_get_contents($result);
-
-					$closesession = ssh2_exec($connection, 'exit');
-					stream_set_blocking($closesession, true);
-					stream_get_contents($closesession);
-				}
-			}
-		}else {
-			if (!file_exists($file)) {
-				if ($type == 'tts') {
-					$lang = $playtts->getConfiguration('lang');
-					if ($lang == '') {
-						$lang == 'fr-FR';
-					}
-					exec("pico2wave -l " . $lang . " -w /tmp/voice.wav \"" . $option . "\"");
-					exec("sox /tmp/voice.wav -r 48k " . $file);
-				} else {
-					log::add('clientSIP', 'error', 'Fichier inexistant');
-					return;
-				}
-			}
-
-			exec('mplayer ' . $playtts->getConfiguration('opt') . ' ' . $file);
-		}
-	}
 }
 class clientSIPCmd extends cmd {
 	public function execute($_options = null){
