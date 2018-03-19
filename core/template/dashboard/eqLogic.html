@@ -90,8 +90,24 @@ $(document).ready(function() {
                 }
 	});
     $('.sipLogClear').click(function(event) {
-        event.preventDefault();
-       // ctxSip.logClear();
+       $.ajax({
+                type: 'POST',
+                async: false,
+                url: 'plugins/clientSIP/core/ajax/clientSIP.ajax.php',
+                data: {
+                        action: 'clearHistoryCall',
+                },
+                dataType: 'json',
+                global: false,
+                success: function(data) {
+                        if (data.state != 'ok') {
+                                $('#div_alert').showAlert({message: data.result, level: 'danger'});
+                                return;
+                        }
+                        $('#sip-logitems').html('');
+                        });		
+                }
+	});
     });
     $('#sip-logitems').on('click', '.sip-logitem .btnCall', function(event) {
         return false;
