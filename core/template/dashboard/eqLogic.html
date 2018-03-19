@@ -67,7 +67,7 @@ $(document).ready(function() {
                         $('#sip-logitems').html('');
                         var monitors=jQuery.parseJSON(data.result);
                         jQuery.each(monitors.reverse(),function(key, item) {
-                                var i  = '<div class="list-group-item sip-logitem clearfix" title="Double clique pour rappeler">';
+                                var i  = '<div class="list-group-item sip-logitem clearfix" title="Double clique pour rappeler" style="color: black;">';
                                 i += '<div class="clearfix"><div class="pull-left">';
                                 i += '<i class="fa fa-fw fa-fw"></i> <strong>'+item.number+'</strong><br><small>'+item.start+'</small>';
                                 i += '</div>';
