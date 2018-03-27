@@ -117,8 +117,10 @@ class clientSIP extends eqLogic {
 			$cron->setFunction($Name);
 			$cron->setOption(array('id' => $this->getId()));
 			$cron->setEnable(1);
-			if($deamon)
+			if($deamon){
 				$cron->setDeamon(1);
+				$cron->setTimeout('999999');
+			}
 			$cron->setSchedule($Schedule);
 			$cron->save();
 		}
