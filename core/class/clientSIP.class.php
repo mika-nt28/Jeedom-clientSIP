@@ -34,13 +34,13 @@ class clientSIP extends eqLogic {
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
 			if($clientSIP->getIsEnable()){
 				$cron = cron::byClassAndFunction('clientSIP', 'ConnectSip', array('id' => $clientSIP->getId()));
-				if (!is_object($cron)) 	
+				if (!is_object($cron))  	
 					return $return;
 				$cron = cron::byClassAndFunction('clientSIP', 'WaitCall', array('id' => $clientSIP->getId()));
-				if (!is_object($cron)) 	
+				if (!is_object($cron) || !$cron->running()) 	
 					return $return;
 				$cron = cron::byClassAndFunction('clientSIP', 'WaitMessage', array('id' => $clientSIP->getId()));
-				if (!is_object($cron)) 	
+				if (!is_object($cron) || !$cron->running()) 	
 					return $return;
 			}
 		}
@@ -61,9 +61,9 @@ class clientSIP extends eqLogic {
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
 			if($clientSIP->getIsEnable()){
 				$minute=round($clientSIP->getConfiguration("Expiration")/60,0);
-				$clientSIP->CreateDemon('ConnectSip','*/'.$minute.' * * * *');   
-				$clientSIP->CreateDemon('WaitCall','* * * * * *');   
-				$clientSIP->CreateDemon('WaitMessage','* * * * * *');   
+				$clientSIP->CreateDemon('ConnectSip','*/'.$minute.' * * * *',false);   
+				$clientSIP->CreateDemon('WaitCall','* * * * * *',true);   
+				$clientSIP->CreateDemon('WaitMessage','* * * * * *',true);   
 			}
 		}
 	}
@@ -109,7 +109,7 @@ class clientSIP extends eqLogic {
 	        'displayName' => true,
 	        'optionalParameters' => true,
 	));
-	public function CreateDemon($Name,$Schedule) {
+	public function CreateDemon($Name,$Schedule,$deamon=false) {
 		$cron =cron::byClassAndFunction('clientSIP', $Name, array('id' => $this->getId()));
 		if (!is_object($cron)) {
 			$cron = new cron();
@@ -117,7 +117,8 @@ class clientSIP extends eqLogic {
 			$cron->setFunction($Name);
 			$cron->setOption(array('id' => $this->getId()));
 			$cron->setEnable(1);
-			$cron->setDeamon(1);
+			if($deamon)
+				$cron->setDeamon(1);
 			$cron->setSchedule($Schedule);
 			$cron->save();
 		}
