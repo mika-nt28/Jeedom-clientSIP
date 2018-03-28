@@ -17,6 +17,10 @@ try {
 	if (init('action') == 'getHistoryCall') {
 		ajax::success(cache::byKey('clientSIP::HistoryCall')->getValue('[]'));
 	}
+	if (init('action') == 'clearHistoryCall') {
+		cache::set('clientSIP::HistoryCall', '[]', 0);
+		ajax::success(true);
+	}
    throw new Exception(__('Aucune methode correspondante à : ', __FILE__) . init('action'));
 } catch (Exception $e) {
     ajax::error(displayExeption($e), $e->getCode());

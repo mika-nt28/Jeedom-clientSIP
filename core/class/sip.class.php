@@ -4,7 +4,7 @@ class sip
   private $min_port = 5065;
   private $max_port = 5265;
   private $fr_timer = 10000;
-  private $lock_file = '/var/www/html/tmp/PhpSIP.lock';
+  private $lock_file = '/tmp/PhpSIP.lock';
   private $persistent_lock_file = true;
   private $allowed_methods = array(
     "CANCEL","NOTIFY", "INVITE","BYE","REFER","OPTIONS","SUBSCRIBE","MESSAGE", "PUBLISH", "REGISTER"

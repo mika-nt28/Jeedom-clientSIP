@@ -34,13 +34,13 @@ class clientSIP extends eqLogic {
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
 			if($clientSIP->getIsEnable()){
 				$cron = cron::byClassAndFunction('clientSIP', 'ConnectSip', array('id' => $clientSIP->getId()));
-				if (!is_object($cron)) 	
+				if (!is_object($cron))  	
 					return $return;
 				$cron = cron::byClassAndFunction('clientSIP', 'WaitCall', array('id' => $clientSIP->getId()));
-				if (!is_object($cron)) 	
+				if (!is_object($cron) || !$cron->running()) 	
 					return $return;
 				$cron = cron::byClassAndFunction('clientSIP', 'WaitMessage', array('id' => $clientSIP->getId()));
-				if (!is_object($cron)) 	
+				if (!is_object($cron) || !$cron->running()) 	
 					return $return;
 			}
 		}
@@ -48,7 +48,7 @@ class clientSIP extends eqLogic {
 		return $return;
 	}
 	public static function deamon_start($_debug = false) {
-		unlink("/var/www/html/tmp/PhpSIP.lock");
+		unlink("/tmp/PhpSIP.lock");
 		log::remove('clientSIP');
 		self::deamon_stop();
 		$deamon_info = self::deamon_info();
@@ -61,9 +61,9 @@ class clientSIP extends eqLogic {
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
 			if($clientSIP->getIsEnable()){
 				$minute=round($clientSIP->getConfiguration("Expiration")/60,0);
-				$clientSIP->CreateDemon('ConnectSip','*/'.$minute.' * * * *');   
-				$clientSIP->CreateDemon('WaitCall','* * * * * *');   
-				$clientSIP->CreateDemon('WaitMessage','* * * * * *');   
+				$clientSIP->CreateDemon('ConnectSip','*/'.$minute.' * * * *',false);   
+				$clientSIP->CreateDemon('WaitCall','* * * * * *',true);   
+				$clientSIP->CreateDemon('WaitMessage','* * * * * *',true);   
 			}
 		}
 	}
@@ -109,7 +109,7 @@ class clientSIP extends eqLogic {
 	        'displayName' => true,
 	        'optionalParameters' => true,
 	));
-	public function CreateDemon($Name,$Schedule) {
+	public function CreateDemon($Name,$Schedule,$deamon=false) {
 		$cron =cron::byClassAndFunction('clientSIP', $Name, array('id' => $this->getId()));
 		if (!is_object($cron)) {
 			$cron = new cron();
@@ -117,6 +117,10 @@ class clientSIP extends eqLogic {
 			$cron->setFunction($Name);
 			$cron->setOption(array('id' => $this->getId()));
 			$cron->setEnable(1);
+			if($deamon){
+				$cron->setDeamon(1);
+				$cron->setTimeout('999999');
+			}
 			$cron->setSchedule($Schedule);
 			$cron->save();
 		}
@@ -126,27 +130,8 @@ class clientSIP extends eqLogic {
 	public static function ConnectSip($_option){
 		log::add('clientSIP', 'debug', 'Objet mis à jour => ' . json_encode($_option));
 		$clientSIP = clientSIP::byId($_option['id']);
-		if (is_object($clientSIP) && $clientSIP->getIsEnable()) {
+		if (is_object($clientSIP) && $clientSIP->getIsEnable())
 			$clientSIP->CreateConnexion();
-			//while(true){
-				$clientSIP->checkAndUpdateCmd('RegStatus','Inactif');
-				$clientSIP->_sip->setUsername($clientSIP->_Username);
-				$clientSIP->_sip->setPassword($clientSIP->_Password);
-				$clientSIP->_sip->addHeader('Expires: '.$clientSIP->getConfiguration("Expiration"));
-				$clientSIP->_sip->setMethod('REGISTER');
-				if($clientSIP->getConfiguration("Proxy")!="") 
-					$clientSIP->_sip->setProxy($clientSIP->getConfiguration("Proxy"));
-				$clientSIP->_sip->setFrom('sip:'.$clientSIP->_Username.'@'.$clientSIP->_Host.':'.$clientSIP->_Port);
-				$clientSIP->_sip->setUri('sip:'.$clientSIP->_Username.'@'.$clientSIP->_Host.':'.$clientSIP->_Port.';transport='.$clientSIP->getConfiguration("transport"));
-				$clientSIP->_sip->setServerMode(true);
-				$res = $clientSIP->_sip->send();
-				if ($res == '200')
-					$clientSIP->checkAndUpdateCmd('RegStatus','OK');
-				else
-					$clientSIP->checkAndUpdateCmd('RegStatus','Echec');	
-				//sleep($clientSIP->getConfiguration("Expiration"));
-			//}
-		}
 	}
 	public static function WaitCall($_option){
 		$clientSIP = clientSIP::byId($_option['id']);
@@ -185,6 +170,19 @@ class clientSIP extends eqLogic {
 				$this->_sip->setProxy($this->getConfiguration("Proxy"));
 			$this->_sip->setUsername($this->_Username);
 			$this->_sip->setPassword($this->_Password);
+        	  	$this->checkAndUpdateCmd('RegStatus','Inactif');
+			$this->_sip->addHeader('Expires: '.$this->getConfiguration("Expiration"));
+			$this->_sip->setMethod('REGISTER');
+			if($this->getConfiguration("Proxy")!="") 
+				$this->_sip->setProxy($this->getConfiguration("Proxy"));
+			$this->_sip->setFrom('sip:'.$this->_Username.'@'.$this->_Host.':'.$this->_Port);
+			$this->_sip->setUri('sip:'.$this->_Username.'@'.$this->_Host.':'.$this->_Port.';transport='.$this->getConfiguration("transport"));
+			$this->_sip->setServerMode(true);
+			$res = $this->_sip->send();
+			if ($res == '200')
+				$this->checkAndUpdateCmd('RegStatus','OK');
+			else
+				$this->checkAndUpdateCmd('RegStatus','Echec');	
 		}
 	}
 	public function RepondreAppel() {
@@ -200,7 +198,7 @@ class clientSIP extends eqLogic {
 		$CallStatus=$this->getCmd(null,'CallStatus');
 		$call['status']= 'ringing';
 		while($CallStatus->execCmd() == 'Sonnerie');
-		self::addCacheMonitor($call);
+		self::addHistoryCall($call);
 		switch($CallStatus->execCmd()){
 			case 'Decrocher':
 				$call['status']= 'call';
@@ -334,68 +332,6 @@ class clientSIP extends eqLogic {
 		}
 		$Commande->save();
 		return $Commande;
-	}
-	public function sendCommand( $id, $type, $option ) {
-		log::add('clientSIP', 'debug', 'Lecture : ' . $type . ' ' . $option);
-		$playtts = self::byId($id, 'clientSIP');
-		if ($type == 'tts') {
-			$hash = hash('md5', $option);
-			$file = '/tmp/' . $hash . '.mp3';
-		} else {
-			$file = $option;
-		}
-		log::add('clientSIP', 'debug', 'File : ' .  $file);
-		if ($playtts->getConfiguration('maitreesclave') == 'deporte'){
-			$ip=$playtts->getConfiguration('addressip');
-			$this->_Port=$playtts->getConfiguration('portssh');
-			$user=$playtts->getConfiguration('user');
-			$pass=$playtts->getConfiguration('password');
-			if (!$connection = ssh2_connect($ip,$this->_Port)) {
-				log::add('clientSIP', 'error', 'connexion SSH KO');
-			}else{
-				if (!ssh2_auth_password($connection,$user,$pass)){
-					log::add('clientSIP', 'error', 'Authentification SSH KO');
-				}else{
-					log::add('clientSIP', 'debug', 'Commande par SSH');
-					if ($type == 'tts') {
-						$lang = $playtts->getConfiguration('lang');
-						if ($lang == '') {
-							$lang == 'fr-FR';
-						}
-						$pico = ssh2_exec($connection,"pico2wave -l " . $lang . " -w /tmp/voice.wav \"" . $option . "\"");						
-						stream_set_blocking($pico, true);
-						$result = stream_get_contents($pico);						
-						
-						$sox = ssh2_exec($connection,"sox /tmp/voice.wav -r 48k " . $file);
-						stream_set_blocking($sox, true);
-						$result = stream_get_contents($sox);						
-					}
-					$result = ssh2_exec($connection,'mplayer ' . $playtts->getConfiguration('opt') . ' ' . $file);
-					stream_set_blocking($result, true);
-					$result = stream_get_contents($result);
-
-					$closesession = ssh2_exec($connection, 'exit');
-					stream_set_blocking($closesession, true);
-					stream_get_contents($closesession);
-				}
-			}
-		}else {
-			if (!file_exists($file)) {
-				if ($type == 'tts') {
-					$lang = $playtts->getConfiguration('lang');
-					if ($lang == '') {
-						$lang == 'fr-FR';
-					}
-					exec("pico2wave -l " . $lang . " -w /tmp/voice.wav \"" . $option . "\"");
-					exec("sox /tmp/voice.wav -r 48k " . $file);
-				} else {
-					log::add('clientSIP', 'error', 'Fichier inexistant');
-					return;
-				}
-			}
-
-			exec('mplayer ' . $playtts->getConfiguration('opt') . ' ' . $file);
-		}
 	}
 }
 class clientSIPCmd extends cmd {

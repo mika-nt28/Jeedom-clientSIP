@@ -43,3 +43,10 @@ function addCmdToTable(_cmd) {
 	$('#table_cmd tbody').append(tr);
 	$('#table_cmd tbody tr:last').setValues(_cmd, '.cmdAttr');
 }
+
+$(".listEquipement").on('click', function() {
+	var el = $(this).closest('.input-group').find('input');
+	jeedom.eqLogic.getSelectModal({}, function (result) {
+		el.value(result.human);
+	});
+});

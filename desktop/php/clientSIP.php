@@ -202,6 +202,30 @@ $eqLogics = eqLogic::byType('clientSIP');
 							</div>
 						</fieldset> 
 					</form>
+				</div>		
+				<div class="col-sm-6">
+					<form class="form-horizontal">
+						<legend>Options</legend>
+						<fieldset>
+							<div class="form-group">
+								<label class="col-sm-2 control-label">{{Equipement TTS}}
+									<sup>
+										<i class="fa fa-question-circle tooltips" title="{{Séléctionner un equipipement PlayTTS qui permettera a jeedom de lire vos messages}}"></i>
+									</sup>
+								</label>
+								<div class="col-sm-5">
+									<div class="input-group">
+										<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="PlayTTS" placeholder="{{Equipement PlayTTS}}"/>
+										<span class="input-group-btn">
+											<a class="btn btn-success btn-sm listEquipement">
+												<i class="fa fa-list-alt"></i>
+											</a>
+										</span>
+									</div>
+								</div>
+							</div>
+						</fieldset> 
+					</form>
 				</div>
 			</div>
 			<div role="tabpanel" class="tab-pane" id="commandtab">
