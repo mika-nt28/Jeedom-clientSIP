@@ -130,27 +130,8 @@ class clientSIP extends eqLogic {
 	public static function ConnectSip($_option){
 		log::add('clientSIP', 'debug', 'Objet mis à jour => ' . json_encode($_option));
 		$clientSIP = clientSIP::byId($_option['id']);
-		if (is_object($clientSIP) && $clientSIP->getIsEnable()) {
+		if (is_object($clientSIP) && $clientSIP->getIsEnable())
 			$clientSIP->CreateConnexion();
-			//while(true){
-				$clientSIP->checkAndUpdateCmd('RegStatus','Inactif');
-				$clientSIP->_sip->setUsername($clientSIP->_Username);
-				$clientSIP->_sip->setPassword($clientSIP->_Password);
-				$clientSIP->_sip->addHeader('Expires: '.$clientSIP->getConfiguration("Expiration"));
-				$clientSIP->_sip->setMethod('REGISTER');
-				if($clientSIP->getConfiguration("Proxy")!="") 
-					$clientSIP->_sip->setProxy($clientSIP->getConfiguration("Proxy"));
-				$clientSIP->_sip->setFrom('sip:'.$clientSIP->_Username.'@'.$clientSIP->_Host.':'.$clientSIP->_Port);
-				$clientSIP->_sip->setUri('sip:'.$clientSIP->_Username.'@'.$clientSIP->_Host.':'.$clientSIP->_Port.';transport='.$clientSIP->getConfiguration("transport"));
-				$clientSIP->_sip->setServerMode(true);
-				$res = $clientSIP->_sip->send();
-				if ($res == '200')
-					$clientSIP->checkAndUpdateCmd('RegStatus','OK');
-				else
-					$clientSIP->checkAndUpdateCmd('RegStatus','Echec');	
-				//sleep($clientSIP->getConfiguration("Expiration"));
-			//}
-		}
 	}
 	public static function WaitCall($_option){
 		$clientSIP = clientSIP::byId($_option['id']);
@@ -189,6 +170,19 @@ class clientSIP extends eqLogic {
 				$this->_sip->setProxy($this->getConfiguration("Proxy"));
 			$this->_sip->setUsername($this->_Username);
 			$this->_sip->setPassword($this->_Password);
+        	  	$this->checkAndUpdateCmd('RegStatus','Inactif');
+			$this->_sip->addHeader('Expires: '.$this->getConfiguration("Expiration"));
+			$this->_sip->setMethod('REGISTER');
+			if($this->getConfiguration("Proxy")!="") 
+				$this->_sip->setProxy($this->getConfiguration("Proxy"));
+			$this->_sip->setFrom('sip:'.$this->_Username.'@'.$this->_Host.':'.$this->_Port);
+			$this->_sip->setUri('sip:'.$this->_Username.'@'.$this->_Host.':'.$this->_Port.';transport='.$this->getConfiguration("transport"));
+			$this->_sip->setServerMode(true);
+			$res = $this->_sip->send();
+			if ($res == '200')
+				$this->checkAndUpdateCmd('RegStatus','OK');
+			else
+				$this->checkAndUpdateCmd('RegStatus','Echec');	
 		}
 	}
 	public function RepondreAppel() {
@@ -204,7 +198,7 @@ class clientSIP extends eqLogic {
 		$CallStatus=$this->getCmd(null,'CallStatus');
 		$call['status']= 'ringing';
 		while($CallStatus->execCmd() == 'Sonnerie');
-		self::addCacheMonitor($call);
+		self::addHistoryCall($call);
 		switch($CallStatus->execCmd()){
 			case 'Decrocher':
 				$call['status']= 'call';
