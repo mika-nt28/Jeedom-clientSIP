@@ -41,6 +41,7 @@ $eqLogics = eqLogic::byType('clientSIP');
 			</div>
 		</div>
         <legend>{{Mes equipement virtuel}}</legend>
+		<input class="form-control" placeholder="{{Rechercher}}" style="margin-bottom:4px;" id="in_searchEqlogic" />
 		<div class="eqLogicThumbnailContainer">
 			<?php
 			if (count($eqLogics) == 0) {
