@@ -44,16 +44,15 @@ $eqLogics = eqLogic::byType('clientSIP');
 		<input class="form-control" placeholder="{{Rechercher}}" style="margin-bottom:4px;" id="in_searchEqlogic" />
 		<div class="eqLogicThumbnailContainer">
 			<?php
-			if (count($eqLogics) == 0) {
-				echo "<br/><br/><br/><center><span style='color:#767676;font-size:1.2em;font-weight: bold;'>{{Vous n'avez pas encore de module SIP, cliquez sur Ajouter pour commencer}}</span></center>";
-			} else {
 				foreach ($eqLogics as $eqLogic) {
-					echo '<div class="eqLogicDisplayCard cursor" data-eqLogic_id="' . $eqLogic->getId() . '" style="background-color : #ffffff; height : 200px;margin-bottom : 10px;padding : 5px;border-radius: 2px;width : 160px;margin-left : 10px;" >';
-					echo '<center><img src="plugins/clientSIP/plugin_info/clientSIP_icon.png" height="105" width="95" /></center>';
-					echo '<span style="font-size : 1.1em;position:relative; top : 15px;word-break: break-all;white-space: pre-wrap;word-wrap: break-word;"><center>' . $eqLogic->getHumanName(true, true) . '</center></span>';
+					$opacity = ($eqLogic->getIsEnable()) ? '' : jeedom::getConfiguration('eqLogic:style:noactive');
+					echo '<div class="eqLogicDisplayCard cursor" data-eqLogic_id="' . $eqLogic->getId() . '" style="background-color : #ffffff; height : 200px;margin-bottom : 10px;padding : 5px;border-radius: 2px;width : 160px;margin-left : 10px;' . $opacity . '" >';
+					echo "<center>";
+					echo '<img src="plugins/clientSIP/plugin_info/clientSIP_icon.png" height="105" width="95" />';
+					echo "</center>";
+					echo '<span class="name" style="font-size : 1.1em;position:relative; top : 15px;word-break: break-all;white-space: pre-wrap;word-wrap: break-word;"><center>' . $eqLogic->getHumanName(true, true) . '</center></span>';
 					echo '</div>';
 				}
-			} 
 			?>
 		</div>
     </div>
