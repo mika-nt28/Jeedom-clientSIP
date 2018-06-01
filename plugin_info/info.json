@@ -7,6 +7,7 @@
 	"require" : "3.0",
 	"category" : "communication",
 	"hasOwnDeamon" : true,
+	"compatibility" : ["miniplus","smart","rpi","docker","diy","mobile"],
 	"issue" : "https://github.com/mika-nt28/Jeedom-clientSIP/issues",
  	"changelog" : "https://github.com/mika-nt28/Jeedom-clientSIP/commits/master",
  	"documentation" : "https://jeedom.github.io/documentation/third_plugin/clientSIP/fr_FR/index.html"
