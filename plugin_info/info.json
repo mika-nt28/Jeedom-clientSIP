@@ -9,6 +9,6 @@
 	"hasOwnDeamon" : true,
 	"compatibility" : ["miniplus","smart","rpi","docker","diy","mobile"],
 	"issue" : "https://github.com/mika-nt28/Jeedom-clientSIP/issues",
- 	"changelog" : "https://github.com/mika-nt28/Jeedom-clientSIP/commits/master",
- 	"documentation" : "https://jeedom.github.io/documentation/third_plugin/clientSIP/fr_FR/index.html"
+ 	"changelog" : "https://github.com/mika-nt28/Jeedom-clientSIP/commits/stable",
+ 	"documentation" : "https://mika-nt28.github.io/Jeedom-clientSIP/"
 }
