@@ -335,17 +335,21 @@ class sip
     
     if ($method == 'INVITE')
     {
-      $body = "v=0\r\n";
-      $body.= "o=click2dial 0 0 IN IP4 ".$this->src_ip."\r\n";
-      $body.= "s=click2dial call\r\n";
-      $body.= "c=IN IP4 ".$this->src_ip."\r\n";
-      $body.= "t=0 0\r\n";
-      $body.= "m=audio 8000 RTP/AVP 0 8 18 3 4 97 98\r\n";
-      $body.= "m=audio 14582 RTP/AVP 0 8 3 101\r\n";
-      $body.= "a=rtpmap:0 PCMU/8000\r\n";
-      $body.= "a=rtpmap:18 G729/8000\r\n";
-      $body.= "a=rtpmap:97 ilbc/8000\r\n";
-      $body.= "a=rtpmap:98 speex/8000\r\n";
+      	$body = "v=0\r\n";
+      	//$body.= "o=click2dial 0 0 IN IP4 ".$this->src_ip."\r\n";
+      	//$body.= "s=click2dial call\r\n";
+      	$body.= "c=IN IP4 ".$this->src_ip."\r\n";
+     	// $body.= "t=0 0\r\n";
+	$body.= " m = audio 45450 RTP/AVP 0\r\n";
+      	//$body.= "m=audio 8000 RTP/AVP 0 8 18 3 4 97 98\r\n";
+      	//$body.= "m=audio 14582 RTP/AVP 0 8 3 101\r\n";
+	foreach(config::byKey('codec', 'clientSIP') as $codec){
+		//$body.= "a=rtpmap:0 ".$codec."/8000\r\n";
+	}
+      	//$body.= "a=rtpmap:0 PCMU/8000\r\n";
+      	//$body.= "a=rtpmap:18 G729/8000\r\n";
+      	//$body.= "a=rtpmap:97 ilbc/8000\r\n";
+      	//$body.= "a=rtpmap:98 speex/8000\r\n";
       
       $this->body = $body;
       
