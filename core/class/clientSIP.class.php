@@ -225,8 +225,11 @@ class clientSIP extends eqLogic {
 		if($CallStatus->execCmd() == 'Sonnerie'){
 			$this->_sip->reply(487,'Request Terminated');
 			$this->_sip->reply(603,'Decline');
-		}else{
 			$this->_sip->setMethod('CANCEL');
+			$this->_sip->setFrom('sip:'.$this->_Username.'@'.$this->_Host);
+			$this->_sip->send();
+		}else{
+			$this->_sip->setMethod('BYE');
 			$this->_sip->setFrom('sip:'.$this->_Username.'@'.$this->_Host);
 			$this->_sip->send();
 		}
