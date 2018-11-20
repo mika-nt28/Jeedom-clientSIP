@@ -239,7 +239,6 @@ class sip{
 			$body.= " m = audio 45450 RTP/AVP";
 			$CodecString = "";
 			$CodecList=config::byKey('codec', 'clientSIP');
-			log::add('clientSIP','debug',json_encode($CodecList));
 			for($loop=0;$loop < count($CodecList);$loop++){
 				$body.= " ".$loop;
 				$CodecString.= "a=rtpmap:".$loop." ".$CodecList['type'][$loop]."/".$CodecList['port'][$loop]."\r\n";
@@ -550,7 +549,7 @@ class sip{
 		// Call-id
 		if (!$this->call_id){
 			$m = array();
-			if (preg_match('/^Call-ID:(.*)$/im', $this->rx_msg, $m)){
+			if (preg_match('/^Call-ID:(.*@)$/im', $this->rx_msg, $m)){
 				$this->call_id = trim($m[1]);
 			}
 		}
