@@ -72,9 +72,9 @@
 				$('#div_alert').showAlert({message: data.result, level: 'danger'});
 				return;
 			}
-			if (data.result['configuration']!=''){
+			if (data.result['codec']!=''){
 				var Codec= new Object();
-				$.each(data.result['configuration'], function(param,valeur){
+				$.each(data.result['codec'], function(param,valeur){
 					switch(typeof(valeur)){
 						case 'object':
 							$.each(valeur, function(Codeckey,value ){
