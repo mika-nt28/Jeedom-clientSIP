@@ -81,7 +81,7 @@
 								if (typeof(Codec[Codeckey]) === 'undefined')
 									Codec[Codeckey]= new Object();
 								if (typeof(Codec[Codeckey]['codec']) === 'undefined')
-									Codec[Codeckey]['configuration']= new Object();
+									Codec[Codeckey]['codec']= new Object();
 								Codec[Codeckey]['codec'][param]=value;
 							});
 						break;
