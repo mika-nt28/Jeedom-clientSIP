@@ -239,9 +239,10 @@ class sip{
 			$body.= " m = audio 45450 RTP/AVP";
 			$CodecString = "";
 			$CodecList=config::byKey('codec', 'clientSIP');
-			for($loop=0;$loop <=count($CodecList);$loop++){
+			log::add('clientSIP','debug',json_encode($CodecList));
+			for($loop=0;$loop < count($CodecList);$loop++){
 				$body.= " ".$loop;
-				$CodecString.= "a=rtpmap:0 ".$CodecList[$loop]['type']."/".$CodecList[$loop]['port']."\r\n";
+				$CodecString.= "a=rtpmap:".$loop." ".$CodecList['type'][$loop]."/".$CodecList['port'][$loop]."\r\n";
 			}
 			$body.= "\r\n";
 			$body.=  $CodecString."\r\n"; 
