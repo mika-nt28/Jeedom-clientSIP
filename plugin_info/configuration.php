@@ -113,7 +113,7 @@
 				.append($('<span class="input-group-btn">')
 					.append($('<a class="btn btn-default btn-sm bt_RemoveCodec">')
 						.append($('<i class="fa fa-minus-circle">'))))
-				.append($('<select class="configKey form-control input-sm "data-l1key="codec" data-l2key="type>')
+				.append($('<select class="configKey form-control input-sm "data-l1key="codec" data-l2key="type">')
 					.append($('<option value="ulaw">').text('u-law'))
 					.append($('<option value="alaw">').text('a-law'))
 					.append($('<option value="gsm">').text('GSM'))
