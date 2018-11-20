@@ -244,7 +244,7 @@ class sip{
 				$CodecString.= "a=rtpmap:0 ".$CodecList[$loop]['type']."/".$CodecList[$loop]['port']."\r\n";
 			}
 			$body.= "\r\n";
-			$body.=  $CodecString 
+			$body.=  $CodecString."\r\n"; 
 			$this->body = $body;
 			$this->setContentType(null);
 		}
