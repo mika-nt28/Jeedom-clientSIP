@@ -199,6 +199,7 @@ class clientSIP extends eqLogic {
 		$call['flow']='incoming';  
 		$call['number']='';  
 		$call['callLength']='';  
+		$call['callActive']=false;
 		$call['start']=date('d/m/Y H:i:s');  
 		self::addHistoryCall($call);
 		//$this->_sip->reply(100,'Trying');
@@ -226,6 +227,7 @@ class clientSIP extends eqLogic {
 		event::add('clientSIP::rtsp', $this->_sip->getBody());
 		$this->checkAndUpdateCmd('CallStatus','Décrocher');
 		while($CallStatus->execCmd() == 'Decrocher'){
+			$call['callActive']=true;
 			$call['callLength']=$strtotime("now")-strtotime($call['start']);  
 			self::addHistoryCall($call);
 			sleep(5);
@@ -247,6 +249,7 @@ class clientSIP extends eqLogic {
 		}
 		$this->checkAndUpdateCmd('CallStatus','Racrocher');
 		$call['callLength']=$strtotime("now")-strtotime($call['start']);  
+		$call['callActive']=false;
 		self::addHistoryCall($call);
 	}
 	public function call($number) {	
@@ -254,7 +257,8 @@ class clientSIP extends eqLogic {
 		$call['flow']='outcoming';  
 		$call['number']=$number;  
 		$call['start']=date('d/m/Y H:i:s');  
-		$call['callLength']='';  
+		$call['callLength']=''; 
+		$call['callActive']=false; 
 		self::addHistoryCall($call);
 		log::add('clientSIP', 'debug', 'Appel en demandé => ' . $number);
 		$this->checkAndUpdateCmd('CallStatus','Racrocher');	
