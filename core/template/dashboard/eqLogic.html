@@ -77,26 +77,38 @@
 				}
 			});
 		}
-		function addItem(item) { 
-			var i  = '<div class="list-group-item sip-logitem clearfix" title="Double clique pour rappeler" style="color: black;">';
-			i += '<div class="clearfix"><div class="pull-left">';
-			i += '<i class="fa fa-fw fa-fw"></i> <strong>'+item.number+'</strong><br><small>'+item.start+'</small>';
-			i += '</div>';
-			i += '<div class="pull-right text-right"><em></em><br>' + item.callLength+'</div></div>';
-			//if (callActive) {
-			i += '<div class="btn-group btn-group-xs pull-right">';
-			if (item.status === 'ringing' && item.flow === 'incoming') {
-			i += '<button class="btn btn-xs btn-success btnCall" title="Call"><i class="fa fa-phone"></i></button>';
-			} else {
-			i += '<button class="btn btn-xs btn-primary btnHoldResume" title="Hold"><i class="fa fa-pause"></i></button>';
-			i += '<button class="btn btn-xs btn-info btnTransfer" title="Transfer"><i class="fa fa-random"></i></button>';
-			i += '<button class="btn btn-xs btn-warning btnMute" title="Mute"><i class="fa fa-fw fa-microphone"></i></button>';
+		function addItem(call) { 
+			var callHistory  = $('<div class="list-group-item sip-logitem clearfix" title="Double clique pour rappeler" style="color: black;">');
+			callHistory.append($('<div class="clearfix">')
+				.append($('<div class="pull-left">')
+					.append($('<i class="fa fa-fw fa-fw">'))
+					.append($('<strong>')
+						.text(call.number))
+					.append($('<br>'))
+					.append($('<small>')
+						.text(call.start)))
+				.append($('<div class="pull-right text-right">')
+					.append($('<em>'))
+					.append($('<br>'))
+					.text(call.callLength)));
+			if (call.callActive) {
+				var callActi = $('<div class="btn-group btn-group-xs pull-right">');
+				if (call.status === 'ringing' && call.flow === 'incoming') {
+					callActi.append($('<button class="btn btn-xs btn-success btnCall" title="Call">')
+						.append($('<i class="fa fa-phone">')));
+				} else {
+					callActi.append($('<button class="btn btn-xs btn-primary btnHoldResume" title="Hold">')
+							.append($('<i class="fa fa-pause">')));
+					callActi.append($('<button class="btn btn-xs btn-info btnTransfer" title="Transfer">')
+						   .append($('<i class="fa fa-random">')));
+					callActi.append($('<button class="btn btn-xs btn-warning btnMute" title="Mute">')
+						.append($('<i class="fa fa-fw fa-microphone">')));
+				}
+				callActi.append($('<button class="btn btn-xs btn-danger btnHangUp" title="Hangup">')
+					 .append($('<i class="fa fa-stop">')));
+				callHistory.append(callActi);
 			}
-			i += '<button class="btn btn-xs btn-danger btnHangUp" title="Hangup"><i class="fa fa-stop"></i></button>';
-			i += '</div>';
-			//}
-			i += '</div>';
-			$('#sip-logitems').append(i);
+			$('#sip-logitems').append(callHistory);
 		}
 		$(function() { 
 			getHistoryCall();
