@@ -2,6 +2,7 @@
 class sip{
 	private $min_port = 5065;
 	private $max_port = 5265;
+	private $socket_bind = true;
 	private $fr_timer = 10000;
 	private $lock_file = '/tmp/PhpSIP.lock';
 	private $persistent_lock_file = true;
@@ -80,6 +81,7 @@ class sip{
 				die();
 			}
 			$this->src_port = $src_port;
+			$this->socket_bind = false;
 			$this->lock_file = null;
 		}
 		if ($fr_timer){
@@ -246,7 +248,7 @@ class sip{
 			$body.= "\r\n";
 			$body.=  $CodecString."\r\n"; */
           	$body.= "m=audio 45450 RTP/AVP 0 8\r\n";
-			$body.= " a=rtpmap:0 PCMU/8000\r\n";
+			$body.= "a=rtpmap:0 PCMU/8000\r\n";
             $body.= "a=rtpmap:8 PCMA/8000\r\n";
 			$this->body = $body;
 			$this->setContentType(null);
@@ -853,10 +855,12 @@ class sip{
 			log::add('clientSIP','error',socket_strerror($err_no));
 			die();
 		}
-		if (!@socket_bind($this->socket, $this->src_ip, $this->src_port)){
-			$err_no = socket_last_error($this->socket);
-			log::add('clientSIP','error',"Failed to bind ".$this->src_ip.":".$this->src_port." ".socket_strerror($err_no));
-			die();
+		if($this->socket_bind){
+			if (!@socket_bind($this->socket, $this->src_ip, $this->src_port)){
+				$err_no = socket_last_error($this->socket);
+				log::add('clientSIP','error',"Failed to bind ".$this->src_ip.":".$this->src_port." ".socket_strerror($err_no));
+				die();
+			}
 		}
 		$microseconds = $this->fr_timer * 1000;
 		$usec = $microseconds % 1000000;

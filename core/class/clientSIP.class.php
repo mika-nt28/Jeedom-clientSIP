@@ -192,7 +192,7 @@ class clientSIP extends eqLogic {
 			$this->checkAndUpdateCmd('RegStatus','OK');
 		else
 			$this->checkAndUpdateCmd('RegStatus','Echec');			
-		cache::set('clientSIP::Port::'.$this->getId(), $this->_sip->getPort(), 0);
+		cache::set('clientSIP::Port::'.$this->getId(), $this->_sip->getSrcPort(), 0);
 	}
 	public function RepondreAppel() {
 		$call['status']='ringing'; 
