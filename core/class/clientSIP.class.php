@@ -169,7 +169,7 @@ class clientSIP extends eqLogic {
 		$this->_Username=$this->getConfiguration("Username");
 		$this->_Password=$this->getConfiguration("Password");
 		if($this->_sip == null){
-			$this->_sip = new sip(network ::getNetworkAccess('internal', 'ip', '', false),$cache->getValue('');
+			$this->_sip = new sip(network ::getNetworkAccess('internal', 'ip', '', false),$cache->getValue(''));
 			if($this->getConfiguration("Proxy")!="") 
 				$this->_sip->setProxy($this->getConfiguration("Proxy"));
 			$this->_sip->setUsername($this->_Username);
