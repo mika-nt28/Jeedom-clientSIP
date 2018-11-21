@@ -97,7 +97,7 @@ class sip{
 	public function getSrcIp(){
 		return $this->src_ip;
 	}
-	private function getPort(){
+	public function getPort(){
 		if ($this->src_port){
 			return true;
 		}
@@ -236,7 +236,7 @@ class sip{
 			//$body.= "s=click2dial call\r\n";
 			$body.= "c=IN IP4 ".$this->src_ip."\r\n";
 			// $body.= "t=0 0\r\n";
-			$body.= " m = audio 45450 RTP/AVP";
+		/*	$body.= " m = audio 45450 RTP/AVP";
 			$CodecString = "";
 			$CodecList=config::byKey('codec', 'clientSIP');
 			for($loop=0;$loop < count($CodecList);$loop++){
@@ -244,7 +244,10 @@ class sip{
 				$CodecString.= "a=rtpmap:".$loop." ".$CodecList['type'][$loop]."/".$CodecList['port'][$loop]."\r\n";
 			}
 			$body.= "\r\n";
-			$body.=  $CodecString."\r\n"; 
+			$body.=  $CodecString."\r\n"; */
+          	$body.= "m=audio 45450 RTP/AVP 0 8\r\n";
+			$body.= " a=rtpmap:0 PCMU/8000\r\n";
+            $body.= "a=rtpmap:8 PCMA/8000\r\n";
 			$this->body = $body;
 			$this->setContentType(null);
 		}
@@ -421,12 +424,6 @@ class sip{
 			}
 		}
 	}
-
-	/**
-	* Sets server mode
-	* 
-	* @param bool $status
-	*/
 	public function setServerMode($v){
 		if (!@socket_set_option($this->socket, SOL_SOCKET, SO_RCVTIMEO, array("sec"=>0,"usec"=>0)))	{
 			$err_no = socket_last_error($this->socket);
