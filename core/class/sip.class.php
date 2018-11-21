@@ -754,7 +754,7 @@ class sip{
 			$this->call_id = $v;
 		}
 		else{
-			$this->call_id = md5(uniqid()).'@'.$this->src_ip;
+			$this->call_id = md5(uniqid())/*.'@'.$this->src_ip*/;
 		}
 	}
 	public function getHeader($name){
