@@ -205,9 +205,7 @@ class clientSIP extends eqLogic {
 		$this->checkAndUpdateCmd('CallStatus','Sonnerie');
 		event::add('clientSIP::call', utils::o2a($this));
 		$CallStatus=$this->getCmd(null,'CallStatus');
-		$call['status']= 'ringing';
 		while($CallStatus->execCmd() == 'Sonnerie');
-		self::addHistoryCall($call);
 		switch($CallStatus->execCmd()){
 			case 'Decrocher':
 				$call['status']= 'call';
@@ -245,6 +243,12 @@ class clientSIP extends eqLogic {
 		$this->checkAndUpdateCmd('CallStatus','Racrocher');
 	}
 	public function call($number) {	
+		
+		$call['status']='ringing'; 
+		$call['flow']='outcoming';  
+		$call['number']=$number;  
+		$call['start']=date('d/m/Y H:i:s');  
+		self::addHistoryCall($call);
 		log::add('clientSIP', 'debug', 'Appel en demandé => ' . $number);
 		$this->checkAndUpdateCmd('CallStatus','Racrocher');	
 		$this->CreateConnexion();
@@ -264,21 +268,20 @@ class clientSIP extends eqLogic {
 		switch($CallStatus->execCmd()){
 			case 'Decrocher':
 				$call['status']= 'call';
-				self::addHistoryCall($call);
 				$this->Decrocher();
-				while($CallStatus->execCmd() == 'Decrocher'){
+				/*while($CallStatus->execCmd() == 'Decrocher'){
 					$this->actionResCode();
 				}
 				$call['status']= 'close';
 				self::addHistoryCall($call);
-				$this->Racrocher();
+				$this->Racrocher();*/
 			break;
 			case 'Racrocher':
 				$call['status']= 'reject';
-				self::addHistoryCall($call);
 				$this->Racrocher();
 			return;
 		}
+		self::addHistoryCall($call);
 	}
 	public function sendMessage($number,$message) {	
 		log::add('clientSIP', 'debug', 'Appel en demandé => ' . $number);
