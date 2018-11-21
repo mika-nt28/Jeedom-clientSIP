@@ -80,6 +80,9 @@ class clientSIP extends eqLogic {
 			$cron = cron::byClassAndFunction('clientSIP', 'WaitMessage', array('id' => $clientSIP->getId()));
 			if (is_object($cron)) 	
 				$cron->remove();
+			$cache = cache::byKey('clientSIP::Port::'.$clientSIP->getId());
+			if (is_object($cache)) 	
+				$cache->remove();
 		}
 	}	
 	public function toHtml($_version = 'mobile') {
@@ -160,12 +163,13 @@ class clientSIP extends eqLogic {
 		}
 	}	
 	private function CreateConnexion(){
+		$cache = cache::byKey('clientSIP::Port::'.$this->getId());
 		$this->_Host=config::byKey('Host', 'clientSIP');
 		$this->_Port=config::byKey('Port', 'clientSIP');
 		$this->_Username=$this->getConfiguration("Username");
 		$this->_Password=$this->getConfiguration("Password");
 		if($this->_sip == null){
-			$this->_sip = new sip(network ::getNetworkAccess('internal', 'ip', '', false));
+			$this->_sip = new sip(network ::getNetworkAccess('internal', 'ip', '', false),$cache->getValue('');
 			if($this->getConfiguration("Proxy")!="") 
 				$this->_sip->setProxy($this->getConfiguration("Proxy"));
 			$this->_sip->setUsername($this->_Username);
@@ -183,12 +187,12 @@ class clientSIP extends eqLogic {
 			$this->_sip->setProxy($this->getConfiguration("Proxy"));
 		$this->_sip->setFrom('sip:'.$this->_Username.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setUri('sip:'.$this->_Username.'@'.$this->_Host.':'.$this->_Port.';transport='.$this->getConfiguration("transport"));
-
 		$res = $this->_sip->send();
 		if ($res == '200')
 			$this->checkAndUpdateCmd('RegStatus','OK');
 		else
-			$this->checkAndUpdateCmd('RegStatus','Echec');	
+			$this->checkAndUpdateCmd('RegStatus','Echec');			
+		cache::set('clientSIP::Port::'.$this->getId(), $this->_sip->getPort(), 0);
 	}
 	public function RepondreAppel() {
 		$call['status']='ringing'; 
