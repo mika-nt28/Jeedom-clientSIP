@@ -131,7 +131,7 @@ class clientSIP extends eqLogic {
 		log::add('clientSIP', 'debug', 'Objet mis à jour => ' . json_encode($_option));
 		$clientSIP = clientSIP::byId($_option['id']);
 		if (is_object($clientSIP) && $clientSIP->getIsEnable())
-			$clientSIP->CreateConnexion();
+			$clientSIP->RegisterClient();
 	}
 	public static function WaitCall($_option){
 		$clientSIP = clientSIP::byId($_option['id']);
@@ -170,20 +170,25 @@ class clientSIP extends eqLogic {
 				$this->_sip->setProxy($this->getConfiguration("Proxy"));
 			$this->_sip->setUsername($this->_Username);
 			$this->_sip->setPassword($this->_Password);
-        	  	$this->checkAndUpdateCmd('RegStatus','Inactif');
-			$this->_sip->addHeader('Expires: '.$this->getConfiguration("Expiration"));
-			$this->_sip->setMethod('REGISTER');
-			if($this->getConfiguration("Proxy")!="") 
-				$this->_sip->setProxy($this->getConfiguration("Proxy"));
-			$this->_sip->setFrom('sip:'.$this->_Username.'@'.$this->_Host.':'.$this->_Port);
-			$this->_sip->setUri('sip:'.$this->_Username.'@'.$this->_Host.':'.$this->_Port.';transport='.$this->getConfiguration("transport"));
 			$this->_sip->setServerMode(true);
-			$res = $this->_sip->send();
-			if ($res == '200')
-				$this->checkAndUpdateCmd('RegStatus','OK');
-			else
-				$this->checkAndUpdateCmd('RegStatus','Echec');	
 		}
+	}
+	private function RegisterClient(){
+		if($this->_sip == null)			
+        	  	$this->CreateConnexion();
+		$this->checkAndUpdateCmd('RegStatus','Inactif');
+		$this->_sip->addHeader('Expires: '.$this->getConfiguration("Expiration"));
+		$this->_sip->setMethod('REGISTER');
+		if($this->getConfiguration("Proxy")!="") 
+			$this->_sip->setProxy($this->getConfiguration("Proxy"));
+		$this->_sip->setFrom('sip:'.$this->_Username.'@'.$this->_Host.':'.$this->_Port);
+		$this->_sip->setUri('sip:'.$this->_Username.'@'.$this->_Host.':'.$this->_Port.';transport='.$this->getConfiguration("transport"));
+
+		$res = $this->_sip->send();
+		if ($res == '200')
+			$this->checkAndUpdateCmd('RegStatus','OK');
+		else
+			$this->checkAndUpdateCmd('RegStatus','Echec');	
 	}
 	public function RepondreAppel() {
 		$call['status']='ringing'; 
