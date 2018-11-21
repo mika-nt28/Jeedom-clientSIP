@@ -99,7 +99,10 @@ class sip{
 	public function getSrcIp(){
 		return $this->src_ip;
 	}
-	public function getPort(){
+	public function getSrcPort(){
+		return $this->src_port;
+	}
+	private function getPort(){
 		if ($this->src_port){
 			return true;
 		}
