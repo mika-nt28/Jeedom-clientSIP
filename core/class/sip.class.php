@@ -1,5 +1,6 @@
 <?php
 class sip{
+	private $jeedom;
 	private $min_port = 5065;
 	private $max_port = 5265;
 	private $socket_bind = true;
@@ -50,7 +51,8 @@ class sip{
 	private $record_route = array();
 	private $request_via = array();
 	private $extra_headers = array();
-	public function __construct($src_ip = null, $src_port = null, $fr_timer = null)	{
+	public function __construct($jeedom = null,$src_ip = null, $src_port = null, $fr_timer = null)	{
+		$this->jeedom = $jeedom;
 		if (!function_exists('socket_create')){
 			log::add('clientSIP','error',"socket_create() function missing.");
 			die();
@@ -350,20 +352,7 @@ class sip{
 				$i++;
 			}
 		}
-		if ($this->res_code == '407'){
-			$this->cseq++;
-			$this->auth();
-			$data = $this->formatRequest();
-			$this->sendData($data);
-			$this->readMessage();
-		}
-		if ($this->res_code == '401')	{
-			$this->cseq++;
-			$this->authWWW();
-			$data = $this->formatRequest();
-			$this->sendData($data);
-			$this->readMessage();
-		}
+		$this->ActionForRxCode();
 		if (substr($this->res_code,0,1) == '1'){
 			$i = 0;
 			while (substr($this->res_code,0,1) == '1' && $i < 4){
@@ -374,6 +363,39 @@ class sip{
 		$this->extra_headers = array();
 		$this->cseq++;
 		return $this->res_code;
+	}
+	private function ActionForRxCode(){
+		switch($this->res_code){
+			case '100':
+				$this->reply(100,'Trying');
+				$this->jeedom->checkAndUpdateCmd('CallStatus','Décroché');
+			break;
+			case '180':
+				$this->reply(180,'Ringing');
+				$this->jeedom->checkAndUpdateCmd('CallStatus','Sonnerie');
+			break;
+			case '200':
+				$this->checkAndUpdateCmd('CallStatus','Appel en cours');
+				$this->_sip->reply(200,'OK');
+			break;
+			case '407':
+				$this->cseq++;
+				$this->auth();
+				$data = $this->formatRequest();
+				$this->sendData($data);
+				$this->readMessage();
+			break;
+			case '401':
+				$this->cseq++;
+				$this->authWWW();
+				$data = $this->formatRequest();
+				$this->sendData($data);
+				$this->readMessage();
+			break;
+			case '486':
+				$this->checkAndUpdateCmd('CallStatus','Appel en cours');
+			break;
+		}
 	}
 	private function sendData($data)	{
 		if (!$this->host)	{
