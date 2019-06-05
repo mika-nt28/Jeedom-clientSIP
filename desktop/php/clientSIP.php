@@ -91,7 +91,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								</div>
 							</div>
 							<div class="form-group">
-	                					<label class="col-sm-2 control-label" >{{Objet parent}}</label>
+	                					<label class="col-sm-3 control-label" >{{Objet parent}}</label>
 								<div class="col-sm-3">
 									<select id="sel_object" class="eqLogicAttr form-control" data-l1key="object_id">
 										<option value="">{{Aucun}}</option>
@@ -141,47 +141,47 @@ $eqLogics = eqLogic::byType($plugin->getId());
 						<legend>Compte Sip</legend>
 						<fieldset>
 							<div class="form-group">
-								<label class="col-md-2 control-label" >
+								<label class="col-sm-3 control-label" >
 									{{Proxy}}
 									<sup>
 										<i class="fa fa-question-circle tooltips" title="Proxy" style="font-size : 1em;color:grey;">{{Proxy}}</i>
 									</sup>
 								</label>
-								<div class="col-md-3">
+								<div class="col-sm-3">
 									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="Proxy" placeholder="{{Proxy}}"/>
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-md-2 control-label" >
+								<label class="col-sm-3 control-label" >
 									{{Autentification}}
 									<sup>
 										<i class="fa fa-question-circle tooltips" title="" style="font-size : 1em;color:grey;"></i>
 									</sup>
 								</label>
-								<div class="col-md-3">
+								<div class="col-sm-3">
 									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="Username" placeholder="{{Login}}"/>
 									<input type="password" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="Password" placeholder="{{Mots de passe}}"/>
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-md-2 control-label" >
+								<label class="col-sm-3 control-label" >
 									{{Expiration}}
 									<sup>
 										<i class="fa fa-question-circle tooltips" title="Saisire le delais d'expiration" style="font-size : 1em;color:grey;"></i>
 									</sup>
 								</label>
-								<div class="col-md-3">
+								<div class="col-sm-3">
 									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="Expiration" placeholder="{{Expiration}}"/>
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-md-2 control-label" >
+								<label class="col-sm-3 control-label" >
 									{{Transport}}
 									<sup>
 										<i class="fa fa-question-circle tooltips" title="Choisissez le type de transport" style="font-size : 1em;color:grey;"></i>
 									</sup>
 								</label>
-								<div class="col-md-3">
+								<div class="col-sm-3">
 									<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="transport">
 										<option value="udp">UDP</option>
 										<option value="tcp">TCP</option>
@@ -197,7 +197,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 						<legend>Options</legend>
 						<fieldset>
 							<div class="form-group">
-								<label class="col-sm-2 control-label">{{Equipement TTS}}
+								<label class="col-sm-3 control-label">{{Equipement TTS}}
 									<sup>
 										<i class="fa fa-question-circle tooltips" title="{{Séléctionner un equipipement PlayTTS qui permettera a jeedom de lire vos messages}}"></i>
 									</sup>
