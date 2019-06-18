@@ -86,19 +86,18 @@ class clientSIP extends eqLogic {
 		}
 	}	
 	public function toHtml($_version = 'mobile') {
-		$_version = jeedom::versionAlias($_version);
-		$replace = array(
-			'#id#' => $this->getId(),
-			'#name#' => ($this->getIsEnable()) ? $this->getName() : '<del>' . $this->getName() . '</del>',
-			'#eqLink#' => $this->getLinkToConfiguration(),
-			'#background#' => $this->getBackgroundColor($_version),				
-			'#height#' => $this->getDisplay('height', 'auto'),
-			'#width#' => $this->getDisplay('width', 'auto')
-		);	
+		$replace = $this->preToHtml($_version);
+		if (!is_array($replace)) {
+			return $replace;
+		}
+		$version = jeedom::versionAlias($_version);
+		if ($this->getDisplay('hideOn' . $version) == 1) {
+			return '';
+		}
 		foreach ($this->getCmd(null, null, true) as $cmd) {
 			 $replace['#'.$cmd->getLogicalId().'#'] = $cmd->toHtml($_version);
-		}   
-		return template_replace($replace, getTemplate('core', $_version, 'eqLogic','clientSIP'));
+		} 
+		return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version,'eqLogic','clientSIP')));
 	}
 	public function postSave() {
 		$this->AddCommande('Etat connexion','RegStatus','info', 'string');
