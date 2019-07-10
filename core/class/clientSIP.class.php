@@ -103,7 +103,7 @@ class clientSIP extends eqLogic {
 		$this->AddCommande('Etat connexion','RegStatus','info', 'string');
 		$this->AddCommande('Etat appel','CallStatus','info', 'string','CallStatus');
 		$this->AddCommande('Appel','call','action','message','call');
-		$this->AddCommande('Message','message','action','message','call');
+		$this->AddCommande('Message','message','action','message','default');
 		$this->checkAndUpdateCmd('RegStatus','Inactif');
 	}
 	public static $_widgetPossibility = array('custom' => array(
@@ -298,7 +298,7 @@ class clientSIP extends eqLogic {
 		switch($this->_sip->getResCode()){
 		}
 	}
-	public function AddCommande($Name,$_logicalId,$Type="info", $SubType='string',$Template='') {
+	public function AddCommande($Name,$_logicalId,$Type="info", $SubType='string',$Template='default') {
 		$Commande = $this->getCmd(null,$_logicalId);
 		if (!is_object($Commande))
 		{
