@@ -814,7 +814,7 @@ class sip{
 		$realm = $m[1];
 		// nonce
 		$m = array();
-		if (!preg_match('/^Proxy-Authenticate: .* nonce="(.*)"/imU',$this->rx_msg, $m)){
+		if (!preg_match('/^Proxy-Authenticate: .*,*nonce="(.*)"/imU',$this->rx_msg, $m)){
 			log::add('clientSIP','error',"Can't find nonce in proxy-auth");
 			die();
 		}
@@ -851,7 +851,7 @@ class sip{
 		$realm = $m[1];
 		// nonce
 		$m = array();
-		if (!preg_match('/^WWW-Authenticate: .* nonce="(.*)"/imU',$this->rx_msg, $m)){
+		if (!preg_match('/^WWW-Authenticate: .*,*nonce="(.*)"/imU',$this->rx_msg, $m)){
 			log::add('clientSIP','error',"Can't find nonce in www-auth");
 			die();
 		}

@@ -1,18 +1,18 @@
 <div class="eqLogic eqLogic-widget allowResize" data-eqLogic_id="#id#" data-eqLogic_uid="#uid#" data-version="#version#" style="min-width : 50px;min-height : 80px ;border:#border#;border-radius:#border-radius#;background-color: #background-color#;color: #color#;width: #width#;height: #height#;#style#" >
-	<span class="statusCmd" style="position : absolute;bottom : 3px;left : 3px;width : 30px;color: #404040 ;z-index: 1030;"></span>
 	<center class="widget-name">
 		<span style="font-weight:bold;"><a href="#eqLink#">#name#</a></span>
 	</center>	
 	<div class="clearfix sipStatus">
-		<div id="txtCallStatus" class="pull-right">#CallStatus#</div>
-		<div id="txtRegStatus"><i class="fa fa-signal"></i>#RegStatus#</div>
+		<span class="statusCmd" style="position : absolute;bottom : 3px;left : 3px;width : 30px;color: #404040 ;z-index: 1030;"></span>
+		<div id="txtCallStatus" class="pull-right"><i class="fas fa-phone"></i>#CallStatus#</div>
+		<div id="txtRegStatus" class="pull-right"><i class="fas fa-signal"></i>#RegStatus#</div>
 	</div>
 	<div class="form-group" id="phoneUI">
 		<div class="input-group">
 			#call#
 			<div class="input-group-btn input-group-btn-sm">
 				<button class="btn btn-sm btn-primary dropdown-toggle" id="btnVol" data-toggle="dropdown" title="Volume">
-					<i class="fa fa-fw fa-volume-up"></i>
+					<i class="fas fa-fw fa-volume-up"></i>
 				</button>
 				<div class="dropdown-menu dropdown-menu-right">
 					<input type="range" min="0" max="100" value="100" step="1" id="sldVolume" />
@@ -20,22 +20,17 @@
 			</div>
 		</div>
 	</div>
-	<div class="well-sip" style="height:75%;">
-		<!--div id="sip-splash" class="text-muted text-center panel panel-default">
-			<div class="panel-body">
-				<h3 class="page-header">
-					<span class="fa-stack fa-2x">
-						<i class="fa fa-circle fa-stack-2x text-success"></i>
-						<i class="fa fa-phone fa-stack-1x fa-inverse"></i>
-					</span><br>
-				</h3>
+	<div class="well-sip">
+		<label>Message <i class="fas fa-plus-circle" data-toggle="collapse" href="#sendMessage" role="button" aria-expanded="false" aria-controls="sendMessage"></i></label>
+			<div class="collapse panel panel-default" id="sendMessage">
+				#message#
 			</div>
-		</div-->
-		<div id="sip-log" class="panel panel-default" style="height:100%;overflow: scroll;">
+		<label>Historique <i class="fas fa-plus-circle" data-toggle="collapse" href="#sip-log" role="button" aria-expanded="false" aria-controls="sip-log"></i></label>
+		<div id="sip-log" class="collapse panel panel-default" style="height:100%;overflow: scroll;">
 			<div class="panel-heading">
 				<h4 class="text-muted panel-title">Appel récent
 					<span class="pull-right">
-						<i class="fa fa-trash text-muted sipLogClear" title="Clear Log"></i>
+						<i class="fas fa-trash text-muted sipLogClear" title="Clear Log"></i>
 					</span>
 				</h4>
 			</div>
@@ -85,7 +80,7 @@
 			var callHistory  = $('<div class="list-group-item sip-logitem clearfix" title="Double clique pour rappeler" style="color: black;">');
 			callHistory.append($('<div class="clearfix">')
 				.append($('<div class="pull-left">')
-					.append($('<i class="fa fa-fw fa-fw">'))
+					.append($('<i class="fas fa-fw fa-fw">'))
 					.append($('<strong>')
 						.text(call.number))
 					.append($('<br>'))
@@ -99,17 +94,17 @@
 				var callActi = $('<div class="btn-group btn-group-xs pull-right">');
 				if (call.status === 'ringing' && call.flow === 'incoming') {
 					callActi.append($('<button class="btn btn-xs btn-success btnCall" title="Call">')
-						.append($('<i class="fa fa-phone">')));
+						.append($('<i class="fas fa-phone">')));
 				} else {
 					callActi.append($('<button class="btn btn-xs btn-primary btnHoldResume" title="Hold">')
-							.append($('<i class="fa fa-pause">')));
+							.append($('<i class="fas fa-pause">')));
 					callActi.append($('<button class="btn btn-xs btn-info btnTransfer" title="Transfer">')
-						   .append($('<i class="fa fa-random">')));
+						   .append($('<i class="fas fa-random">')));
 					callActi.append($('<button class="btn btn-xs btn-warning btnMute" title="Mute">')
-						.append($('<i class="fa fa-fw fa-microphone">')));
+						.append($('<i class="fas fa-fw fa-microphone">')));
 				}
 				callActi.append($('<button class="btn btn-xs btn-danger btnHangUp" title="Hangup">')
-					 .append($('<i class="fa fa-stop">')));
+					 .append($('<i class="fas fa-stop">')));
 				callHistory.append(callActi);
 			}
 			$('#sip-logitems').append(callHistory);
