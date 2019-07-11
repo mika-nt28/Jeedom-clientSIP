@@ -136,9 +136,20 @@ $eqLogics = eqLogic::byType($plugin->getId());
 						<fieldset>
 							<div class="form-group">
 								<label class="col-sm-3 control-label" >
+									{{Port de communication}}
+									<sup>
+										<i class="fa fa-question-circle tooltips" title="{{Saisir le port de connexion de se client}}"></i>
+									</sup>
+								</label>
+								<div class="col-sm-3">
+									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="Port" placeholder="{{Port de connexion}}"/>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label" >
 									{{Proxy}}
 									<sup>
-										<i class="fa fa-question-circle tooltips" title="Proxy" style="font-size : 1em;color:grey;">{{Proxy}}</i>
+										<i class="fa fa-question-circle tooltips" title="{{Saisir le proxy de connexion}}"></i>
 									</sup>
 								</label>
 								<div class="col-sm-3">
@@ -149,7 +160,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								<label class="col-sm-3 control-label" >
 									{{Autentification}}
 									<sup>
-										<i class="fa fa-question-circle tooltips" title="" style="font-size : 1em;color:grey;"></i>
+										<i class="fa fa-question-circle tooltips" title="{{Parametre d'autentification au serveur}}"></i>
 									</sup>
 								</label>
 								<div class="col-sm-3">
@@ -161,7 +172,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								<label class="col-sm-3 control-label" >
 									{{Expiration}}
 									<sup>
-										<i class="fa fa-question-circle tooltips" title="Saisire le delais d'expiration" style="font-size : 1em;color:grey;"></i>
+										<i class="fa fa-question-circle tooltips" title="{{Saisir le delais d'expiration}}"></i>
 									</sup>
 								</label>
 								<div class="col-sm-3">
@@ -172,7 +183,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								<label class="col-sm-3 control-label" >
 									{{Transport}}
 									<sup>
-										<i class="fa fa-question-circle tooltips" title="Choisissez le type de transport" style="font-size : 1em;color:grey;"></i>
+										<i class="fa fa-question-circle tooltips" title="{{Choisissez le type de transport}}"></i>
 									</sup>
 								</label>
 								<div class="col-sm-3">
@@ -212,7 +223,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 				</div>
 			</div>
 			<div role="tabpanel" class="tab-pane" id="commandtab">	
-				<!--a class="btn btn-success btn-sm cmdAction pull-right" data-action="add" style="margin-top:5px;">
+				<!--a class="btn btn-success btn-sm cmdAction pull-right" data-action="add">
 					<i class="fa fa-plus-circle"></i> 
 					{{Commandes}}
 				</a-->
