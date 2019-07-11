@@ -162,13 +162,13 @@ class clientSIP extends eqLogic {
 		}
 	}	
 	private function CreateConnexion(){
-		$cache = cache::byKey('clientSIP::Port::'.$this->getId());
+		//$cache = cache::byKey('clientSIP::Port::'.$this->getId());
 		$this->_Host=config::byKey('Host', 'clientSIP');
 		$this->_Port=config::byKey('Port', 'clientSIP');
 		$this->_Username=$this->getConfiguration("Username");
 		$this->_Password=$this->getConfiguration("Password");
 		if($this->_sip == null){
-			$this->_sip = new sip($this,network ::getNetworkAccess('internal', 'ip', '', false),$cache->getValue(''));
+			$this->_sip = new sip($this,network ::getNetworkAccess('internal', 'ip', '', false),$this->getConfiguration("Port"));
 			if($this->getConfiguration("Proxy")!="") 
 				$this->_sip->setProxy($this->getConfiguration("Proxy"));
 			$this->_sip->setUsername($this->_Username);
@@ -191,7 +191,7 @@ class clientSIP extends eqLogic {
 			$this->checkAndUpdateCmd('RegStatus','OK');
 		else
 			$this->checkAndUpdateCmd('RegStatus','Echec');			
-		cache::set('clientSIP::Port::'.$this->getId(), $this->_sip->getSrcPort(), 0);
+		//cache::set('clientSIP::Port::'.$this->getId(), $this->_sip->getSrcPort(), 0);
 	}
 	public function RepondreAppel() {
 		$call['status']='ringing'; 
