@@ -33,9 +33,11 @@ class clientSIP extends eqLogic {
 		$return['state'] = 'nok';
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
 			if($clientSIP->getIsEnable()){
-				$cron = cron::byClassAndFunction('clientSIP', 'ConnectSip', array('id' => $clientSIP->getId()));
-				if (!is_object($cron))  	
-					return $return;
+				if($clientSIP->getConfiguration("Expiration") != ''){
+					$cron = cron::byClassAndFunction('clientSIP', 'ConnectSip', array('id' => $clientSIP->getId()));
+					if (!is_object($cron))  	
+						return $return;
+				}
 				$cron = cron::byClassAndFunction('clientSIP', 'WaitCall', array('id' => $clientSIP->getId()));
 				if (!is_object($cron) || !$cron->running()) 	
 					return $return;
@@ -60,8 +62,10 @@ class clientSIP extends eqLogic {
 		$cache->remove();
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
 			if($clientSIP->getIsEnable()){
-				$minute=round($clientSIP->getConfiguration("Expiration")/60,0);
-				$clientSIP->CreateDemon('ConnectSip','*/'.$minute.' * * * *',false);   
+				if($clientSIP->getConfiguration("Expiration") != ''){
+					$minute=round($clientSIP->getConfiguration("Expiration")/60,0);
+					$clientSIP->CreateDemon('ConnectSip','*/'.$minute.' * * * *',false); 
+				}
 				$clientSIP->CreateDemon('WaitCall','* * * * * *',true);   
 				$clientSIP->CreateDemon('WaitMessage','* * * * * *',true);   
 			}
@@ -71,9 +75,11 @@ class clientSIP extends eqLogic {
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
 			$clientSIP->checkAndUpdateCmd('RegStatus','Inactif');
 			$clientSIP->checkAndUpdateCmd('CallStatus','Racrocher');
-			$cron = cron::byClassAndFunction('clientSIP', 'ConnectSip', array('id' => $clientSIP->getId()));
-			if (is_object($cron)) 	
-				$cron->remove();
+			if($clientSIP->getConfiguration("Expiration") != ''){
+				$cron = cron::byClassAndFunction('clientSIP', 'ConnectSip', array('id' => $clientSIP->getId()));
+				if (is_object($cron)) 	
+					$cron->remove();
+			}
 			$cron = cron::byClassAndFunction('clientSIP', 'WaitCall', array('id' => $clientSIP->getId()));
 			if (is_object($cron)) 	
 				$cron->remove();
