@@ -8,5 +8,6 @@
 	"category" : "communication",
 	"hasOwnDeamon" : true,
 	"compatibility" : ["miniplus","smart","rpi","docker","diy","mobile"],
- 	"documentation" : "https://mika-nt28.github.io/Jeedom-clientSIP/"
+ 	"documentation" : "https://mika-nt28.github.io/Jeedom-clientSIP/",
+	"changelog" : "https://mika-nt28.github.io/Jeedom-clientSIP/"
 }
