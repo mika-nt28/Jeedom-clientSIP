@@ -116,15 +116,9 @@
 					.append($('<option value="ulaw">').text('u-law'))
 					.append($('<option value="alaw">').text('a-law'))
 					.append($('<option value="gsm">').text('GSM'))
-					.append($('<option value="ilbc">').text('ILBC'))
-					.append($('<option value="speex">').text('SPEEX'))
-					.append($('<option value="g726">').text('G.726'))
-					.append($('<option value="adpcm">').text('ADPCM'))
-					.append($('<option value="lpc10">').text('LPC10'))
 					.append($('<option value="g729">').text('G.729'))
 					.append($('<option value="g723">').text('G.723'))
 					.append($('<option value="h263">').text('H.263'))
-					.append($('<option value="h263p">').text('H.263p'))
 					.append($('<option value="h264">').text('H.264')))));
 		_el.append(tr);
 		_el.find('tr:last').setValues(data, '.configKey');
