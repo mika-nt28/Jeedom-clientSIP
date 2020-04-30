@@ -231,6 +231,52 @@ class sip{
 			$this->to = '<'.$to.'>';
 		}
 	}
+	private function clientSDP(){
+		$SDP ="v=0\r\n";
+		$SDP = "s=".$this->jeedom->getName()." Audio Session";
+		$SDP.= "c=IN IP4 ".$this->src_ip."\r\n";
+		$SDP.= "t=0 0\r\n";
+		$a='';
+		$audio= "m=audio 45450 RTP/AVP";
+		$video= "m=video 45450 RTP/AVP";
+		$CodecList=config::byKey('codec', 'clientSIP');
+		for($loop=0;$loop < count($CodecList);$loop++){
+			switch($CodecList['type'][$loop]){
+				case "ulaw":
+					$audio.= " 0";
+					$a.= "a=rtpmap:0 PCMU/8000\r\n";
+				break;
+				case "alaw":
+					$audio.= " 8";
+           				$a.= "a=rtpmap:8 PCMA/8000\r\n";
+				break;
+				case "gsm":
+					$audio.= " 3";
+           				$a.= "a=rtpmap:3 GSM/8000\r\n";
+				break;
+				case "g729":
+					$audio.= " 18";
+           				$a.= "a=rtpmap:18 G729/8000\r\n";
+				break;
+				case "g723":
+					$audio.= " 4";
+           				$a.= "a=rtpmap:4 G723/8000\r\n";
+				break;
+				case "h263":
+					$video.= " 34";
+           				$a.= "a=rtpmap:34 H263/8000\r\n";
+				break;
+				case "h264">:
+					$video.= " 35";
+           				$a.= "a=rtpmap:35 H264/90000\r\n";
+				break;
+			}
+		}
+		$SDP.= $audio."\r\n";
+		$SDP.= $video."\r\n";
+		$SDP.= $a;
+		return $SDP;
+	}
 	public function setMethod($method){
 		if (!in_array($method,$this->allowed_methods)){
 			log::add('clientSIP','error','Invalid method.');
@@ -238,24 +284,7 @@ class sip{
 		}
 		$this->method = $method;
 		if ($method == 'INVITE'){
-			$body = "v=0\r\n";
-			//$body.= "o=click2dial 0 0 IN IP4 ".$this->src_ip."\r\n";
-			//$body.= "s=click2dial call\r\n";
-			$body.= "c=IN IP4 ".$this->src_ip."\r\n";
-			// $body.= "t=0 0\r\n";
-		/*	$body.= " m = audio 45450 RTP/AVP";
-			$CodecString = "";
-			$CodecList=config::byKey('codec', 'clientSIP');
-			for($loop=0;$loop < count($CodecList);$loop++){
-				$body.= " ".$loop;
-				$CodecString.= "a=rtpmap:".$loop." ".$CodecList['type'][$loop]."/".$CodecList['port'][$loop]."\r\n";
-			}
-			$body.= "\r\n";
-			$body.=  $CodecString."\r\n"; */
-          	$body.= "m=audio 45450 RTP/AVP 0 8\r\n";
-			$body.= "a=rtpmap:0 PCMU/8000\r\n";
-            $body.= "a=rtpmap:8 PCMA/8000\r\n";
-			$this->body = $body;
+			$this->body = $this->clientSDP();
 			$this->setContentType(null);
 		}
 		if ($method == 'REFER')	{
