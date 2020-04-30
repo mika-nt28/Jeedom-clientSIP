@@ -37,7 +37,6 @@
 						<thead>
 							<tr>
 								<th>{{Type}}</th>
-								<th>{{Port}}</th>
 							</tr>
 						</thead>
 						<tbody></tbody>
@@ -127,8 +126,6 @@
 					.append($('<option value="h263">').text('H.263'))
 					.append($('<option value="h263p">').text('H.263p'))
 					.append($('<option value="h264">').text('H.264')))));
-		tr.append($('<td>')
-			.append($('<input class="configKey form-control input-sm" data-l1key="codec" data-l2key="port">')));
 		_el.append(tr);
 		_el.find('tr:last').setValues(data, '.configKey');
 	}
