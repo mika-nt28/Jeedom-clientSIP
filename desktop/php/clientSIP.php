@@ -202,20 +202,53 @@ $eqLogics = eqLogic::byType($plugin->getId());
 						<legend>Options</legend>
 						<fieldset>
 							<div class="form-group">
-								<label class="col-sm-3 control-label">{{Equipement TTS}}
-									<sup>
-										<i class="fa fa-question-circle tooltips" title="{{Séléctionner un equipipement PlayTTS qui permettera a jeedom de lire vos messages}}"></i>
-									</sup>
-								</label>
-								<div class="col-sm-5">
-									<div class="input-group">
-										<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="PlayTTS" placeholder="{{Equipement PlayTTS}}"/>
-										<span class="input-group-btn">
-											<a class="btn btn-success btn-sm listEquipement">
-												<i class="fa fa-list-alt"></i>
-											</a>
-										</span>
-									</div>
+								<label class="col-sm-3 control-label">{{Langue}}</label>
+								<div class="col-sm-3">
+									<select id="sel_object" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="lang">
+										<option value="">{{Aucun}}</option>
+										<option value="af-ZA">Afrikaans</option>
+										<option value="sq-AL">Albanian</option>
+										<option value="ar-YE">Arabic</option>
+										<option value="hy-AM">Armenian</option>
+										<option value="ca-ES">Catalan</option>
+										<option value="zh-CN">Mandarin (simplified)</option>
+										<option value="zh-TW">Mandarin (traditional)</option>
+										<option value="hr-HR">Croatian</option>
+										<option value="cs-CZ">Czech</option>
+										<option value="da-DK">Danish</option>
+										<option value="nl-NL">Dutch</option>
+										<option value="en-GB">English</option>
+										<option value="en-us">English (United States)</option>
+										<option value="en-au">English (Australia)</option>
+										<option value="fi-FI">Finnish</option>
+										<option value="fr-FR">French</option>
+										<option value="de-DE">German</option>
+										<option value="el-GR">Greek</option>
+										<option value="hi-IN">Hindi</option>
+										<option value="hu-HU">Hungarian</option>
+										<option value="is-IS">Icelandic</option>
+										<option value="id-ID">Indonesian</option>
+										<option value="it-IT">Italian</option>
+										<option value="ja-JP">Japanese</option>
+										<option value="ko-KR">Korean</option>
+										<option value="lv-LV">Latvian</option>
+										<option value="mk-MK">Macedonian</option>
+										<option value="no-NO">Norwegian</option>
+										<option value="pl-PL">Polish</option>
+										<option value="pt-PT">Portuguese</option>
+										<option value="ro-RO">Romanian</option>
+										<option value="ru-RU">Russian</option>
+										<option value="sr-SP">Serbian</option>
+										<option value="sk-SK">Slovak</option>
+										<option value="es-ES">Spanish</option>
+										<option value="sw-KE">Swahili</option>
+										<option value="sv-SE">Swedish</option>
+										<option value="ta-IN">Tamil</option>
+										<option value="th-TH">Thai</option>
+										<option value="tr-TR">Turkish</option>
+										<option value="vi-VN">Vietnamese</option>
+										<option value="cy-GB">Welsh</option>
+									</select>
 								</div>
 							</div>
 						</fieldset> 
