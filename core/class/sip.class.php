@@ -236,45 +236,15 @@ class sip{
 		$SDP = "s=".$this->jeedom->getName()." Audio Session";
 		$SDP.= "c=IN IP4 ".$this->src_ip."\r\n";
 		$SDP.= "t=0 0\r\n";
-		$a='';
-		$audio= "m=audio 45450 RTP/AVP";
-		$video= "m=video 45450 RTP/AVP";
-		$CodecList=config::byKey('codec', 'clientSIP');
-		for($loop=0;$loop < count($CodecList);$loop++){
-			switch($CodecList['type'][$loop]){
-				case "ulaw":
-					$audio.= " 0";
-					$a.= "a=rtpmap:0 PCMU/8000\r\n";
-				break;
-				case "alaw":
-					$audio.= " 8";
-           				$a.= "a=rtpmap:8 PCMA/8000\r\n";
-				break;
-				case "gsm":
-					$audio.= " 3";
-           				$a.= "a=rtpmap:3 GSM/8000\r\n";
-				break;
-				case "g729":
-					$audio.= " 18";
-           				$a.= "a=rtpmap:18 G729/8000\r\n";
-				break;
-				case "g723":
-					$audio.= " 4";
-           				$a.= "a=rtpmap:4 G723/8000\r\n";
-				break;
-				case "h263":
-					$video.= " 34";
-           				$a.= "a=rtpmap:34 H263/8000\r\n";
-				break;
-				case "h264">:
-					$video.= " 35";
-           				$a.= "a=rtpmap:35 H264/90000\r\n";
-				break;
-			}
-		}
-		$SDP.= $audio."\r\n";
-		$SDP.= $video."\r\n";
-		$SDP.= $a;
+		$SDP.= "m=audio 45450 RTP/AVP 0 3 4 8 19\r\n";
+		$SDP.= "a=rtpmap:0 PCMU/8000\r\n";
+		$SDP.= "a=rtpmap:3 GSM/8000\r\n";
+           	$SDP.= "a=rtpmap:4 G723/8000\r\n";
+		$SDP.= "a=rtpmap:8 PCMA/8000\r\n";
+		$SDP.= "a=rtpmap:18 G729/8000\r\n";
+		$SDP.= "m=video 45450 RTP/AVP 34\r\n";
+		$SDP.= "a=rtpmap:34 H263/8000\r\n";
+		//$SDP.= "a=rtpmap:35 H264/90000\r\n";
 		return $SDP;
 	}
 	public function setMethod($method){
