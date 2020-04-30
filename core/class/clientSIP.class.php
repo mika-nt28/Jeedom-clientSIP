@@ -324,6 +324,18 @@ class clientSIP extends eqLogic {
 		$Commande->save();
 		return $Commande;
 	}
+	public function TextToSpeach($Texte) {
+		$SpeachFile = '/tmp/' . hash('md5', $Texte) . '.mp3';
+		if (!file_exists($SpeachFile)) {
+			$lang = $this->getConfiguration('lang');
+			if ($lang == '') {
+				$lang == 'fr-FR';
+			}
+			exec("pico2wave -l " . $lang . " -w /tmp/voice.wav \"" . $Texte . "\"");
+			exec("sox /tmp/voice.wav -r 48k " . $SpeachFile);
+		}	
+		return file_get_contents($SpeachFile);
+	}
 }
 class clientSIPCmd extends cmd {
 	public function execute($_options = null){
