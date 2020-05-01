@@ -10,7 +10,7 @@ class clientSIP extends eqLogic {
 	public static function dependancy_info() {
 		$return = array();
 		$return['log'] = log::getPathToLog(__CLASS__ . '_update');
-		$cmd = "dpkg -l | grep mplayer";
+		$cmd = "dpkg -l | grep libttspico-utils";
 		exec($cmd, $output, $return_var);
 		if (isset($output[0])) {
 			if (`which pico2wave`) {
