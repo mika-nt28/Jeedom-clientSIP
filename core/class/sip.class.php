@@ -232,7 +232,8 @@ class sip{
 		}
 	}
 	private function clientSDP(){
-		$SDP ="v=0\r\n";
+		$SDP = "v=0\r\n";
+		$SDP = "o=".$this->jeedom->getName()." ".$this->session_id." ".$this->call_id." IN IP4 ".$this->cseq."\r\n";
 		$SDP = "s=".$this->jeedom->getName()." Audio Session\r\n";
 		$SDP.= "c=IN IP4 ".$this->src_ip."\r\n";
 		$SDP.= "t=0 0\r\n";
