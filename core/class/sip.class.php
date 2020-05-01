@@ -242,8 +242,8 @@ class sip{
            	$SDP.= "a=rtpmap:4 G723/8000\r\n";
 		$SDP.= "a=rtpmap:8 PCMA/8000\r\n";
 		$SDP.= "a=rtpmap:18 G729/8000\r\n";
-		$SDP.= "m=video 45450 RTP/AVP 34\r\n";
-		$SDP.= "a=rtpmap:34 H263/8000\r\n";
+		//$SDP.= "m=video 45450 RTP/AVP 34\r\n";
+		//$SDP.= "a=rtpmap:34 H263/8000\r\n";
 		//$SDP.= "a=rtpmap:35 H264/90000\r\n";
 		return $SDP;
 	}
