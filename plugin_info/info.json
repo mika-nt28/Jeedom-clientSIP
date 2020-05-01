@@ -6,8 +6,9 @@
 	"author" : "Halbout Michael",
 	"require" : "3.0",
 	"category" : "communication",
-	"hasOwnDeamon" : true,
+	"hasDependency" : true,
+ 	"hasOwnDeamon" : true,
 	"compatibility" : ["miniplus","smart","rpi","docker","diy","mobile","v4"],
- 	"documentation" : "https://mika-nt28.github.io/Documentations/clientSIP/",
-	"changelog" : "https://mika-nt28.github.io/Documentations/clientSIP/changelog"
+ 	"documentation" : "https://mika-nt28.github.io/Documentations/clientSIP/#language#/",
+	"changelog" : "https://mika-nt28.github.io/Documentations/clientSIP/#language#/changelog"
 }

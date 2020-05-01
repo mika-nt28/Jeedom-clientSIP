@@ -9,8 +9,8 @@ class clientSIP extends eqLogic {
 	protected $_Password= null;
 	public static function dependancy_info() {
 		$return = array();
-		$return['log'] = 'clientSIP';
-		$cmd = "dpkg -l | grep mplayer";
+		$return['log'] = log::getPathToLog(__CLASS__ . '_update');
+		$cmd = "dpkg -l | grep libttspico-utils";
 		exec($cmd, $output, $return_var);
 		if (isset($output[0])) {
 			if (`which pico2wave`) {
@@ -21,10 +21,12 @@ class clientSIP extends eqLogic {
 		} else {
 			$return['state'] = 'nok';
 		}
+		$return['progress_file'] = jeedom::getTmpFolder('clientSIP') . '/compilation_in_progress';
 		return $return;
 	}
 	public static function dependancy_install() {
-		passthru('/bin/bash ' . realpath(dirname(__FILE__)) . '/../../resources/install.sh ' . realpath(dirname(__FILE__)) . '/../../resources/ > ' . log::getPathToLog('clientSIP') . ' 2>&1 &');
+		log::remove(__CLASS__ . '_update');
+		return array('script' => dirname(__FILE__) . '/../../resources/install.sh ' . jeedom::getTmpFolder('clientSIP') . '/compilation_in_progress', 'log' => log::getPathToLog(__CLASS__ . '_update'));
 	}
 	public static function deamon_info() {
 		$return = array();
@@ -323,6 +325,18 @@ class clientSIP extends eqLogic {
 		}
 		$Commande->save();
 		return $Commande;
+	}
+	public function TextToSpeach($Texte) {
+		$SpeachFile = '/tmp/' . hash('md5', $Texte) . '.mp3';
+		if (!file_exists($SpeachFile)) {
+			$lang = $this->getConfiguration('lang');
+			if ($lang == '') {
+				$lang == 'fr-FR';
+			}
+			exec("pico2wave -l " . $lang . " -w /tmp/voice.wav \"" . $Texte . "\"");
+			exec("sox /tmp/voice.wav -r 48k " . $SpeachFile);
+		}	
+		return file_get_contents($SpeachFile);
 	}
 }
 class clientSIPCmd extends cmd {

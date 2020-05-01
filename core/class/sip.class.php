@@ -231,6 +231,23 @@ class sip{
 			$this->to = '<'.$to.'>';
 		}
 	}
+	private function clientSDP(){
+		$SDP = "v=0\r\n";
+		$SDP .= "o=".$this->jeedom->getName()." ".$this->session_id." ".$this->call_id." IN IP4 ".$this->cseq."\r\n";
+		$SDP .= "s=".$this->jeedom->getName()." Audio Session\r\n";
+		$SDP .= "c=IN IP4 ".$this->src_ip."\r\n";
+		$SDP .= "t=0 0\r\n";
+		$SDP .= "m=audio 45450 RTP/AVP 0 3 4 8 19\r\n";
+		$SDP .= "a=rtpmap:0 PCMU/8000\r\n";
+		$SDP .= "a=rtpmap:3 GSM/8000\r\n";
+           	$SDP .= "a=rtpmap:4 G723/8000\r\n";
+		$SDP .= "a=rtpmap:8 PCMA/8000\r\n";
+		$SDP .= "a=rtpmap:18 G729/8000\r\n";
+		//$SDP .= "m=video 45450 RTP/AVP 34\r\n";
+		//$SDP .= "a=rtpmap:34 H263/8000\r\n";
+		//$SDP .= "a=rtpmap:35 H264/90000\r\n";
+		return $SDP;
+	}
 	public function setMethod($method){
 		if (!in_array($method,$this->allowed_methods)){
 			log::add('clientSIP','error','Invalid method.');
@@ -238,24 +255,7 @@ class sip{
 		}
 		$this->method = $method;
 		if ($method == 'INVITE'){
-			$body = "v=0\r\n";
-			//$body.= "o=click2dial 0 0 IN IP4 ".$this->src_ip."\r\n";
-			//$body.= "s=click2dial call\r\n";
-			$body.= "c=IN IP4 ".$this->src_ip."\r\n";
-			// $body.= "t=0 0\r\n";
-		/*	$body.= " m = audio 45450 RTP/AVP";
-			$CodecString = "";
-			$CodecList=config::byKey('codec', 'clientSIP');
-			for($loop=0;$loop < count($CodecList);$loop++){
-				$body.= " ".$loop;
-				$CodecString.= "a=rtpmap:".$loop." ".$CodecList['type'][$loop]."/".$CodecList['port'][$loop]."\r\n";
-			}
-			$body.= "\r\n";
-			$body.=  $CodecString."\r\n"; */
-          	$body.= "m=audio 45450 RTP/AVP 0 8\r\n";
-			$body.= "a=rtpmap:0 PCMU/8000\r\n";
-            $body.= "a=rtpmap:8 PCMA/8000\r\n";
-			$this->body = $body;
+			$this->body = $this->clientSDP();
 			$this->setContentType(null);
 		}
 		if ($method == 'REFER')	{
