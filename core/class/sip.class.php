@@ -233,19 +233,19 @@ class sip{
 	}
 	private function clientSDP(){
 		$SDP = "v=0\r\n";
-		$SDP = "o=".$this->jeedom->getName()." ".$this->session_id." ".$this->call_id." IN IP4 ".$this->cseq."\r\n";
-		$SDP = "s=".$this->jeedom->getName()." Audio Session\r\n";
-		$SDP.= "c=IN IP4 ".$this->src_ip."\r\n";
-		$SDP.= "t=0 0\r\n";
-		$SDP.= "m=audio 45450 RTP/AVP 0 3 4 8 19\r\n";
-		$SDP.= "a=rtpmap:0 PCMU/8000\r\n";
-		$SDP.= "a=rtpmap:3 GSM/8000\r\n";
-           	$SDP.= "a=rtpmap:4 G723/8000\r\n";
-		$SDP.= "a=rtpmap:8 PCMA/8000\r\n";
-		$SDP.= "a=rtpmap:18 G729/8000\r\n";
-		//$SDP.= "m=video 45450 RTP/AVP 34\r\n";
-		//$SDP.= "a=rtpmap:34 H263/8000\r\n";
-		//$SDP.= "a=rtpmap:35 H264/90000\r\n";
+		$SDP .= "o=".$this->jeedom->getName()." ".$this->session_id." ".$this->call_id." IN IP4 ".$this->cseq."\r\n";
+		$SDP .= "s=".$this->jeedom->getName()." Audio Session\r\n";
+		$SDP .= "c=IN IP4 ".$this->src_ip."\r\n";
+		$SDP .= "t=0 0\r\n";
+		$SDP .= "m=audio 45450 RTP/AVP 0 3 4 8 19\r\n";
+		$SDP .= "a=rtpmap:0 PCMU/8000\r\n";
+		$SDP .= "a=rtpmap:3 GSM/8000\r\n";
+           	$SDP .= "a=rtpmap:4 G723/8000\r\n";
+		$SDP .= "a=rtpmap:8 PCMA/8000\r\n";
+		$SDP .= "a=rtpmap:18 G729/8000\r\n";
+		//$SDP .= "m=video 45450 RTP/AVP 34\r\n";
+		//$SDP .= "a=rtpmap:34 H263/8000\r\n";
+		//$SDP .= "a=rtpmap:35 H264/90000\r\n";
 		return $SDP;
 	}
 	public function setMethod($method){
