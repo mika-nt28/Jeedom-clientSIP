@@ -22,7 +22,6 @@ class SpaServer{
 		$this->_createSocket();
 		$this->_bindSocket();
 		$this->CreateSipConnexion();
-		$this->RegisterClient();
 	}
 	private function CreateSipConnexion(){
 		$this->_Host=config::byKey('Host', 'clientSIP');
@@ -223,6 +222,9 @@ class SpaServer{
 		while(true){
 			$Read = json_decode($client->read());
 			switch($Read['action']){
+				case 'RegisterClient':
+					$this->RegisterClient();
+				break;	
 				case 'sendMessage':
 					$this->sendMessage($Read['$number'],$Read['$message']);
 				break;					
