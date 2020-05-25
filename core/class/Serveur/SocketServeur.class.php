@@ -5,12 +5,10 @@ ini_set('error_reporting', E_ALL ^ E_NOTICE);
 ini_set('display_errors', 1);
 set_time_limit(0);
 ob_implicit_flush();
-class SpaServer{
+class SocketServeur{
 	protected $sockServer;
-	protected $SpaSock;
 	protected $HostServer;
 	protected $Port;
-	protected $HostSpa;
 	protected $_listenLoop;
 	private $clients = [];
 	
