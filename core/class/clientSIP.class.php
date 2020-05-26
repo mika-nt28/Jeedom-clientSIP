@@ -1,6 +1,5 @@
 <?php
 require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
-include_file('core', 'sip', 'class', 'clientSIP');
 include_file('core', 'Serveur/SocketServeur', 'class', 'clientSIP');
 class clientSIP extends eqLogic {
   	public static function dependancy_info() {
@@ -51,7 +50,6 @@ class clientSIP extends eqLogic {
 		return $return;
 	}
 	public static function deamon_start($_debug = false) {
-		unlink("/tmp/PhpSIP.lock");
 		log::remove('clientSIP');
 		self::deamon_stop();
 		$deamon_info = self::deamon_info();
@@ -104,18 +102,16 @@ class clientSIP extends eqLogic {
           		$Server->listen();
 		}
 	}
-	private function _createSocket() {		
+	private function _createSocket(){ 
 		$HostServer = '127.0.0.1';
 		$PortServer = $this->getConfiguration("Port") * 10;
+		set_time_limit(0);
 		$this->sockServer = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 		if( $this->sockServer === false ) 
 			throw new Exception(__(' {{[Serveur] Impossible de créer le service verifier votre configuration => '.$HostServer.':'.$PortServer.'}}', __FILE__));
-		socket_set_option($this->sockServer, SOL_SOCKET, SO_REUSEADDR, 1);
+		socket_connect($this->sockServer, $HostServer,$PortServer);
 		if(is_resource($this->sockServer))
 			log::add('clientSIP','debug',"[Serveur] Creation d'un serveur de connexion => ".$HostServer.':'.$PortServer);
-		if( socket_bind($this->sockServer, $HostServer, $PortServer) === false ) 
-			throw new Exception(__(' {{[Serveur] Impossible de binder le serveur de connexion => '.$HostServer.':'.$PortServer.'}}', __FILE__));
-
 	}
 	private function _closeSocket(){
 		$HostServer = '127.0.0.1';
@@ -177,7 +173,7 @@ class clientSIP extends eqLogic {
 			$clientSIP->_createSocket();
 			$_options['action']='RegisterClient';
 			$message = json_encode($_options);	
-			$reponse =socket_write($this->sockServer, $message, strlen($message));
+			$reponse =socket_write($clientSIP->sockServer, $message, strlen($message));
 			$clientSIP->_closeSocket();
 		}
 	}
@@ -187,7 +183,9 @@ class clientSIP extends eqLogic {
 			$clientSIP->_createSocket();
 			$_options['action']='WaitCall';
 			$message = json_encode($_options);	
-			$reponse =socket_write($this->sockServer, $message, strlen($message));
+			$reponse =socket_write($clientSIP->sockServer, $message, strlen($message));
+			while(true)
+				sleep(60);
 			$clientSIP->_closeSocket();
 		}
 	}	
@@ -197,7 +195,9 @@ class clientSIP extends eqLogic {
 			$clientSIP->_createSocket();
 			$_options['action']='WaitMessage';
 			$message = json_encode($_options);	
-			$reponse =socket_write($this->sockServer, $message, strlen($message));
+			$reponse =socket_write($clientSIP->sockServer, $message, strlen($message));
+			while(true)
+				sleep(60);
 			$clientSIP->_closeSocket();
 		}
 	}
