@@ -21,7 +21,7 @@ class SocketServeur{
 		$this->_bindSocket();
 		$this->CreateSipConnexion();
 	}
-	public function __construct($Jeedom) {
+	public function __destruct() {
 		unlink("/tmp/PhpSIP.lock");
 	}
 	private function CreateSipConnexion(){
