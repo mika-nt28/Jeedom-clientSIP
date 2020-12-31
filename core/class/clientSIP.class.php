@@ -2,28 +2,7 @@
 require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
 include_file('core', 'Serveur/SocketServeur', 'class', 'clientSIP');
 class clientSIP extends eqLogic {
-  	public static function dependancy_info() {
-		$return = array();
-		$return['log'] = log::getPathToLog(__CLASS__ . '_update');
-		$cmd = "dpkg -l | grep libttspico-utils";
-		exec($cmd, $output, $return_var);
-		if (isset($output[0])) {
-			if (`which pico2wave`) {
-				$return['state'] = 'ok';
-			} else {
-				$return['state'] = 'nok';
-			}
-		} else {
-			$return['state'] = 'nok';
-		}
-		$return['progress_file'] = jeedom::getTmpFolder('clientSIP') . '/compilation_in_progress';
-		return $return;
-	}
-	public static function dependancy_install() {
-		log::remove(__CLASS__ . '_update');
-		return array('script' => dirname(__FILE__) . '/../../resources/install.sh ' . jeedom::getTmpFolder('clientSIP') . '/compilation_in_progress', 'log' => log::getPathToLog(__CLASS__ . '_update'));
-	}
-	public static function deamon_info() {
+  	public static function deamon_info() {
 		$return = array();
 		$return['log'] = 'clientSIP';
 		$return['launchable'] = 'ok';
