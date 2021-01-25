@@ -21,9 +21,9 @@ class SocketServeur{
 		$this->_bindSocket();
 		$this->CreateSipConnexion();
 	}
-	public function __destruct() {
+/*	public function __destruct() {
 		unlink("/tmp/PhpSIP.lock");
-	}
+	}*/
 	private function CreateSipConnexion(){
 		$this->_Host=config::byKey('Host', 'clientSIP');
 		$this->_Port=config::byKey('Port', 'clientSIP');

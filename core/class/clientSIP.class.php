@@ -210,18 +210,6 @@ class clientSIP extends eqLogic {
 		$Commande->save();
 		return $Commande;
 	}
-	public function TextToSpeach($Texte) {
-		$SpeachFile = '/tmp/' . hash('md5', $Texte) . '.mp3';
-		if (!file_exists($SpeachFile)) {
-			$lang = $this->getConfiguration('lang');
-			if ($lang == '') {
-				$lang == 'fr-FR';
-			}
-			exec("pico2wave -l " . $lang . " -w /tmp/voice.wav \"" . $Texte . "\"");
-			exec("sox /tmp/voice.wav -r 48k " . $SpeachFile);
-		}	
-		return file_get_contents($SpeachFile);
-	}
 }
 class clientSIPCmd extends cmd {
 	public function execute($_options = null){
@@ -238,8 +226,20 @@ class clientSIPCmd extends cmd {
 				$message = json_encode($_options);	
 				$reponse =socket_write($this->getEqLogic()->sockServer, $message, strlen($message));
 			break;
+			default:
+				$this->TextToSpeach($_options['message']);
+			break;
 		}
 		$this->getEqLogic()->_closeSocket();
+	}
+	public function TextToSpeach($Texte) {
+		$SpeachFile = '/tmp/' . hash('md5', $Texte) . '.mp3';
+		if (!file_exists($SpeachFile)) {
+			$lang == 'fr-FR';
+			exec("pico2wave -l " . $lang . " -w /tmp/voice.wav \"" . $Texte . "\"");
+			exec("sox /tmp/voice.wav -r 48k " . $SpeachFile);
+		}	
+		return file_get_contents($SpeachFile);
 	}
 }
 ?>
