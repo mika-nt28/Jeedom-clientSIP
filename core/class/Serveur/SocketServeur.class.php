@@ -29,6 +29,7 @@ class SocketServeur{
 		$this->_Port=config::byKey('Port', 'clientSIP');
 		$this->_Username=$this->Jeedom->getConfiguration("Username");
 		$this->_Password=$this->Jeedom->getConfiguration("Password");
+		$this->_CallNumber=$this->Jeedom->getConfiguration("CallNumber");
 		if($this->_sip == null){
 			$this->_sip = new sip($this->Jeedom,network ::getNetworkAccess('internal', 'ip', '', false),$this->Jeedom->getConfiguration("Port"));
 			if($this->Jeedom->getConfiguration("Proxy")!="") 
@@ -45,8 +46,8 @@ class SocketServeur{
 		$this->_sip->setMethod('REGISTER');
 		if($this->Jeedom->getConfiguration("Proxy")!="") 
 			$this->_sip->setProxy($this->Jeedom->getConfiguration("Proxy"));
-		$this->_sip->setFrom('sip:'.$this->_Username.'@'.$this->_Host.':'.$this->_Port);
-		$this->_sip->setUri('sip:'.$this->_Username.'@'.$this->_Host.':'.$this->_Port.';transport='.$this->Jeedom->getConfiguration("transport"));
+		$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
+		$this->_sip->setUri('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port.';transport='.$this->Jeedom->getConfiguration("transport"));
 		$res = $this->_sip->send();
 		if ($res == '200')
 			$this->Jeedom->checkAndUpdateCmd('RegStatus','OK');
@@ -97,11 +98,11 @@ class SocketServeur{
 			$this->_sip->reply(487,'Request Terminated');
 			$this->_sip->reply(603,'Decline');
 			$this->_sip->setMethod('CANCEL');
-			$this->_sip->setFrom('sip:'.$this->_Username.'@'.$this->_Host);
+			$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host);
 			$this->_sip->send();
 		}else{
 			$this->_sip->setMethod('BYE');
-			$this->_sip->setFrom('sip:'.$this->_Username.'@'.$this->_Host);
+			$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host);
 			$this->_sip->send();
 		}
 		$this->Jeedom->checkAndUpdateCmd('CallStatus','Racrocher');
@@ -122,7 +123,7 @@ class SocketServeur{
 		$this->_sip->setUsername($this->_Username);
 		$this->_sip->setPassword($this->_Password);
 		$this->_sip->newCall();
-		$this->_sip->setFrom('sip:'.$this->_Username.'@'.$this->_Host);
+		$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host);
 		$this->_sip->setUri('sip:'.$number.'@'.$this->_Host.':'.$this->_Port.';transport='.$this->Jeedom->getConfiguration("transport"));
 		$this->_sip->setTo('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setMethod('INVITE');
@@ -134,7 +135,7 @@ class SocketServeur{
 		$this->_sip->setUsername($this->_Username);
 		$this->_sip->setPassword($this->_Password);
 		$this->_sip->newCall();
-		$this->_sip->setFrom('sip:'.$this->_Username.'@'.$this->_Host);
+		$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host);
 		$this->_sip->setUri('sip:'.$number.'@'.$this->_Host.':'.$this->_Port.';transport='.$this->Jeedom->getConfiguration("transport"));
 		$this->_sip->setTo('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setBody($message);
