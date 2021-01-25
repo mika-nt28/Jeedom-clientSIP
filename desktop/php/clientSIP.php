@@ -142,7 +142,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									</sup>
 								</label>
 								<div class="col-sm-3">
-									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="Port" placeholder="{{Port de connexion}}"/>
+									<input type="number" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="Port" placeholder="{{Port de connexion}}"/>
 								</div>
 							</div>
 							<div class="form-group">
@@ -154,6 +154,17 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								</label>
 								<div class="col-sm-3">
 									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="Proxy" placeholder="{{Proxy}}"/>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label" >
+									{{Numéro de téléphone}}
+									<sup>
+										<i class="fa fa-question-circle tooltips" title="{{Saisir le numéro de téléphone  de se client}}"></i>
+									</sup>
+								</label>
+								<div class="col-sm-3">
+									<input type="number" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="CallNumber" placeholder="{{Numero de téléphone}}"/>
 								</div>
 							</div>
 							<div class="form-group">
