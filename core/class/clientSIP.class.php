@@ -246,11 +246,11 @@ class clientSIP extends eqLogic {
 			$this->_sip->reply(487,'Request Terminated');
 			$this->_sip->reply(603,'Decline');
 			$this->_sip->setMethod('CANCEL');
-			$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host);
+			$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
 			$this->_sip->send();
 		}else{
 			$this->_sip->setMethod('BYE');
-			$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host);
+			$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
 			$this->_sip->send();
 		}
 		$this->checkAndUpdateCmd('CallStatus','Racrocher');
@@ -272,7 +272,7 @@ class clientSIP extends eqLogic {
 		$this->_sip->setUsername($this->_Username);
 		$this->_sip->setPassword($this->_Password);
 		$this->_sip->newCall();
-		$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host);
+		$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setUri('sip:'.$number.'@'.$this->_Host.':'.$this->_Port.';transport='.$this->getConfiguration("transport"));
 		$this->_sip->setTo('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setMethod('INVITE');
@@ -285,7 +285,7 @@ class clientSIP extends eqLogic {
 		$this->_sip->setUsername($this->_Username);
 		$this->_sip->setPassword($this->_Password);
 		$this->_sip->newCall();
-		$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host);
+		$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setUri('sip:'.$number.'@'.$this->_Host.':'.$this->_Port.';transport='.$this->getConfiguration("transport"));
 		$this->_sip->setTo('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setBody($message);
