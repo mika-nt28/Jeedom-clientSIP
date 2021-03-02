@@ -7,6 +7,7 @@ class clientSIP extends eqLogic {
 	protected $_Port=null;
 	protected $_Username= null;
 	protected $_Password= null;
+	protected $_CallNumber= null;
 	public static function dependancy_info() {
 		$return = array();
 		$return['log'] = log::getPathToLog(__CLASS__ . '_update');
@@ -173,6 +174,7 @@ class clientSIP extends eqLogic {
 		//$cache = cache::byKey('clientSIP::Port::'.$this->getId());
 		$this->_Host=config::byKey('Host', 'clientSIP');
 		$this->_Port=config::byKey('Port', 'clientSIP');
+		$this->_CallNumber=$this->getConfiguration("CallNumber");
 		$this->_Username=$this->getConfiguration("Username");
 		$this->_Password=$this->getConfiguration("Password");
 		if($this->_sip == null){
@@ -192,8 +194,8 @@ class clientSIP extends eqLogic {
 		$this->_sip->setMethod('REGISTER');
 		if($this->getConfiguration("Proxy")!="") 
 			$this->_sip->setProxy($this->getConfiguration("Proxy"));
-		$this->_sip->setFrom('sip:'.$this->_Username.'@'.$this->_Host.':'.$this->_Port);
-		$this->_sip->setUri('sip:'.$this->_Username.'@'.$this->_Host.':'.$this->_Port.';transport='.$this->getConfiguration("transport"));
+		$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
+		$this->_sip->setUri('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port.';transport='.$this->getConfiguration("transport"));
 		$res = $this->_sip->send();
 		if ($res == '200')
 			$this->checkAndUpdateCmd('RegStatus','OK');
@@ -244,11 +246,11 @@ class clientSIP extends eqLogic {
 			$this->_sip->reply(487,'Request Terminated');
 			$this->_sip->reply(603,'Decline');
 			$this->_sip->setMethod('CANCEL');
-			$this->_sip->setFrom('sip:'.$this->_Username.'@'.$this->_Host);
+			$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
 			$this->_sip->send();
 		}else{
 			$this->_sip->setMethod('BYE');
-			$this->_sip->setFrom('sip:'.$this->_Username.'@'.$this->_Host);
+			$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
 			$this->_sip->send();
 		}
 		$this->checkAndUpdateCmd('CallStatus','Racrocher');
@@ -270,7 +272,7 @@ class clientSIP extends eqLogic {
 		$this->_sip->setUsername($this->_Username);
 		$this->_sip->setPassword($this->_Password);
 		$this->_sip->newCall();
-		$this->_sip->setFrom('sip:'.$this->_Username.'@'.$this->_Host);
+		$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setUri('sip:'.$number.'@'.$this->_Host.':'.$this->_Port.';transport='.$this->getConfiguration("transport"));
 		$this->_sip->setTo('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setMethod('INVITE');
@@ -283,7 +285,7 @@ class clientSIP extends eqLogic {
 		$this->_sip->setUsername($this->_Username);
 		$this->_sip->setPassword($this->_Password);
 		$this->_sip->newCall();
-		$this->_sip->setFrom('sip:'.$this->_Username.'@'.$this->_Host);
+		$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setUri('sip:'.$number.'@'.$this->_Host.':'.$this->_Port.';transport='.$this->getConfiguration("transport"));
 		$this->_sip->setTo('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setBody($message);
