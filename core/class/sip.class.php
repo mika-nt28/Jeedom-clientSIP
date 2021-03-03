@@ -796,6 +796,10 @@ class sip{
 		}
 		return $temp[1];
 	}
+	public function getRtsp(){
+		$rtsp='rtp://'.$this->src_ip.':'.$this->src_port;
+		return $rtsp;
+	}
 	private function auth(){
 		if (!$this->username){
 			log::add('clientSIP','error',"Missing username");
