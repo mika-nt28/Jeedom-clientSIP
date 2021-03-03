@@ -230,6 +230,7 @@ class clientSIP extends eqLogic {
 	public function Decrocher($call) {
 		//ajouter les options de compatibilité de jeedom
 		$this->_sip->reply(200,'Ok');
+		exec('ffmpeg -i '.$this->TextToSpeach("Test de communication de Jeedom sur une communication sip").' -f s16le -acodec pcm_s16le '.$this->_sip->getRtsp());
 		event::add('clientSIP::rtsp', $this->_sip->getBody());
 		$this->checkAndUpdateCmd('CallStatus','Appel en cours');
 		while($CallStatus->execCmd() == 'Appel en cours'){
@@ -338,7 +339,7 @@ class clientSIP extends eqLogic {
 			exec("pico2wave -l " . $lang . " -w /tmp/voice.wav \"" . $Texte . "\"");
 			exec("sox /tmp/voice.wav -r 48k " . $SpeachFile);
 		}	
-		return file_get_contents($SpeachFile);
+		return $SpeachFile;
 	}
 }
 class clientSIPCmd extends cmd {
