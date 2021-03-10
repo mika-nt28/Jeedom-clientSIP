@@ -811,7 +811,7 @@ class sip{
 		}
 		// realm
 		$m = array();
-		if (!preg_match('/^Proxy-Authenticate: .* realm="(.*)"/imU',$this->rx_msg, $m)){
+		if (!preg_match('/^Proxy-Authenticate: .*realm="(.*)"/imU',$this->rx_msg, $m)){
 			log::add('clientSIP','error',"Can't find realm in proxy-auth");
 			die();
 		}
