@@ -796,6 +796,10 @@ class sip{
 		}
 		return $temp[1];
 	}
+	public function getRtsp(){
+		$rtsp='rtp://'.$this->src_ip.':'.$this->src_port;
+		return $rtsp;
+	}
 	private function auth(){
 		if (!$this->username){
 			log::add('clientSIP','error',"Missing username");
@@ -807,7 +811,7 @@ class sip{
 		}
 		// realm
 		$m = array();
-		if (!preg_match('/^Proxy-Authenticate: .* realm="(.*)"/imU',$this->rx_msg, $m)){
+		if (!preg_match('/^Proxy-Authenticate: .*realm="(.*)"/imU',$this->rx_msg, $m)){
 			log::add('clientSIP','error',"Can't find realm in proxy-auth");
 			die();
 		}
