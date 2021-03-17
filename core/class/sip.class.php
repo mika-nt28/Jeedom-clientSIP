@@ -55,12 +55,12 @@ class sip{
 		$this->jeedom = $jeedom;
 		$this->socket_bind = $socket_bind;
 		if (!function_exists('socket_create')){
-			log::add('clientSIP','error',"socket_create() function missing.");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()." socket_create() function missing.");
 			die();
 		}
 		if ($src_ip){
 			if (!preg_match('/^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/', $src_ip)){
-				log::add('clientSIP','error',"Invalid src_ip $src_ip");
+				log::add('clientSIP','error',$this->jeedom->getHumanName()." Invalid src_ip $src_ip");
 				die();
 			}
 		}else{
@@ -71,7 +71,7 @@ class sip{
 				// running from command line
 				$addr = gethostbynamel(php_uname('n'));
 				if (!is_array($addr) || !isset($addr[0]) || substr($addr[0],0,3) == '127')	{
-					log::add('clientSIP','error',"Failed to obtain IP address to bind. Please set bind address manualy.");
+					log::add('clientSIP','error',$this->jeedom->getHumanName()." Failed to obtain IP address to bind. Please set bind address manualy.");
 					die();
 				}
 				$src_ip = $addr[0];
@@ -80,7 +80,7 @@ class sip{
 		$this->src_ip = $src_ip;
 		if ($src_port){
 			if (!preg_match('/^[0-9]+$/',$src_port)){
-				log::add('clientSIP','error',"Invalid src_port $src_port");
+				log::add('clientSIP','error',$this->jeedom->getHumanName(). " Invalid src_port $src_port");
 				die();
 			}
 			$this->src_port = $src_port;
@@ -88,7 +88,7 @@ class sip{
 		}
 		if ($fr_timer){
 			if (!preg_match('/^[0-9]+$/',$fr_timer)){
-				log::add('clientSIP','error',"Invalid fr_timer $fr_timer");
+				log::add('clientSIP','error',$this->jeedom->getHumanName()."Invalid fr_timer $fr_timer");
 				die();
 			}
 			$this->fr_timer = $fr_timer;
@@ -109,17 +109,17 @@ class sip{
 			return true;
 		}
 		if ($this->min_port > $this->max_port){
-			log::add('clientSIP','error',"Min port is bigger than max port.");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Min port is bigger than max port.");
 			die();
 		}
 		$fp = @fopen($this->lock_file, 'a+');
 		if (!$fp)	{
-			log::add('clientSIP','error',"Failed to open lock file ".$this->lock_file);
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Failed to open lock file ".$this->lock_file);
 			die();
 		}
 		$canWrite = flock($fp, LOCK_EX);
 		if (!$canWrite)	{
-			log::add('clientSIP','error',"Failed to lock a file in 1000 ms.");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Failed to lock a file in 1000 ms.");
 			die();
 		}
 		clearstatcache();
@@ -135,7 +135,7 @@ class sip{
 		if (!$ports){
 			// we are the first one to run, initialize "PID" => "port number" array
 			if (!fwrite($fp, $this->min_port)){
-				log::add('clientSIP','error',"Fail to write data to a lock file.");
+				log::add('clientSIP','error',$this->jeedom->getHumanName()."Fail to write data to a lock file.");
 				die();
 			}
 			$this->src_port =  $this->min_port;
@@ -149,18 +149,18 @@ class sip{
 				}
 			}
 			if (!$src_port)	{
-				log::add('clientSIP','error',"No more ports left to bind.");
+				log::add('clientSIP','error',$this->jeedom->getHumanName()."No more ports left to bind.");
 				die();
 			}
 			$ports[] = $src_port;
 			if (!fwrite($fp, implode(",",$ports)))	{
-				log::add('clientSIP','error',"Failed to write data to lock file.");
+				log::add('clientSIP','error',$this->jeedom->getHumanName()."Failed to write data to lock file.");
 				die();
 			}
 			$this->src_port = $src_port;
 		}
 		if (!fclose($fp)){
-			log::add('clientSIP','error',"Failed to close lock_file");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Failed to close lock_file");
 			die();
 		}
 	}
@@ -170,12 +170,12 @@ class sip{
 		}
 		$fp = fopen($this->lock_file, 'r+');
 		if (!$fp){
-			log::add('clientSIP','error',"Can't open lock file.");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't open lock file.");
 			die();
 		}
 		$canWrite = flock($fp, LOCK_EX);
 		if (!$canWrite){
-			log::add('clientSIP','error',"Failed to lock a file in 1000 ms.");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Failed to lock a file in 1000 ms.");
 			die();
 		}
 		clearstatcache();
@@ -187,23 +187,23 @@ class sip{
 		unset($ports[$key]);
 		if (!$this->persistent_lock_file && count($ports) === 0){
 			if (!fclose($fp)){
-				log::add('clientSIP','error',"Failed to close lock_file");
+				log::add('clientSIP','error',$this->jeedom->getHumanName()."Failed to close lock_file");
 				die();
 			}
 			if (!unlink($this->lock_file))	{
-				log::add('clientSIP','error',"Failed to delete lock_file.");
+				log::add('clientSIP','error',$this->jeedom->getHumanName()."Failed to delete lock_file.");
 				die();
 			}
 		}else{
 			ftruncate($fp, 0);
 			rewind($fp);
 			if ($ports && !fwrite($fp, implode(",",$ports)))	{
-				log::add('clientSIP','error',"Failed to save data in lock_file");
+				log::add('clientSIP','error',$this->jeedom->getHumanName()."Failed to save data in lock_file");
 				die();
 			}
 			flock($fp, LOCK_UN);
 			if (!fclose($fp)){
-				log::add('clientSIP','error',"Failed to close lock_file");
+				log::add('clientSIP','error',$this->jeedom->getHumanName()."Failed to close lock_file");
 				die();
 			}
 		}
@@ -219,7 +219,7 @@ class sip{
 		}
 		$m = array();
 		if (!preg_match('/sip:(.*)@/i',$this->from,$m))	{
-			log::add('clientSIP','error','Failed to parse From username.');
+			log::add('clientSIP','error',$this->jeedom->getHumanName().'Failed to parse From username.');
 			die();
 		}
 		$this->from_user = $m[1];
@@ -250,7 +250,7 @@ class sip{
 	}
 	public function setMethod($method){
 		if (!in_array($method,$this->allowed_methods)){
-			log::add('clientSIP','error','Invalid method.');
+			log::add('clientSIP','error',$this->jeedom->getHumanName().'Invalid method.');
 			die();
 		}
 		$this->method = $method;
@@ -274,7 +274,7 @@ class sip{
 		if (strpos($this->proxy,':'))	{
 			$temp = explode(":",$this->proxy);
 			if (!preg_match('/^[0-9]+$/',$temp[1]))	{
-				log::add('clientSIP','error',"Invalid port number ".$temp[1]);
+				log::add('clientSIP','error',$this->jeedom->getHumanName()."Invalid port number ".$temp[1]);
 				die();
 			}
 			$this->host = $temp[0];
@@ -288,11 +288,11 @@ class sip{
 	}
 	public function setUri($uri){
 		if (strpos($uri,'sip:') === false){
-			log::add('clientSIP','error',"Only sip: URI supported.");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Only sip: URI supported.");
 			die();
 		}
 		if (!$this->proxy && strpos($uri,'transport=tcp') !== false){
-			log::add('clientSIP','error',"Only UDP transport supported.");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Only UDP transport supported.");
 			die();
 		}
 		$this->uri = $uri;
@@ -331,15 +331,15 @@ class sip{
 	}
 	public function send()	{
 		if (!$this->from)	{
-			log::add('clientSIP','error','Missing From.');
+			log::add('clientSIP','error',$this->jeedom->getHumanName().'Missing From.');
 			die();
 		}
 		if (!$this->method)	{
-			log::add('clientSIP','error','Missing Method.');
+			log::add('clientSIP','error',$this->jeedom->getHumanName().'Missing Method.');
 			die();
 		}
 		if (!$this->uri)	{
-			log::add('clientSIP','error','Missing URI.');
+			log::add('clientSIP','error',$this->jeedom->getHumanName().'Missing URI.');
 			die();
 		}
 		$data = $this->formatRequest();
@@ -399,15 +399,15 @@ class sip{
 	}
 	private function sendData($data)	{
 		if (!$this->host)	{
-			log::add('clientSIP','error',"Can't send data, host undefined");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't send data, host undefined");
 			die();
 		}
 		if (!$this->port)	{
-			log::add('clientSIP','error',"Can't send data, host undefined");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't send data, host undefined");
 			die();
 		}
 		if (!$data)	{
-			log::add('clientSIP','error',"Can't send - empty data");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't send - empty data");
 			die();
 		}
 		if (preg_match('/^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/', $this->host))	{
@@ -415,22 +415,22 @@ class sip{
 		}else{
 			$ip_address = gethostbyname($this->host);
 			if ($ip_address == $this->host)	{
-				log::add('clientSIP','error',"DNS resolution of ".$this->host." failed");
+				log::add('clientSIP','error',$this->jeedom->getHumanName()."DNS resolution of ".$this->host." failed");
 				die();
 			}
 		}
 		if (!@socket_sendto($this->socket, $data, strlen($data), 0, $ip_address, $this->port))	{
 			$err_no = socket_last_error($this->socket);
-			log::add('clientSIP','error',"Failed to send data to ".$ip_address.":".$this->port.". Source IP ".$this->src_ip.", source port: ".$this->src_port.". ".socket_strerror($err_no));
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Failed to send data to ".$ip_address.":".$this->port.". Source IP ".$this->src_ip.", source port: ".$this->src_port.". ".socket_strerror($err_no));
 			die();
 		}
-		log::add('clientSIP','info','TX : '.$data);
+		log::add('clientSIP','info',$this->jeedom->getHumanName().'TX : '.$data);
 	}
 	public function listen($methods){ 
 		if (!is_array($methods))	{
 			$methods = array($methods);
 		}
-		log::add('clientSIP','debug',"Listenning for ".implode(", ",$methods));
+		log::add('clientSIP','debug',$this->jeedom->getHumanName()."Listenning for ".implode(", ",$methods));
 		if ($this->server_mode)	{
 			while (!in_array($this->req_method, $methods))	{
 				$this->readMessage(); 
@@ -445,7 +445,7 @@ class sip{
 				$this->readMessage(); 
 				$i++;
 				if ($i > 5)			{
-					log::add('clientSIP','error',"Unexpected request ".$this->req_method." received.");
+					log::add('clientSIP','error',$this->jeedom->getHumanName()."Unexpected request ".$this->req_method." received.");
 					die();
 				}
 			}
@@ -454,7 +454,7 @@ class sip{
 	public function setServerMode($v){
 		if (!@socket_set_option($this->socket, SOL_SOCKET, SO_RCVTIMEO, array("sec"=>0,"usec"=>0)))	{
 			$err_no = socket_last_error($this->socket);
-			log::add('clientSIP','error',socket_strerror($err_no));
+			log::add('clientSIP','error',$this->jeedom->getHumanName().socket_strerror($err_no));
 			die();
 		}
 		$this->server_mode = $v;
@@ -468,7 +468,7 @@ class sip{
 			die();
 			return $this->res_code;
 		}
-		log::add('clientSIP','info','RX: '.$this->rx_msg);
+		log::add('clientSIP','info',$this->jeedom->getHumanName().'RX: '.$this->rx_msg);
 		$m = array();
 		if (preg_match('/^SIP\/2\.0 ([0-9]{3})/', $this->rx_msg, $m))	{
 			// Response
@@ -802,24 +802,24 @@ class sip{
 	}
 	private function auth(){
 		if (!$this->username){
-			log::add('clientSIP','error',"Missing username");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Missing username");
 			die();
 		}
 		if (!$this->password){
-			log::add('clientSIP','error',"Missing password");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Missing password");
 			die();
 		}
 		// realm
 		$m = array();
 		if (!preg_match('/^Proxy-Authenticate: .*realm="(.*)"/imU',$this->rx_msg, $m)){
-			log::add('clientSIP','error',"Can't find realm in proxy-auth");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find realm in proxy-auth");
 			die();
 		}
 		$realm = $m[1];
 		// nonce
 		$m = array();
 		if (!preg_match('/^Proxy-Authenticate: .*,*nonce="(.*)"/imU',$this->rx_msg, $m)){
-			log::add('clientSIP','error',"Can't find nonce in proxy-auth");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find nonce in proxy-auth");
 			die();
 		}
 		$nonce = $m[1];
@@ -830,11 +830,11 @@ class sip{
 	}
 	private function authWWW(){
 		if (!$this->username){
-			log::add('clientSIP','error',"Missing auth username");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Missing auth username");
 			die();
 		}
 		if (!$this->password){
-			log::add('clientSIP','error',"Missing auth password");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Missing auth password");
 			die();
 		}
 		$qop_present = false;
@@ -842,21 +842,21 @@ class sip{
 			$qop_present = true;
 			// we can only do qop="auth"
 			if  (strpos($this->rx_msg,'qop="auth"') === false){
-				log::add('clientSIP','error','Only qop="auth" digest authentication supported.');
+				log::add('clientSIP','error',$this->jeedom->getHumanName().'Only qop="auth" digest authentication supported.');
 				die();
 			}
 		}
 		// realm
 		$m = array();
 		if (!preg_match('/^WWW-Authenticate: .* realm="(.*)"/imU',$this->rx_msg, $m)){
-			log::add('clientSIP','error',"Can't find realm in www-auth");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find realm in www-auth");
 			die();
 		}
 		$realm = $m[1];
 		// nonce
 		$m = array();
 		if (!preg_match('/^WWW-Authenticate: .*,*nonce="(.*)"/imU',$this->rx_msg, $m)){
-			log::add('clientSIP','error',"Can't find nonce in www-auth");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find nonce in www-auth");
 			die();
 		}
 		$nonce = $m[1];
@@ -876,18 +876,18 @@ class sip{
 	private function createSocket(){ 
 		$this->getPort();
 		if (!$this->src_ip){
-			log::add('clientSIP','error',"Source IP not defined.");
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Source IP not defined.");
 			die();
 		}
 		if (!$this->socket = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP)){
 			$err_no = socket_last_error($this->socket);
-			log::add('clientSIP','error',socket_strerror($err_no));
+			log::add('clientSIP','error',$this->jeedom->getHumanName().socket_strerror($err_no));
 			die();
 		}
 		if($this->socket_bind){
 			if (!@socket_bind($this->socket, $this->src_ip, $this->src_port)){
 				$err_no = socket_last_error($this->socket);
-				log::add('clientSIP','error',"Failed to bind ".$this->src_ip.":".$this->src_port." ".socket_strerror($err_no));
+				log::add('clientSIP','error',$this->jeedom->getHumanName()."Failed to bind ".$this->src_ip.":".$this->src_port." ".socket_strerror($err_no));
 				die();
 			}
 		}
@@ -896,12 +896,12 @@ class sip{
 		$sec = floor($microseconds / 1000000);
 		if (!@socket_set_option($this->socket, SOL_SOCKET, SO_RCVTIMEO, array("sec"=>$sec,"usec"=>$usec))){
 			$err_no = socket_last_error($this->socket);
-			log::add('clientSIP','error',socket_strerror($err_no));
+			log::add('clientSIP','error',$this->jeedom->getHumanName().socket_strerror($err_no));
 			die();
 		}
 		if (!@socket_set_option($this->socket, SOL_SOCKET, SO_SNDTIMEO, array("sec"=>5,"usec"=>0))){
 			$err_no = socket_last_error($this->socket);
-			log::add('clientSIP','error',socket_strerror($err_no));
+			log::add('clientSIP','error',$this->jeedom->getHumanName().socket_strerror($err_no));
 			die();
 		}
 	}
