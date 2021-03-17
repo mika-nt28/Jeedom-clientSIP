@@ -3,7 +3,7 @@ class sip{
 	private $jeedom;
 	private $min_port = 5065;
 	private $max_port = 5265;
-	private $socket_bind = true;
+	private $socket_bind = false;
 	private $fr_timer = 10000;
 	private $lock_file = '/tmp/PhpSIP.lock';
 	private $persistent_lock_file = true;
@@ -51,8 +51,9 @@ class sip{
 	private $record_route = array();
 	private $request_via = array();
 	private $extra_headers = array();
-	public function __construct($jeedom = null,$src_ip = null, $src_port = null, $fr_timer = null)	{
+	public function __construct($jeedom = null,$src_ip = null, $src_port = null, $fr_timer = null, $socket_bind = true)	{
 		$this->jeedom = $jeedom;
+		$this->socket_bind = $socket_bind;
 		if (!function_exists('socket_create')){
 			log::add('clientSIP','error',"socket_create() function missing.");
 			die();
@@ -83,7 +84,6 @@ class sip{
 				die();
 			}
 			$this->src_port = $src_port;
-			$this->socket_bind = false;
 			$this->lock_file = null;
 		}
 		if ($fr_timer){
