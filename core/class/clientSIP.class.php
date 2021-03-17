@@ -44,9 +44,9 @@ class clientSIP extends eqLogic {
 				$cron = cron::byClassAndFunction('clientSIP', 'WaitCall', array('id' => $clientSIP->getId()));
 				if (!is_object($cron) || !$cron->running()) 	
 					return $return;
-				$cron = cron::byClassAndFunction('clientSIP', 'WaitMessage', array('id' => $clientSIP->getId()));
+			/*	$cron = cron::byClassAndFunction('clientSIP', 'WaitMessage', array('id' => $clientSIP->getId()));
 				if (!is_object($cron) || !$cron->running()) 	
-					return $return;
+					return $return;*/
 			}
 		}
 		$return['state'] = 'ok';
@@ -70,7 +70,7 @@ class clientSIP extends eqLogic {
 					$clientSIP->CreateDemon('ConnectSip','*/'.$minute.' * * * *',false); 
 				}
 				$clientSIP->CreateDemon('WaitCall','* * * * * *',true);   
-				$clientSIP->CreateDemon('WaitMessage','* * * * * *',true);   
+				//$clientSIP->CreateDemon('WaitMessage','* * * * * *',true);   
 			}
 		}
 	}
@@ -94,20 +94,6 @@ class clientSIP extends eqLogic {
 				$cache->remove();
 		}
 	}	
-	public function toHtml($_version = 'mobile') {
-		$replace = $this->preToHtml($_version);
-		if (!is_array($replace)) {
-			return $replace;
-		}
-		$version = jeedom::versionAlias($_version);
-		if ($this->getDisplay('hideOn' . $version) == 1) {
-			return '';
-		}
-		foreach ($this->getCmd(null, null, true) as $cmd) {
-			 $replace['#'.$cmd->getLogicalId().'#'] = $cmd->toHtml($_version);
-		} 
-		return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version,'eqLogic','clientSIP')));
-	}
 	public function postSave() {
 		$this->AddCommande('Etat connexion','RegStatus','info', 'string');
 		$this->AddCommande('Etat appel','CallStatus','info', 'string','CallStatus');
@@ -115,11 +101,6 @@ class clientSIP extends eqLogic {
 		$this->AddCommande('Message','message','action','message','default');
 		$this->checkAndUpdateCmd('RegStatus','Inactif');
 	}
-	public static $_widgetPossibility = array('custom' => array(
-	        'visibility' => true,
-	        'displayName' => true,
-	        'optionalParameters' => true,
-	));
 	public function CreateDemon($Name,$Schedule,$deamon=false) {
 		$cron =cron::byClassAndFunction('clientSIP', $Name, array('id' => $this->getId()));
 		if (!is_object($cron)) {
@@ -149,9 +130,9 @@ class clientSIP extends eqLogic {
 		if (is_object($clientSIP) && $clientSIP->getIsEnable()) {
 			while(true){
 				if(!is_object($clientSIP->_sip))
-					$clientSIP->CreateConnexion();
+					$clientSIP->CreateConnexion(true);
 				$clientSIP->_sip->newCall();
-				$clientSIP->_sip->listen('INVITE');
+				$clientSIP->_sip->listen(array('INVITE','MESSAGE'));
 				$clientSIP->RepondreAppel();
 			}
 		}
@@ -161,7 +142,7 @@ class clientSIP extends eqLogic {
 		if (is_object($clientSIP) && $clientSIP->getIsEnable()) {
 			while(true){
 				if(!is_object($clientSIP->_sip))
-					$clientSIP->CreateConnexion();
+					$clientSIP->CreateConnexion(true);
 				$clientSIP->_sip->newCall();
 				$clientSIP->_sip->listen('MESSAGE');
 				if ($res == '200')
@@ -170,7 +151,7 @@ class clientSIP extends eqLogic {
 			}
 		}
 	}	
-	private function CreateConnexion(){
+	private function CreateConnexion($socket_bind = false){
 		//$cache = cache::byKey('clientSIP::Port::'.$this->getId());
 		$this->_Host=config::byKey('Host', 'clientSIP');
 		$this->_Port=config::byKey('Port', 'clientSIP');
@@ -178,7 +159,7 @@ class clientSIP extends eqLogic {
 		$this->_Username=$this->getConfiguration("Username");
 		$this->_Password=$this->getConfiguration("Password");
 		if($this->_sip == null){
-			$this->_sip = new sip($this,network ::getNetworkAccess('internal', 'ip', '', false),$this->getConfiguration("Port"));
+			$this->_sip = new sip($this,network ::getNetworkAccess('internal', 'ip', '', false),$this->getConfiguration("Port"),null,$socket_bind);
 			if($this->getConfiguration("Proxy")!="") 
 				$this->_sip->setProxy($this->getConfiguration("Proxy"));
 			$this->_sip->setUsername($this->_Username);
@@ -188,7 +169,7 @@ class clientSIP extends eqLogic {
 	}
 	private function RegisterClient(){
 		if($this->_sip == null)			
-        	  	$this->CreateConnexion();
+        	  	$this->CreateConnexion(false);
 		$this->checkAndUpdateCmd('RegStatus','Inactif');
 		$this->_sip->addHeader('Expires: '.$this->getConfiguration("Expiration"));
 		$this->_sip->setMethod('REGISTER');
@@ -340,6 +321,25 @@ class clientSIP extends eqLogic {
 			exec("sox /tmp/voice.wav -r 48k " . $SpeachFile);
 		}	
 		return $SpeachFile;
+	}
+	public static $_widgetPossibility = array('custom' => array(
+	        'visibility' => true,
+	        'displayName' => true,
+	        'optionalParameters' => true,
+	));
+	public function toHtml($_version = 'mobile') {
+		$replace = $this->preToHtml($_version);
+		if (!is_array($replace)) {
+			return $replace;
+		}
+		$version = jeedom::versionAlias($_version);
+		if ($this->getDisplay('hideOn' . $version) == 1) {
+			return '';
+		}
+		foreach ($this->getCmd(null, null, true) as $cmd) {
+			 $replace['#'.$cmd->getLogicalId().'#'] = $cmd->toHtml($_version);
+		} 
+		return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version,'eqLogic','clientSIP')));
 	}
 }
 class clientSIPCmd extends cmd {
