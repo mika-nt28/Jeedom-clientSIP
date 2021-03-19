@@ -133,7 +133,7 @@ class clientSIP extends eqLogic {
 					$clientSIP->CreateConnexion(true);
 				$clientSIP->_sip->newCall();
 				$clientSIP->_sip->listen(array('INVITE','MESSAGE'));
-				$clientSIP->RepondreAppel();
+				$clientSIP->Decrocher();
 			}
 		}
 	}	
@@ -182,47 +182,26 @@ class clientSIP extends eqLogic {
 			$this->checkAndUpdateCmd('RegStatus','OK');
 		else
 			$this->checkAndUpdateCmd('RegStatus','Echec');			
-		//cache::set('clientSIP::Port::'.$this->getId(), $this->_sip->getSrcPort(), 0);
 	}
-	public function RepondreAppel() {
-		$call['status']='ringing'; 
-		$call['flow']='incoming';  
-		$call['number']='';  
-		$call['callLength']='';  
-		$call['callActive']=false;
-		$call['start']=date('d/m/Y H:i:s');  
-		self::addHistoryCall($call);
-		event::add('clientSIP::call', utils::o2a($this));
-		$CallStatus=$this->getCmd(null,'CallStatus');
-		while($CallStatus->execCmd() == 'Sonnerie');
-		switch($CallStatus->execCmd()){
-			case 'Decrocher':
-				$call['status']= 'call';
-				self::addHistoryCall($call);
-				$this->Decrocher($call);
-			break;
-			case 'Racrocher':
-				$call['status']= 'reject';
-				self::addHistoryCall($call);
-				$this->Racrocher($call);
-			return;
-		}
-	}
-	public function Decrocher($call) {
+	public function Decrocher() {
+		if($this->_sip == null)			
+        	  	$this->CreateConnexion(false);
 		//ajouter les options de compatibilité de jeedom
 		$this->_sip->reply(200,'Ok');
-		exec('ffmpeg -i '.$this->TextToSpeach("Test de communication de Jeedom sur une communication sip").' -f s16le -acodec pcm_s16le '.$this->_sip->getRtsp());
 		event::add('clientSIP::rtsp', $this->_sip->getBody());
 		$this->checkAndUpdateCmd('CallStatus','Appel en cours');
+		$CallStatus=$this->getCmd(null,'CallStatus');
+		$cmd ='ffmpeg -i '.$this->TextToSpeach("Test de communication de Jeedom sur une communication sip").' -f s16le -acodec pcm_s16le '.$this->_sip->getRtsp();
+		$cmd .= ' >> ' . log::getPathToLog('clientSIP') . ' 2>&1';
+		exec($cmd);
 		while($CallStatus->execCmd() == 'Appel en cours'){
-			$call['callActive']=true;
-			$call['callLength']=$strtotime("now")-strtotime($call['start']);  
-			self::addHistoryCall($call);
 			sleep(5);
 		}
 		$this->Racrocher();
 	}
-	public function Racrocher($call) {
+	public function Racrocher() {
+		if($this->_sip == null)			
+        	  	$this->CreateConnexion(false);
 		$CallStatus=$this->getCmd(null,'CallStatus');
 		if($CallStatus->execCmd() == 'Sonnerie'){
 			$this->_sip->reply(487,'Request Terminated');
@@ -236,18 +215,9 @@ class clientSIP extends eqLogic {
 			$this->_sip->send();
 		}
 		$this->checkAndUpdateCmd('CallStatus','Racrocher');
-		$call['callLength']=$strtotime("now")-strtotime($call['start']);  
-		$call['callActive']=false;
-		self::addHistoryCall($call);
+		
 	}
 	public function call($number) {	
-		$call['status']='ringing'; 
-		$call['flow']='outcoming';  
-		$call['number']=$number;  
-		$call['start']=date('d/m/Y H:i:s');  
-		$call['callLength']=''; 
-		$call['callActive']=false; 
-		self::addHistoryCall($call);
 		log::add('clientSIP', 'debug', 'Appel en demandé => ' . $number);
 		$this->checkAndUpdateCmd('CallStatus','Racrocher');	
 		$this->CreateConnexion();
@@ -277,19 +247,6 @@ class clientSIP extends eqLogic {
 			event::add('clientSIP::message', 'Le message a bien été transmis');
 		
 	}
-	public static function addHistoryCall($_call) {
-		$cache = cache::byKey('clientSIP::HistoryCall');
-		$value = json_decode($cache->getValue('[]'), true);
-		if($key=array_search($value,$_call['start'])===false)
-			$value[$key]=$_call;
-		else
-			$value[] = $_call;
-		cache::set('clientSIP::HistoryCall', json_encode(array_slice($value, -250, 250)), 0);
-	}
-	private function actionResCode(){
-		switch($this->_sip->getResCode()){
-		}
-	}
 	public function AddCommande($Name,$_logicalId,$Type="info", $SubType='string',$Template='default') {
 		$Commande = $this->getCmd(null,$_logicalId);
 		if (!is_object($Commande))
@@ -317,8 +274,12 @@ class clientSIP extends eqLogic {
 			if ($lang == '') {
 				$lang == 'fr-FR';
 			}
-			exec("pico2wave -l " . $lang . " -w /tmp/voice.wav \"" . $Texte . "\"");
-			exec("sox /tmp/voice.wav -r 48k " . $SpeachFile);
+			$cmd = "pico2wave -l " . $lang . " -w /tmp/voice.wav \"" . $Texte . "\"";
+			$cmd .= ' >> ' . log::getPathToLog('clientSIP') . ' 2>&1';
+			exec($cmd);
+			$cmd = "sox /tmp/voice.wav -r 48k " . $SpeachFile;
+			$cmd .= ' >> ' . log::getPathToLog('clientSIP') . ' 2>&1';
+			exec($cmd);
 		}	
 		return $SpeachFile;
 	}
@@ -327,20 +288,6 @@ class clientSIP extends eqLogic {
 	        'displayName' => true,
 	        'optionalParameters' => true,
 	));
-	public function toHtml($_version = 'mobile') {
-		$replace = $this->preToHtml($_version);
-		if (!is_array($replace)) {
-			return $replace;
-		}
-		$version = jeedom::versionAlias($_version);
-		if ($this->getDisplay('hideOn' . $version) == 1) {
-			return '';
-		}
-		foreach ($this->getCmd(null, null, true) as $cmd) {
-			 $replace['#'.$cmd->getLogicalId().'#'] = $cmd->toHtml($_version);
-		} 
-		return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version,'eqLogic','clientSIP')));
-	}
 }
 class clientSIPCmd extends cmd {
 	public function execute($_options = null){
