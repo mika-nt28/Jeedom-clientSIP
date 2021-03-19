@@ -434,8 +434,26 @@ class sip{
 		if ($this->server_mode)	{
 			while (!in_array($this->req_method, $methods))	{
 				$this->readMessage(); 
-				if ($this->rx_msg && !in_array($this->req_method, $methods))	{
-					$this->reply(200,'OK');
+				if ($this->rx_msg)	{
+					switch(($this->req_method){
+						case "INVITE":
+							$this->reply(180,'Ringing');
+							$this->jeedom->checkAndUpdateCmd('CallStatus','Sonnerie');
+						break;
+						case "MESSAGE":
+						break;
+						case "CANCEL":
+						case "NOTIFY":
+						case "BYE":
+						case "REFER":
+						case "OPTIONS":
+						case "SUBSCRIBE":
+						case "PUBLISH":
+						case "REGISTER":
+						default:
+							$this->reply(200,'OK');
+						break;
+					}
 				}
 			}
 		}else{
@@ -444,12 +462,13 @@ class sip{
 			while (!in_array($this->req_method, $methods)){
 				$this->readMessage(); 
 				$i++;
-				if ($i > 5)			{
+				if ($i > 5){
 					log::add('clientSIP','error',$this->jeedom->getHumanName()."Unexpected request ".$this->req_method." received.");
 					die();
 				}
 			}
 		}
+		return $this->req_method;			   
 	}
 	public function setServerMode($v){
 		if (!@socket_set_option($this->socket, SOL_SOCKET, SO_RCVTIMEO, array("sec"=>0,"usec"=>0)))	{
