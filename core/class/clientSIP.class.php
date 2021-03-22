@@ -132,22 +132,17 @@ class clientSIP extends eqLogic {
 				if(!is_object($clientSIP->_sip))
 					$clientSIP->CreateConnexion(true);
 				$clientSIP->_sip->newCall();
-				$clientSIP->_sip->listen(array('INVITE','MESSAGE'));
-				$clientSIP->Decrocher();
-			}
-		}
-	}	
-	public static function WaitMessage($_option){
-		$clientSIP = clientSIP::byId($_option['id']);
-		if (is_object($clientSIP) && $clientSIP->getIsEnable()) {
-			while(true){
-				if(!is_object($clientSIP->_sip))
-					$clientSIP->CreateConnexion(true);
-				$clientSIP->_sip->newCall();
-				$clientSIP->_sip->listen('MESSAGE');
-				if ($res == '200')
-					message::add('sucess', $clientSIP->_sip->getBody());
-					//event::add('clientSIP::message', $clientSIP->_sip->getBody());
+				$return = $clientSIP->_sip->listen(array('INVITE','MESSAGE'));
+              	log::add('clientSIP','debug',$clientSIP->getHumanName().json_encode($return));
+              	switch($return){
+                    case 'INVITE':
+             			sleep(30);
+						$clientSIP->Decrocher();
+                    break;
+                    case 'MESSAGE':
+                    	message::add('sucess', $clientSIP->_sip->getBody());
+                    break;
+                }
 			}
 		}
 	}	
