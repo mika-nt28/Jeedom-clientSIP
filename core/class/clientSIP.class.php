@@ -2,7 +2,7 @@
 require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
 include_file('core', 'sip', 'class', 'clientSIP');
 class clientSIP extends eqLogic {
-  	protected $_sip = null;
+	protected $_sip = null;
 	protected $_Host=null;
 	protected $_Port=null;
 	protected $_Username= null;
@@ -133,16 +133,15 @@ class clientSIP extends eqLogic {
 					$clientSIP->CreateConnexion(true);
 				$clientSIP->_sip->newCall();
 				$return = $clientSIP->_sip->listen(array('INVITE','MESSAGE'));
-              	log::add('clientSIP','debug',$clientSIP->getHumanName().json_encode($return));
-              	switch($return){
-                    case 'INVITE':
-             			sleep(30);
+				switch($return){
+					case 'INVITE':
+						sleep(30);
 						$clientSIP->Decrocher();
-                    break;
-                    case 'MESSAGE':
-                    	message::add('sucess', $clientSIP->_sip->getBody());
-                    break;
-                }
+					break;
+					case 'MESSAGE':
+						message::add('sucess', $clientSIP->_sip->getBody());
+					break;
+				}
 			}
 		}
 	}	
@@ -164,7 +163,7 @@ class clientSIP extends eqLogic {
 	}
 	private function RegisterClient(){
 		if($this->_sip == null)			
-        	  	$this->CreateConnexion(false);
+			$this->CreateConnexion(false);
 		$this->checkAndUpdateCmd('RegStatus','Inactif');
 		$this->_sip->addHeader('Expires: '.$this->getConfiguration("Expiration"));
 		$this->_sip->setMethod('REGISTER');
@@ -173,14 +172,14 @@ class clientSIP extends eqLogic {
 		$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setUri('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port.';transport='.$this->getConfiguration("transport"));
 		$res = $this->_sip->send();
-		if ($res == '200')
+		if ($this->_sip->getResCode() == '200')
 			$this->checkAndUpdateCmd('RegStatus','OK');
 		else
 			$this->checkAndUpdateCmd('RegStatus','Echec');			
 	}
 	public function Decrocher() {
 		if($this->_sip == null)			
-        	  	$this->CreateConnexion(false);
+			$this->CreateConnexion(false);
 		//ajouter les options de compatibilité de jeedom
 		$this->_sip->reply(200,'Ok');
 		event::add('clientSIP::rtsp', $this->_sip->getBody());
@@ -196,7 +195,7 @@ class clientSIP extends eqLogic {
 	}
 	public function Racrocher() {
 		if($this->_sip == null)			
-        	  	$this->CreateConnexion(false);
+			$this->CreateConnexion(false);
 		$CallStatus=$this->getCmd(null,'CallStatus');
 		if($CallStatus->execCmd() == 'Sonnerie'){
 			$this->_sip->reply(487,'Request Terminated');
@@ -224,6 +223,8 @@ class clientSIP extends eqLogic {
 		$this->_sip->setTo('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setMethod('INVITE');
 		$res=$this->_sip->send();
+		if ($this->_sip->getResCode() == '200')
+			$this->checkAndUpdateCmd('CallStatus','Appel en cours');
 	}
 	public function sendMessage($number,$message) {	
 		log::add('clientSIP', 'debug', 'Appel en demandé => ' . $number);
@@ -240,12 +241,10 @@ class clientSIP extends eqLogic {
 		$res=$this->_sip->send();
 		if ($res == '200')
 			event::add('clientSIP::message', 'Le message a bien été transmis');
-		
 	}
 	public function AddCommande($Name,$_logicalId,$Type="info", $SubType='string',$Template='default') {
 		$Commande = $this->getCmd(null,$_logicalId);
-		if (!is_object($Commande))
-		{
+		if (!is_object($Commande)){
 			$Commande = new clientSIPCmd();
 			$Commande->setId(null);
 			$Commande->setEqLogic_id($this->getId());
