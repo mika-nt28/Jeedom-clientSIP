@@ -1,5 +1,5 @@
 <?php
-class sip{
+class sip{ 
 	private $jeedom;
 	private $min_port = 5065;
 	private $max_port = 5265;
