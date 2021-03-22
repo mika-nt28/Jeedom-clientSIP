@@ -1,5 +1,5 @@
 <?php
-class sip{
+class sip{ 
 	private $jeedom;
 	private $min_port = 5065;
 	private $max_port = 5265;
@@ -368,14 +368,11 @@ class sip{
 		switch($this->res_code){
 			case '100':
 				$this->reply(100,'Trying');
-				$this->jeedom->checkAndUpdateCmd('CallStatus','Décroché');
 			break;
 			case '180':
 				$this->reply(180,'Ringing');
-				$this->jeedom->checkAndUpdateCmd('CallStatus','Sonnerie');
 			break;
 			case '200':
-				$this->checkAndUpdateCmd('CallStatus','Appel en cours');
 				$this->_sip->reply(200,'OK');
 			break;
 			case '407':
@@ -393,7 +390,17 @@ class sip{
 				$this->readMessage();
 			break;
 			case '486':
-				$this->checkAndUpdateCmd('CallStatus','Appel en cours');
+			break;
+		}
+		$this->jeedomStatusForRxCode();
+	}
+	private function jeedomStatusForRxCode(){
+		switch($this->res_code){
+			case '100':
+				$this->jeedom->checkAndUpdateCmd('CallStatus','Décroché');
+			break;
+			case '180':
+				$this->jeedom->checkAndUpdateCmd('CallStatus','Sonnerie');
 			break;
 		}
 	}
@@ -434,8 +441,26 @@ class sip{
 		if ($this->server_mode)	{
 			while (!in_array($this->req_method, $methods))	{
 				$this->readMessage(); 
-				if ($this->rx_msg && !in_array($this->req_method, $methods))	{
-					$this->reply(200,'OK');
+				if ($this->rx_msg)	{
+					switch($this->req_method){
+						case "INVITE":
+							$this->reply(180,'Ringing');
+							$this->jeedom->checkAndUpdateCmd('CallStatus','Sonnerie');
+						break;
+						case "MESSAGE":
+						break;
+						case "CANCEL":
+						case "NOTIFY":
+						case "BYE":
+						case "REFER":
+						case "OPTIONS":
+						case "SUBSCRIBE":
+						case "PUBLISH":
+						case "REGISTER":
+						default:
+							$this->reply(200,'OK');
+						break;
+					}
 				}
 			}
 		}else{
@@ -444,12 +469,13 @@ class sip{
 			while (!in_array($this->req_method, $methods)){
 				$this->readMessage(); 
 				$i++;
-				if ($i > 5)			{
+				if ($i > 5){
 					log::add('clientSIP','error',$this->jeedom->getHumanName()."Unexpected request ".$this->req_method." received.");
 					die();
 				}
 			}
 		}
+		return $this->req_method;			   
 	}
 	public function setServerMode($v){
 		if (!@socket_set_option($this->socket, SOL_SOCKET, SO_RCVTIMEO, array("sec"=>0,"usec"=>0)))	{
@@ -468,7 +494,8 @@ class sip{
 			die();
 			return $this->res_code;
 		}
-		log::add('clientSIP','info',$this->jeedom->getHumanName().'RX: '.$this->rx_msg);
+		log::add('clientSIP','info',$this->jeedom->getHumanName().'RX: '.$this->rx_msg);	
+		$this->jeedomStatusForRxCode();
 		$m = array();
 		if (preg_match('/^SIP\/2\.0 ([0-9]{3})/', $this->rx_msg, $m))	{
 			// Response
@@ -797,7 +824,18 @@ class sip{
 		return $temp[1];
 	}
 	public function getRtsp(){
-		$rtsp='rtp://'.$this->src_ip.':'.$this->src_port;
+		//SIP/2.0 200 OK Via: SIP/2.0/UDP 192.168.0.26:5061;rport=49299;branch=z9hG4bK251448 Contact:  To: ;tag=ad904821 From: ;tag=51478 Call-ID: ae9b7e5859d4968d3d76ba89f191d471 CSeq: 21 INVITE Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, REGISTER, SUBSCRIBE, NOTIFY, REFER, INFO, MESSAGE, UPDATE Content-Type: application/sdp Supported: replaces, timer User-Agent: 3CXPhoneSystem 16.0.8.9 (9) 
+		//Content-Length: 211  v=0 o=3cxPS 2104423362854912 1085122229043201 IN IP4 192.168.0.95 s=3cxPS Audio call c=IN IP4 192.168.0.95 t=0 0 m=audio 7132 RTP/AVP 0 3 8 a=rtpmap:0 PCMU/8000 a=rtpmap:3 GSM/8000 a=rtpmap:8 PCMA/8000
+
+		if (!preg_match('/^Audio call: .*IP4"(.*)"/imU',$this->rx_msg, $ip)){
+			//log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find realm in proxy-auth");
+			//die();
+		}		
+		if (!preg_match('/^Audio call: .*m=audio"(.*)"/imU',$this->rx_msg, $port)){
+			//log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find realm in proxy-auth");
+			//die();
+		}
+		$rtsp='rtp://'.$ip.':'.$port;
 		return $rtsp;
 	}
 	private function auth(){
