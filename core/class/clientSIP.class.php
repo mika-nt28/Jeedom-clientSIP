@@ -1,7 +1,7 @@
 <?php
 require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
 include_file('core', 'sip', 'class', 'clientSIP');
-class clientSIP extends eqLogic {
+class clientSIP extends eqLogic { 
 	protected $_sip = null;
 	protected $_Host=null;
 	protected $_Port=null;
