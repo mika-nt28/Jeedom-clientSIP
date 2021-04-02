@@ -287,7 +287,7 @@ class clientSIPCmd extends cmd {
 	public function execute($_options = null){
 		switch($this->getLogicalId()){
 			case 'call':				
-				$this->getEqLogic()->call($_options['message']);
+				$this->getEqLogic()->call($_options['title']);
 			break;
 			case 'message':				
 				$this->getEqLogic()->sendMessage($_options['title'],$_options['message']);
