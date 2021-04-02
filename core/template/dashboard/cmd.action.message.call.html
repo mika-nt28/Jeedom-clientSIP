@@ -40,16 +40,16 @@
 	</style>
 	<div class="content-lg">
 		<div class="input-group">
-			<input type="number" name="number" class="numDisplay form-control input-sm" placeholder="Saisir le numero SIP" autocomplete="off" data-cmd_id="#id#" />
 			<span class="input-group-btn">
-				<a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" title="Show Keypad">
-					<i class="fa fa-th"></i>
+				<a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" title="Afficher le clavier">
+					<i class="fas fa-th"></i>
 				</a>
 			</span>
-			<a class="btn btn-success btn-block btnCall action" title="Send">#name_display#</a>
+			<input type="number" class="numDisplay form-control input-sm" placeholder="Saisir le numero SIP" autocomplete="off" data-cmd_id="#id#" />
+			<a class="btn btn-success btn-block btnCall" title="Send">#name_display#</a>
 		</div>
 		<div id="sip-dialpad" class="dropdown-menu">
-			<button type="button" class="btn btn-primary digit" data-digit="1">1<span>&nbsp;</span></button>
+			<button type="button" class="btn btn-primary digit" data-digit="1">1<span></span></button>
 			<button type="button" class="btn btn-primary digit" data-digit="2">2<span>ABC</span></button>
 			<button type="button" class="btn btn-primary digit" data-digit="3">3<span>DEF</span></button>
 			<button type="button" class="btn btn-primary digit" data-digit="4">4<span>GHI</span></button>
@@ -64,25 +64,25 @@
 		</div>
 	</div> 
 	<script>
-		$('.cmd[data-cmd_id=#id#]').on('click','.dropdown-menu',function(e) {
-			e.preventDefault();
+		$('.cmd[data-cmd_id=#id#] .dropdown-menu').off().on('click',function(event) {
+			event.preventDefault();
 		});
-		$('.numDisplay[data-cmd_id=#id#]').on('keypress',function(e) {
+		$('.numDisplay[data-cmd_id=#id#]').off().on('keypress',function(event) {
 			// Enter pressed? so Dial.
-			if (e.which === 13) {
-				$('.cmd[data-cmd_id=#id#]  .btnCall').trigger('click');
+			if (event.which === 13) {
+				$('.cmd[data-cmd_id=#id#] .btnCall').trigger('click');
 			}
 		});
-		$('.cmd[data-cmd_id=#id#]').on('click','.digit',function(event) {
+		$('.cmd[data-cmd_id=#id#] .digit').off().on('click',function(event) {
 			event.preventDefault();
 			var num = $('.numDisplay[data-cmd_id=#id#]').val();
 			var dig = $(this).attr('data-digit');
 			$('.numDisplay[data-cmd_id=#id#]').val(num+dig);
 			return false;
 		});
-		$(".cmd[data-cmd_id=#id#] .action").off().on("click", function() {
+		$(".cmd[data-cmd_id=#id#] .btnCall").off().on("click", function() {
 			var num = $('.numDisplay[data-cmd_id=#id#]').val();
-			jeedom.cmd.execute({id: '#id#', value: {message:num}});
+			jeedom.cmd.execute({id: '#id#', value: {title:num}});
 			bootbox.dialog({
 				title: "Appel en cours",
 				message:'Appel en cours de '+num,
