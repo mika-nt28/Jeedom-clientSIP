@@ -98,7 +98,7 @@ class clientSIP extends eqLogic {
 		$this->AddCommande('Etat connexion','RegStatus','info', 'string');
 		$this->AddCommande('Etat appel','CallStatus','info', 'string','CallStatus');
 		$this->AddCommande('Appel','call','action','message','call');
-		$this->AddCommande('Message','message','action','message','default');
+		$this->AddCommande('Message','message','action','message','notif');
 		$this->checkAndUpdateCmd('RegStatus','Inactif');
 	}
 	public function CreateDemon($Name,$Schedule,$deamon=false) {
