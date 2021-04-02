@@ -212,11 +212,10 @@ class sip{
 		$this->extra_headers[] = $header;
 	}
 	public function setFrom($from){
-		if (preg_match('/<.*>$/',$from)){
+      if (preg_match('/<.*>$/',$from))
 			$this->from = $from;
-		}else{
-			$this->from = '<'.$from.'>';
-		}
+		else
+			$this->from = ('<'.$from.'>');
 		$m = array();
 		if (!preg_match('/sip:(.*)@/i',$this->from,$m))	{
 			log::add('clientSIP','error',$this->jeedom->getHumanName().'Failed to parse From username.');
@@ -225,11 +224,10 @@ class sip{
 		$this->from_user = $m[1];
 	}
 	public function setTo($to){
-		if (preg_match('/<.*>$/',$to)){
+      if (preg_match('/<.*>$/',$to))
 			$this->to = $to;
-		}else{
-			$this->to = '<'.$to.'>';
-		}
+		else
+			$this->to = ('<'.$to.'>');
 	}
 	private function clientSDP(){
 		$SDP = "v=0\r\n";
@@ -283,8 +281,11 @@ class sip{
 			$this->host = $this->proxy;
 		}
 	}
-	public function setContact($v){
-		$this->contact = $v;
+	public function setContact($contact){
+      if (preg_match('/<.*>$/',$contact))
+			$this->contact = $contact;
+		else
+			$this->contact = ('<'.$contact.'>');
 	}
 	public function setUri($uri){
 		if (strpos($uri,'sip:') === false){
@@ -431,7 +432,7 @@ class sip{
 			log::add('clientSIP','error',$this->jeedom->getHumanName()."Failed to send data to ".$ip_address.":".$this->port.". Source IP ".$this->src_ip.", source port: ".$this->src_port.". ".socket_strerror($err_no));
 			die();
 		}
-		log::add('clientSIP','info',$this->jeedom->getHumanName().'TX : '.$data);
+		log::add('clientSIP','info',$this->jeedom->getHumanName().'TX : '.htmlentities($data));
 	}
 	public function listen($methods){ 
 		if (!is_array($methods))	{
@@ -494,7 +495,7 @@ class sip{
 			die();
 			return $this->res_code;
 		}
-		log::add('clientSIP','info',$this->jeedom->getHumanName().'RX: '.$this->rx_msg);	
+		log::add('clientSIP','info',$this->jeedom->getHumanName().'RX: '.htmlentities($this->rx_msg));	
 		$this->jeedomStatusForRxCode();
 		$m = array();
 		if (preg_match('/^SIP\/2\.0 ([0-9]{3})/', $this->rx_msg, $m))	{
@@ -619,6 +620,12 @@ class sip{
 		$r.= 'From: '.$this->req_from.';tag='.$this->req_from_tag."\r\n";
 		// To
 		$r.= 'To: '.$this->req_to.';tag='.$this->req_to_tag."\r\n";
+		// Contact
+      	if ($this->contact != null)	{
+			$r.= 'Contact: '.$this->contact."\r\n";
+		}else if ($this->method != 'MESSAGE'){
+			$r.= 'Contact: <sip:'.$this->from_user.'@'.$this->src_ip.':'.$this->src_port.'>'."\r\n";
+		}
 		// Call-ID
 		$r.= 'Call-ID: '.$this->call_id."\r\n";
 		//CSeq
@@ -631,16 +638,6 @@ class sip{
 		$r.= "Supported: replaces, timer\r\n";
 		// Max-Forwards
 		//$r.= 'Max-Forwards: 70'."\r\n";
-		// Contact
-		if ($this->contact)	{
-			if (substr($this->contact,0,1) == "<") {
-				$r.= 'Contact: '.$this->contact."\r\n";
-			} else {
-				$r.= 'Contact: <'.$this->contact.'>'."\r\n";
-			}
-		}else if ($this->method != 'MESSAGE'){
-			$r.= 'Contact: <sip:'.$this->from_user.'@'.$this->src_ip.':'.$this->src_port.'>'."\r\n";
-		}
 		// User-Agent
 		$r.= 'User-Agent: '.$this->user_agent."\r\n";
 		// Content-Length
@@ -721,6 +718,12 @@ class sip{
 		}else{
 			$r.= 'To: '.$this->to."\r\n";
 		}
+		// Contact
+      	if ($this->contact != null)	{
+			$r.= 'Contact: '.$this->contact."\r\n";
+		}else if ($this->method != 'MESSAGE'){
+			$r.= 'Contact: <sip:'.$this->from_user.'@'.$this->src_ip.':'.$this->src_port.'>'."\r\n";
+		}
 		//Server
 		if($this->server)	{
 			$r.= 'Server: '.$this->server."\r\n";
@@ -740,16 +743,7 @@ class sip{
 			$this->cseq--;
 		}
 		$r.= 'CSeq: '.$this->cseq.' '.$this->method."\r\n";
-		// Contact
-		if ($this->contact)	{
-			if (substr($this->contact,0,1) == "<") {
-				$r.= 'Contact: '.$this->contact."\r\n";
-			} else {
-				$r.= 'Contact: <'.$this->contact.'>'."\r\n";
-			}
-		}else if ($this->method != 'MESSAGE'){
-			$r.= 'Contact: <sip:'.$this->from_user.'@'.$this->src_ip.':'.$this->src_port.'>'."\r\n";
-		}
+		$r.= 'Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, NOTIFY, MESSAGE, SUBSCRIBE, INFO'."\r\n";
 		// Content-Type
 		if ($this->content_type){
 			$r.= 'Content-Type: '.$this->content_type."\r\n";
@@ -780,7 +774,7 @@ class sip{
 					$this->content_type = 'application/sdp';
 				break;
 				case 'MESSAGE':
-					$this->content_type = 'text/html; charset=utf-8';
+					$this->content_type = 'text/plain; charset=utf-8';
 				break;
 				default:
 					$this->content_type = null;
@@ -789,7 +783,7 @@ class sip{
 	}
 	private function setVia(){
 		$rand = rand(100000,999999);
-		$this->via = 'SIP/2.0/UDP '.$this->src_ip.':'.$this->src_port.';rport;branch=z9hG4bK'.$rand;
+		$this->via = 'SIP/2.0/UDP '.$this->src_ip.':'.$this->src_port.';rport;branch=z9hG4bK-'.$rand;
 	}
 	public function setFromTag($v){
 		$this->from_tag = $v;
