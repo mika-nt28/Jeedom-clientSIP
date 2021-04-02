@@ -170,7 +170,7 @@ class clientSIP extends eqLogic {
 		if($this->getConfiguration("Proxy")!="") 
 			$this->_sip->setProxy($this->getConfiguration("Proxy"));
 		$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
-		$this->_sip->setUri('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port.';transport='.$this->getConfiguration("transport"));
+		$this->_sip->setUri('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port/*.';transport='.$this->getConfiguration("transport")*/);
 		$res = $this->_sip->send();
 		if ($this->_sip->getResCode() == '200')
 			$this->checkAndUpdateCmd('RegStatus','OK');
@@ -219,7 +219,8 @@ class clientSIP extends eqLogic {
 		$this->_sip->setPassword($this->_Password);
 		$this->_sip->newCall();
 		$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
-		$this->_sip->setUri('sip:'.$number.'@'.$this->_Host.':'.$this->_Port.';transport='.$this->getConfiguration("transport"));
+		$this->_sip->setContact('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
+		$this->_sip->setUri('sip:'.$number.'@'.$this->_Host.':'.$this->_Port/*.';transport='.$this->getConfiguration("transport")*/);
 		$this->_sip->setTo('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setMethod('INVITE');
 		$res=$this->_sip->send();
@@ -227,16 +228,15 @@ class clientSIP extends eqLogic {
 			$this->checkAndUpdateCmd('CallStatus','Appel en cours');
 	}
 	public function sendMessage($number,$message) {	
-		log::add('clientSIP', 'debug', 'Appel en demandé => ' . $number);
+		log::add('clientSIP', 'debug', 'Envoie un message => ' . $number);
 		$this->checkAndUpdateCmd('CallStatus','Racrocher');	
 		$this->CreateConnexion();
 		$this->_sip->setUsername($this->_Username);
 		$this->_sip->setPassword($this->_Password);
 		$this->_sip->newCall();
 		$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
-		$this->_sip->setUri('sip:'.$number.'@'.$this->_Host.':'.$this->_Port.';transport='.$this->getConfiguration("transport"));
+		$this->_sip->setUri('sip:'.$number.'@'.$this->_Host.':'.$this->_Port/*.';transport='.$this->getConfiguration("transport")*/);
 		$this->_sip->setTo('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
-		$this->_sip->setBody($message);
 		$this->_sip->setMethod('MESSAGE');
 		$res=$this->_sip->send();
 		if ($res == '200')
