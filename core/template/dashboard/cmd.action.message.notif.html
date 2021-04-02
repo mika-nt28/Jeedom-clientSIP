@@ -1,12 +1,101 @@
 <div class="cmd cmd-widget reportModeHidden" data-type="action" data-subtype="message" data-template="default" data-cmd_id="#id#" data-cmd_uid="#uid#" data-version="#version#" data-eqLogic_id="#eqLogic_id#">
-  <div class="content-lg">
-    <input type="number" class="form-control input-sm title" placeholder="Numero de contacte" data-cmd_id="#id#" />
-    <textarea class="form-control input-sm message" rows="2" data-cmd_uid="#uid#" data-cmd_id="#id#"></textarea>
-    <a class='btn btn-xs execute'>#name_display#</a>
-  </div>
-  <script>
-    $('.cmd[data-cmd_uid=#uid#]:last .execute').on('click', function() {
-      jeedom.cmd.execute({id: '#id#', value: {title: $('.cmd[data-cmd_uid=#uid#] .title').value(), message: $('.cmd[data-cmd_uid=#uid#] .message').value()}})
-    })
-  </script>
+	<style>
+		.digit {
+			height: 66px;
+			width: 66px;
+			margin: 0 8px 14px !important;
+			background-color: #f8f8f8;
+			font-weight: 300;
+			font-size: 24px;
+			border-radius: 100px;
+			line-height: 21px;
+			padding-top: 9px;
+			float: left;
+		}
+		.digit span {
+			display: block;
+			color: #999;
+			font-size: 10px;
+			font-weight: normal;
+		}
+		#sip-dialpad {
+			width: 292px;
+			padding: 16px 20px;
+		}
+		#sip-dialpad .col-xs-4 {
+			text-align: center;
+		}
+		#numDisplay::-webkit-input-placeholder {
+			color: #bbb;
+		}
+		#numDisplay::-moz-placeholder {
+			color: #bbb;
+		}
+		#numDisplay::-ms-input-placeholder {
+			color: #bbb;
+		}
+		#numDisplay::-moz-placeholder {
+			color: #bbb;
+		}
+	</style>
+	<div class="content-lg">
+		<div class="input-group">
+			<input type="number" name="number" class="numDisplay form-control input-sm" placeholder="Saisir le numero SIP" autocomplete="off" data-cmd_id="#id#" />
+			<span class="input-group-btn">
+				<a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" title="Show Keypad">
+					<i class="fa fa-th"></i>
+				</a>
+			</span>
+			<textarea class="form-control input-sm message" rows="2" data-cmd_uid="#uid#" data-cmd_id="#id#"></textarea>
+			<a class="btn btn-success btn-block btnCall action" title="Send">#name_display#</a>
+		</div>
+		<div id="sip-dialpad" class="dropdown-menu">
+			<button type="button" class="btn btn-primary digit" data-digit="1">1<span>&nbsp;</span></button>
+			<button type="button" class="btn btn-primary digit" data-digit="2">2<span>ABC</span></button>
+			<button type="button" class="btn btn-primary digit" data-digit="3">3<span>DEF</span></button>
+			<button type="button" class="btn btn-primary digit" data-digit="4">4<span>GHI</span></button>
+			<button type="button" class="btn btn-primary digit" data-digit="5">5<span>JKL</span></button>
+			<button type="button" class="btn btn-primary digit" data-digit="6">6<span>MNO</span></button>
+			<button type="button" class="btn btn-primary digit" data-digit="7">7<span>PQRS</span></button>
+			<button type="button" class="btn btn-primary digit" data-digit="8">8<span>TUV</span></button>
+			<button type="button" class="btn btn-primary digit" data-digit="9">9<span>WXYZ</span></button>
+			<button type="button" class="btn btn-primary digit" data-digit="*">*<span></span></button>
+			<button type="button" class="btn btn-primary digit" data-digit="0">0<span>+</span></button>
+			<button type="button" class="btn btn-primary digit" data-digit="#">#<span></span></button>
+		</div>
+	</div> 
+	<script>
+		$('.cmd[data-cmd_id=#id#]').on('click','.dropdown-menu',function(e) {
+			e.preventDefault();
+		});
+		$('.numDisplay[data-cmd_id=#id#]').on('keypress',function(e) {
+			// Enter pressed? so Dial.
+			if (e.which === 13) {
+				$('.cmd[data-cmd_id=#id#]  .btnCall').trigger('click');
+			}
+		});
+		$('.cmd[data-cmd_id=#id#]').on('click','.digit',function(event) {
+			event.preventDefault();
+			var num = $('.numDisplay[data-cmd_id=#id#]').val();
+			var dig = $(this).attr('data-digit');
+			$('.numDisplay[data-cmd_id=#id#]').val(num+dig);
+			return false;
+		});
+		$(".cmd[data-cmd_id=#id#] .action").off().on("click", function() {
+			var num = $('.numDisplay[data-cmd_id=#id#]').val();
+			jeedom.cmd.execute({id: '#id#', value: {message:num}});
+			bootbox.dialog({
+				title: "Appel en cours",
+				message:'Appel en cours de '+num,
+				buttons: {
+					"Racrocher": {
+						className: "btn-danger",
+						callback: function () {
+							updateCmd('Racrocher');
+						}
+					}
+				}
+			});
+		});
+	</script>
 </div>
