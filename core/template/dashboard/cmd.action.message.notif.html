@@ -46,7 +46,10 @@
 				</a>
 			</span>
 			<input type="number" class="numDisplay form-control input-sm" placeholder="Saisir le numero SIP" autocomplete="off" data-cmd_id="#id#" />
-			<a class="btn btn-success btn-block btnCall" title="Send">#name_display#</a>
+			<span class="input-group-btn">
+				<a class="btn btn-success btn-block btnCall" title="{{Envoyer}}">
+					<i class="fas fa-envelope-o"></i>
+				</a>
 		</div>
 		<textarea class="form-control input-sm message" rows="2" data-cmd_uid="#uid#" data-cmd_id="#id#"></textarea>
 		<div id="sip-dialpad" class="dropdown-menu">
@@ -85,18 +88,6 @@
 			var num = $('.numDisplay[data-cmd_id=#id#]').val();
 			var message = $('.message[data-cmd_id=#id#]').val();
 			jeedom.cmd.execute({id: '#id#', value: {title:num,message:message}});
-			bootbox.dialog({
-				title: "Appel en cours",
-				message:'Appel en cours de '+num,
-				buttons: {
-					"Racrocher": {
-						className: "btn-danger",
-						callback: function () {
-							updateCmd('Racrocher');
-						}
-					}
-				}
-			});
 		});
 	</script>
 </div>
