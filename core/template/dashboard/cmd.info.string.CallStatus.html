@@ -16,36 +16,45 @@
 			Call('Un appel est en cours, voulez vous répondre');
 		});
 		$('body').on('clientSIP::rtsp', function (_event,_options) {
-			var message=$('<div>')
+			/*var message=$('<div>')
 			.append($('<div id="cctv-container">')
 				.append($('<object classid="clsid:9BE31822-FDAD-461B-AD51-BE1D1C159921" codebase="http://downloads.videolan.org/pub/videolan/vlc/latest/win32/axvlc.cab" id="vlc" events="True" width="640" height="480">')
 					.append($('<param name="Src" value="'+_options+'"/>'))
 					.append($('<param name="ShowDisplay" value="True"/>'))
 					.append($('<param name="AutoLoop" value="False"/>'))
 					.append($('<param name="AutoPlay" value="True"/>'))
-					.append($('<embed id="vlcEmb" type="application/x-google-vlc-plugin" version="VideoLAN.VLCPlugin.2" autoplay="yes" loop="no" target="'+_options+'" width="640" height="480"/>'))));
+					.append($('<embed id="vlcEmb" type="application/x-google-vlc-plugin" version="VideoLAN.VLCPlugin.2" autoplay="yes" loop="no" target="'+_options+'" width="640" height="480"/>'))));*/
+			var message = "Appel en cours";
 			Call(message);
 		});
+		var dialog = '';
 		function Call(message){
-			bootbox.dialog({
-				title: "{{Appel en cours}}",
-				message: message,
-				buttons: {
-					"Racrocher": {
-						className: "btn-danger",
-						callback: function () {
-							updateCmd('Racrocher');
-						}
-					},
-					success: {
-						label: "Décrocher",
-						className: "btn-success",
-						callback: function () {
-							updateCmd('Decrocher');
-						}
-					},
-				}
-			});
+			if(dialog !=''){
+				dialog.	message = message;
+			}else{
+				dialog= bootbox.dialog({
+					title: "{{Appel en cours}}",
+					message: message,
+					buttons: {
+						"Racrocher": {
+							className: "btn-danger",
+							callback: function () {
+								updateCmd('Racrocher');
+							}
+						},
+						success: {
+							label: "Décrocher",
+							className: "btn-success",
+							callback: function () {
+								updateCmd('Decrocher');
+							}
+						},
+					}
+				});
+				dialog.off('shown.bs.modal').on('shown.bs.modal', function(e){
+				});
+			}
+			dialog.modal("show");
 		}
 		function updateCmd(reponse){
 			$.ajax({
