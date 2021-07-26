@@ -235,7 +235,7 @@ class sip{
 		$SDP .= "s=".$this->jeedom->getName()." Audio Session\r\n";
 		$SDP .= "c=IN IP4 ".$this->src_ip."\r\n";
 		$SDP .= "t=0 0\r\n";
-		$SDP .= "m=audio 45450 RTP/AVP 0 3 4 8 19\r\n";
+		$SDP .= "m=audio 45450 RTP 0 3 4 8 19\r\n";
 		$SDP .= "a=rtpmap:0 PCMU/8000\r\n";
 		$SDP .= "a=rtpmap:3 GSM/8000\r\n";
            	$SDP .= "a=rtpmap:4 G723/8000\r\n";
@@ -819,21 +819,56 @@ class sip{
 		return $temp[1];
 	}
 	public function decodeSDP(){
-		//SIP/2.0 200 OK Via: SIP/2.0/UDP 192.168.0.26:5061;rport=49299;branch=z9hG4bK251448 Contact:  To: ;tag=ad904821 From: ;tag=51478 Call-ID: ae9b7e5859d4968d3d76ba89f191d471 CSeq: 21 INVITE Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, REGISTER, SUBSCRIBE, NOTIFY, REFER, INFO, MESSAGE, UPDATE Content-Type: application/sdp Supported: replaces, timer User-Agent: 3CXPhoneSystem 16.0.8.9 (9) 
-		//Content-Length: 211  v=0 o=3cxPS 2104423362854912 1085122229043201 IN IP4 192.168.0.95 s=3cxPS Audio call c=IN IP4 192.168.0.95 t=0 0 m=audio 7132 RTP/AVP 0 3 8 a=rtpmap:0 PCMU/8000 a=rtpmap:3 GSM/8000 a=rtpmap:8 PCMA/8000
-
-		if (!preg_match('/Audio call.* IP4 (.*) /imU',$this->rx_msg, $ip)){
-			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find IP4 in Audio call");
+		if (!preg_match('/s=(.*) /imU',$this->rx_msg, $this->sdpSessionName)){
+			log::add('clientSIP','debug',$this->jeedom->getHumanName()."Can't find SDP session name");
 			//die();
 		}
-		if (!preg_match('/Audio call.* m=audio (.*) /imU',$this->rx_msg, $port)){
-			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find m=audio in Audio call");
+		if (!preg_match('/c=(.*) (.*) (.*) /imU',$this->rx_msg, $this->sdpConnexion)){
+			log::add('clientSIP','debug',$this->jeedom->getHumanName()."Can't find parameter to SDP connection information");
 			//die();
 		}
-		$this->rtsp='rtp://'.$ip[1].':'.$port[1];
+		//$this->sdpConnexion[0] => c=IN IP4 10.130.130.114
+		//$this->sdpConnexion[1] => IN = Owner’s network type, in this case “IN” for Internet.
+		//$this->sdpConnexion[2] => IP4 = Owner’s address type, in this case IP version 4.
+		//$this->sdpConnexion[3] => 10.130.130.114 = Caller’s SIP phone’s IP address.
+		if (!preg_match('/t=(.*) (.*) /imU',$this->rx_msg, $this->sdpActiveTime)){
+			log::add('clientSIP','debug',$this->jeedom->getHumanName()."Can't find parameter to SDP active time");
+			//die();
+		}
+		//$this->sdpActiveTime[0] => t=0 0
+		//$this->sdpActiveTime[1] => 0 = Session start time
+		//$this->sdpActiveTime[2] => 0 = Session stop time
+		if (!preg_match('/m=(.*) (.*) (.*) (.*) /imU',$this->rx_msg, $this->sdpMedia)){
+			log::add('clientSIP','debug',$this->jeedom->getHumanName()."Can't find parameter in SDP media description");
+			//die();
+		}
+		//$this->sdpMedia[0] => m=audio 61896 RTP 0 8 3 101
+		//$this->sdpMedia[1] => audio = Media type of stream. This can also be video, message, audio etc.
+		//$this->sdpMedia[2] => 61896 = The port number on which the media stream will be transmitted.
+		//$this->sdpMedia[3] => RTP = The protocol which will be used to stream the media, in this case Real Time Protocol.
+		//$this->sdpMedia[4] => 0 = The code specifying the codec, in this case codec 0 = G.711 PCMU.
 	}	
 	public function getRtsp(){
-		return $this->rtsp;
+		return 'rtp://'.$this->sdpConnexion[3].':'.$this->sdpMedia[4];
+	}
+	public function getFFMEGcodec(){
+		switch($this->sdpMedia[4]){
+			case 0:
+				//a=rtpmap:0 PCMU/8000
+			return ' -f mulaw ';//-acodec mulaw ';
+			case 3:
+				//a=rtpmap:3 GSM/8000			
+			return ' -f gsm ';//-acodec gsm ';
+			case 4:
+				//a=rtpmap:4 G723/8000		
+			return ' -f g723 ';//-acodec g723 ';
+			case 8:
+				//a=rtpmap:8 PCMA/8000		
+			return ' -f alaw ';//-acodec alaw ';
+			case 18:
+				//a=rtpmap:18 G729/8000
+			return ' -f g729 ';//-acodec g729 ';
+		}
 	}
 	private function auth(){
 		if (!$this->username){
