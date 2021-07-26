@@ -188,7 +188,7 @@ class clientSIP extends eqLogic {
 		event::add('clientSIP::rtsp', $this->_sip->getBody());
 		$this->checkAndUpdateCmd('CallStatus','Appel en cours');
 		$CallStatus=$this->getCmd(null,'CallStatus');
-		$cmd ='ffmpeg -i '.$this->TextToSpeach("Test de communication de Jeedom sur une communication sip").' -f s16le -acodec pcm_s16le '.$this->_sip->getRtsp();
+		$cmd ='ffmpeg -i '.$this->TextToSpeach("Test de communication de Jeedom sur une communication sip").$this->_sip->getFFMEGcodec().$this->_sip->getRtsp();
 		$cmd .= ' >> ' . log::getPathToLog('clientSIP') . ' 2>&1';
 		exec($cmd);
 		while($CallStatus->execCmd() == 'Appel en cours'){
