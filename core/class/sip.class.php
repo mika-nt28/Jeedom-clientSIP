@@ -236,7 +236,7 @@ class sip{
 		$SDP .= "s=".$this->jeedom->getName()."\r\n";
 		$SDP .= "c=IN IP4 ".$this->src_ip."\r\n";
 		$SDP .= "t=0 0\r\n";
-		$SDP .= "m=audio 45450 RTP 0 3 4 8 19\r\n";
+		$SDP .= "m=audio 45450 RTP 0 3 4 8 18\r\n";
 		$SDP .= "a=rtpmap:0 PCMU/8000\r\n";
 		$SDP .= "a=rtpmap:3 GSM/8000\r\n";
            	$SDP .= "a=rtpmap:4 G723/8000\r\n";
