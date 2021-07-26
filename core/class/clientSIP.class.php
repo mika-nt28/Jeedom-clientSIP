@@ -132,7 +132,7 @@ class clientSIP extends eqLogic {
 				if(!is_object($clientSIP->_sip))
 					$clientSIP->CreateConnexion(true);
 				$clientSIP->_sip->newCall();
-				$return = $clientSIP->_sip->listen(array('INVITE','MESSAGE'));
+				$return = $clientSIP->_sip->listen(array('INVITE','NOTIFY' ,'MESSAGE'));
 				switch($return){
 					case 'INVITE':
 						sleep(30);
@@ -140,6 +140,9 @@ class clientSIP extends eqLogic {
 					break;
 					case 'MESSAGE':
 						message::add('sucess', $clientSIP->_sip->getBody());
+					break;
+					case 'NOTIFY':
+						$clientSIP->Decrocher();
 					break;
 				}
 			}
@@ -224,8 +227,10 @@ class clientSIP extends eqLogic {
 		$this->_sip->setTo('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setMethod('INVITE');
 		$res=$this->_sip->send();
-		if ($this->_sip->getResCode() == '200')
-			$this->checkAndUpdateCmd('CallStatus','Appel en cours');
+		while ($this->_sip->getResCode() != '200')
+			sleep(5);
+		//$this->checkAndUpdateCmd('CallStatus','Appel en cours');
+		$this->Decrocher();
 	}
 	public function sendMessage($number,$message) {	
 		log::add('clientSIP', 'debug', 'Envoie un message => ' . $number);
@@ -264,7 +269,7 @@ class clientSIP extends eqLogic {
 	public function TextToSpeach($Texte) {
 		$SpeachFile = '/tmp/' . hash('md5', $Texte) . '.mp3';
 		if (!file_exists($SpeachFile)) {
-			$lang = $this->getConfiguration('lang');
+			$lang = str_replace('_','-',config::byKey('language', 'core'));
 			if ($lang == '') {
 				$lang == 'fr-FR';
 			}
