@@ -368,14 +368,13 @@ class sip{
 	private function ActionForRxCode(){
 		switch($this->res_code){
 			case '100':
-				$this->reply(100,'Trying');
+				//$this->reply(100,'Trying');
 			break;
 			case '180':
-				$this->reply(180,'Ringing');
+				//$this->reply(180,'Ringing');
 			break;
 			case '200':
-				$this->decodeSDP();
-				$this->_sip->reply(200,'OK');
+			//	$this->_sip->reply(200,'OK');
 			break;
 			case '407':
 				$this->cseq++;
@@ -538,6 +537,7 @@ class sip{
 		$this->res_cseq_method = $this->parseCSeqMethod();
 		// ACK 2XX-6XX - only invites - RFC3261 17.1.2.1
 		if ($this->res_cseq_method == 'INVITE' && in_array(substr($this->res_code,0,1),array('2','3','4','5','6')))	{
+			$this->decodeSDP();
 			$this->ack();
 		}
 		return $this->res_code;
@@ -819,11 +819,11 @@ class sip{
 		return $temp[1];
 	}
 	public function decodeSDP(){
-		if (!preg_match('/s=(.*) /imU',$this->rx_msg, $this->sdpSessionName)){
+		if (!preg_match('/s=(.*)$/imU',$this->rx_msg, $this->sdpSessionName)){
 			log::add('clientSIP','debug',$this->jeedom->getHumanName()."Can't find SDP session name");
 			//die();
 		}
-		if (!preg_match('/c=(.*) (.*) (.*) /imU',$this->rx_msg, $this->sdpConnexion)){
+		if (!preg_match('/c=(.*) (.*) (.*)$/imU',$this->rx_msg, $this->sdpConnexion)){
 			log::add('clientSIP','debug',$this->jeedom->getHumanName()."Can't find parameter to SDP connection information");
 			//die();
 		}
@@ -831,14 +831,14 @@ class sip{
 		//$this->sdpConnexion[1] => IN = Owner’s network type, in this case “IN” for Internet.
 		//$this->sdpConnexion[2] => IP4 = Owner’s address type, in this case IP version 4.
 		//$this->sdpConnexion[3] => 10.130.130.114 = Caller’s SIP phone’s IP address.
-		if (!preg_match('/t=(.*) (.*) /imU',$this->rx_msg, $this->sdpActiveTime)){
+		if (!preg_match('/t=(.*) (.*)$/imU',$this->rx_msg, $this->sdpActiveTime)){
 			log::add('clientSIP','debug',$this->jeedom->getHumanName()."Can't find parameter to SDP active time");
 			//die();
 		}
 		//$this->sdpActiveTime[0] => t=0 0
 		//$this->sdpActiveTime[1] => 0 = Session start time
 		//$this->sdpActiveTime[2] => 0 = Session stop time
-		if (!preg_match('/m=(.*) (.*) (.*) (.*) /imU',$this->rx_msg, $this->sdpMedia)){
+		if (!preg_match('/m=(.*) (.*) (.*) (.*)$/imU',$this->rx_msg, $this->sdpMedia)){
 			log::add('clientSIP','debug',$this->jeedom->getHumanName()."Can't find parameter in SDP media description");
 			//die();
 		}
@@ -849,7 +849,10 @@ class sip{
 		//$this->sdpMedia[4] => 0 = The code specifying the codec, in this case codec 0 = G.711 PCMU.
 	}	
 	public function getRtsp(){
-		return 'rtp://'.$this->sdpConnexion[3].':'.$this->sdpMedia[4];
+		if($this->sdpMedia[3]){
+			case 'RTP':
+				return 'rtp://'.$this->sdpConnexion[3].':'.$this->sdpMedia[2];
+		}
 	}
 	public function getFFMEGcodec(){
 		switch($this->sdpMedia[4]){
