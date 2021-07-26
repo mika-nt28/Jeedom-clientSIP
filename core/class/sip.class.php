@@ -212,7 +212,7 @@ class sip{
 		$this->extra_headers[] = $header;
 	}
 	public function setFrom($from){
-      if (preg_match('/<.*>$/',$from))
+ 		if (preg_match('/<.*>$/',$from))
 			$this->from = $from;
 		else
 			$this->from = ('<'.$from.'>');
@@ -224,7 +224,7 @@ class sip{
 		$this->from_user = $m[1];
 	}
 	public function setTo($to){
-      if (preg_match('/<.*>$/',$to))
+		if (preg_match('/<.*>$/',$to))
 			$this->to = $to;
 		else
 			$this->to = ('<'.$to.'>');
@@ -282,7 +282,7 @@ class sip{
 		}
 	}
 	public function setContact($contact){
-      if (preg_match('/<.*>$/',$contact))
+		if (preg_match('/<.*>$/',$contact))
 			$this->contact = $contact;
 		else
 			$this->contact = ('<'.$contact.'>');
@@ -374,6 +374,7 @@ class sip{
 				$this->reply(180,'Ringing');
 			break;
 			case '200':
+				$this->decodeSDP();
 				$this->_sip->reply(200,'OK');
 			break;
 			case '407':
@@ -514,7 +515,7 @@ class sip{
 		// Request via
 		$m = array();
 		$this->req_via = array();
-		if (preg_match_all('/^Via: (.*)$/im', $this->rx_msg, $m)){
+		if (preg_match_all('/Via: (.*)$/im', $this->rx_msg, $m)){
 			foreach ($m[1] as $via)	{
 				$this->req_via[] = trim($via);
 			}
@@ -523,12 +524,12 @@ class sip{
 		$this->parseRecordRoute();
 		// To tag
 		$m = array();
-		if (preg_match('/^To: .*;tag=(.*)$/im', $this->rx_msg, $m))	{
+		if (preg_match('/To: .*;tag=(.*)$/im', $this->rx_msg, $m))	{
 			$this->to_tag = trim($m[1]);
 		}
 		// Server Name
 		$m = array(); 
-		if (preg_match('/^Server: (.*)/im', $this->rx_msg, $m))	{
+		if (preg_match('/Server: (.*)/im', $this->rx_msg, $m))	{
 			$this->server = trim($m[1]);
 		}
 		// Response contact
@@ -550,7 +551,7 @@ class sip{
 		// Request via
 		$m = array();
 		$this->req_via = array();
-		if (preg_match_all('/^Via: (.*)$/im',$this->rx_msg,$m))	{
+		if (preg_match_all('/Via: (.*)$/im',$this->rx_msg,$m))	{
 			if ($this->server_mode)	{
 				// set $this->host to top most via
 				$m2 = array();
@@ -568,32 +569,32 @@ class sip{
 		$this->req_cseq_method = $this->parseCSeqMethod();
 		// Request CSeq number
 		$m = array(); 
-		if (preg_match('/^CSeq: ([0-9]+)/im', $this->rx_msg, $m)){
+		if (preg_match('/CSeq: ([0-9]+)/im', $this->rx_msg, $m)){
 			$this->req_cseq_number = trim($m[1]);
 		}
 		// Server Name
 		$m = array(); 
-		if (preg_match('/^Server: (.*)/im', $this->rx_msg, $m)){
+		if (preg_match('/Server: (.*)/im', $this->rx_msg, $m)){
 			$this->server = trim($m[1]);
 		}
 		// Request From
 		$m = array();
-		if (preg_match('/^From: (.*)/im', $this->rx_msg, $m)){
+		if (preg_match('/From: (.*)/im', $this->rx_msg, $m)){
 			$this->req_from = (strpos($m[1],';')) ? substr($m[1],0,strpos($m[1],';')) : $m[1];
 		}
 		// Request From tag
 		$m = array();
-		if (preg_match('/^From:.*;tag=(.*)$/im', $this->rx_msg, $m)){
+		if (preg_match('/From:.*;tag=(.*)$/im', $this->rx_msg, $m)){
 			$this->req_from_tag = trim($m[1]);
 		}
 		// Request To
 		$m = array();
-		if (preg_match('/^To: (.*)/im', $this->rx_msg, $m)){
+		if (preg_match('/To: (.*)/im', $this->rx_msg, $m)){
 			$this->req_to = (strpos($m[1],';')) ? substr($m[1],0,strpos($m[1],';')) : $m[1];
 		}
 		// Request To tag
 		$m = array();
-		if (preg_match('/^To:.*;tag=(.*)$/im', $this->rx_msg, $m)){
+		if (preg_match('/To:.*;tag=(.*)$/im', $this->rx_msg, $m)){
 			$this->req_to_tag = trim($m[1]);
 		}else{
 			$this->req_to_tag = rand(10000,99999);
@@ -601,7 +602,7 @@ class sip{
 		// Call-id
 		if (!$this->call_id){
 			$m = array();
-			if (preg_match('/^Call-ID:(.*@)$/im', $this->rx_msg, $m)){
+			if (preg_match('/Call-ID:(.*@)$/im', $this->rx_msg, $m)){
 				$this->call_id = trim($m[1]);
 			}
 		}
@@ -621,7 +622,7 @@ class sip{
 		// To
 		$r.= 'To: '.$this->req_to.';tag='.$this->req_to_tag."\r\n";
 		// Contact
-      	if ($this->contact != null)	{
+		if ($this->contact != null)	{
 			$r.= 'Contact: '.$this->contact."\r\n";
 		}else if ($this->method != 'MESSAGE'){
 			$r.= 'Contact: <sip:'.$this->from_user.'@'.$this->src_ip.':'.$this->src_port.'>'."\r\n";
@@ -719,7 +720,7 @@ class sip{
 			$r.= 'To: '.$this->to."\r\n";
 		}
 		// Contact
-      	if ($this->contact != null)	{
+		if ($this->contact != null)	{
 			$r.= 'Contact: '.$this->contact."\r\n";
 		}else if ($this->method != 'MESSAGE'){
 			$r.= 'Contact: <sip:'.$this->from_user.'@'.$this->src_ip.':'.$this->src_port.'>'."\r\n";
@@ -817,20 +818,22 @@ class sip{
 		}
 		return $temp[1];
 	}
-	public function getRtsp(){
+	public function decodeSDP(){
 		//SIP/2.0 200 OK Via: SIP/2.0/UDP 192.168.0.26:5061;rport=49299;branch=z9hG4bK251448 Contact:  To: ;tag=ad904821 From: ;tag=51478 Call-ID: ae9b7e5859d4968d3d76ba89f191d471 CSeq: 21 INVITE Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, REGISTER, SUBSCRIBE, NOTIFY, REFER, INFO, MESSAGE, UPDATE Content-Type: application/sdp Supported: replaces, timer User-Agent: 3CXPhoneSystem 16.0.8.9 (9) 
 		//Content-Length: 211  v=0 o=3cxPS 2104423362854912 1085122229043201 IN IP4 192.168.0.95 s=3cxPS Audio call c=IN IP4 192.168.0.95 t=0 0 m=audio 7132 RTP/AVP 0 3 8 a=rtpmap:0 PCMU/8000 a=rtpmap:3 GSM/8000 a=rtpmap:8 PCMA/8000
 
-		if (!preg_match('/^Audio call: .*IP4"(.*)"/imU',$this->rx_msg, $ip)){
-			//log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find realm in proxy-auth");
-			//die();
-		}		
-		if (!preg_match('/^Audio call: .*m=audio"(.*)"/imU',$this->rx_msg, $port)){
-			//log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find realm in proxy-auth");
+		if (!preg_match('/Audio call.* IP4 (.*) /imU',$this->rx_msg, $ip)){
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find IP4 in Audio call");
 			//die();
 		}
-		$rtsp='rtp://'.$ip.':'.$port;
-		return $rtsp;
+		if (!preg_match('/Audio call.* m=audio (.*) /imU',$this->rx_msg, $port)){
+			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find m=audio in Audio call");
+			//die();
+		}
+		$this->rtsp='rtp://'.$ip[1].':'.$port[1];
+	}	
+	public function getRtsp(){
+		return $this->rtsp;
 	}
 	private function auth(){
 		if (!$this->username){
@@ -843,14 +846,14 @@ class sip{
 		}
 		// realm
 		$m = array();
-		if (!preg_match('/^Proxy-Authenticate: .*realm="(.*)"/imU',$this->rx_msg, $m)){
+		if (!preg_match('/Proxy-Authenticate: .*realm="(.*)"/imU',$this->rx_msg, $m)){
 			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find realm in proxy-auth");
 			die();
 		}
 		$realm = $m[1];
 		// nonce
 		$m = array();
-		if (!preg_match('/^Proxy-Authenticate: .*,*nonce="(.*)"/imU',$this->rx_msg, $m)){
+		if (!preg_match('/Proxy-Authenticate: .*,*nonce="(.*)"/imU',$this->rx_msg, $m)){
 			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find nonce in proxy-auth");
 			die();
 		}
@@ -880,14 +883,14 @@ class sip{
 		}
 		// realm
 		$m = array();
-		if (!preg_match('/^WWW-Authenticate: .* realm="(.*)"/imU',$this->rx_msg, $m)){
+		if (!preg_match('/WWW-Authenticate: .* realm="(.*)"/imU',$this->rx_msg, $m)){
 			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find realm in www-auth");
 			die();
 		}
 		$realm = $m[1];
 		// nonce
 		$m = array();
-		if (!preg_match('/^WWW-Authenticate: .*,*nonce="(.*)"/imU',$this->rx_msg, $m)){
+		if (!preg_match('/WWW-Authenticate: .*,*nonce="(.*)"/imU',$this->rx_msg, $m)){
 			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find nonce in www-auth");
 			die();
 		}
@@ -977,7 +980,7 @@ class sip{
 	private function parseRecordRoute(){
 		$this->record_route = array();
 		$m = array();
-		if (preg_match_all('/^Record-Route: (.*)$/im', $this->rx_msg, $m)){
+		if (preg_match_all('/Record-Route: (.*)$/im', $this->rx_msg, $m)){
 			foreach ($m[1] as $route_header){
 				$this->record_route[] = $route_header;
 				foreach (explode(",",$route_header) as $route){
@@ -991,7 +994,7 @@ class sip{
 	private function parseContact(){
 		$output = null;
 		$m = array();
-		if (preg_match('/^Contact:.*<(.*)>/im', $this->rx_msg, $m)){
+		if (preg_match('/Contact:.*<(.*)>/im', $this->rx_msg, $m)){
 			$output = trim($m[1]);
 			$semicolon = strpos($output, ";");
 			if ($semicolon !== false){
@@ -1003,7 +1006,7 @@ class sip{
 	private function parseCSeqMethod(){
 		$output = null;
 		$m = array();
-		if (preg_match('/^CSeq: [0-9]+ (.*)$/im', $this->rx_msg, $m)){
+		if (preg_match('/CSeq: [0-9]+ (.*)$/im', $this->rx_msg, $m)){
 			$output = trim($m[1]);
 		}
 		return $output;
