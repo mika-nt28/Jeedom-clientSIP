@@ -849,7 +849,7 @@ class sip{
 		//$this->sdpMedia[4] => 0 = The code specifying the codec, in this case codec 0 = G.711 PCMU.
 	}	
 	public function getRtsp(){
-		if($this->sdpMedia[3]){
+		switch($this->sdpMedia[3]){
 			case 'RTP':
 				return 'rtp://'.$this->sdpConnexion[3].':'.$this->sdpMedia[2];
 		}
