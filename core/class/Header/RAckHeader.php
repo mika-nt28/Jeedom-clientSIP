@@ -1,18 +1,5 @@
 <?php
 /**
-* RTCKit\SIP\RAckHeader Class
-*/
-declare(strict_types = 1);
-
-namespace RTCKit\SIP\Header;
-
-use RTCKit\SIP\Response;
-use RTCKit\SIP\Exception\InvalidDuplicateHeader;
-use RTCKit\SIP\Exception\InvalidHeaderLineException;
-use RTCKit\SIP\Exception\InvalidHeaderValue;
-use RTCKit\SIP\Exception\InvalidScalarValue;
-
-/**
 * RAck Header Class
 *
 * https://datatracker.ietf.org/doc/html/rfc3262#section-7.2
