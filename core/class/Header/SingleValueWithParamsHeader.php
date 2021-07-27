@@ -1,18 +1,5 @@
 <?php
 /**
-* RTCKit\SIP\Header\SingleValueWithParamsHeader Class
-*/
-declare(strict_types = 1);
-
-namespace RTCKit\SIP\Header;
-
-use RTCKit\SIP\Response;
-use RTCKit\SIP\Exception\InvalidDuplicateHeader;
-use RTCKit\SIP\Exception\InvalidHeaderLineException;
-use RTCKit\SIP\Exception\InvalidHeaderParameter;
-use RTCKit\SIP\Exception\InvalidHeaderValue;
-
-/**
 * SingleValueWithParamsHeader Class
 */
 class SingleValueWithParamsHeader
