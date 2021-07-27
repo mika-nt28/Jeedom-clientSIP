@@ -132,17 +132,27 @@ class clientSIP extends eqLogic {
 				if(!is_object($clientSIP->_sip))
 					$clientSIP->CreateConnexion(true);
 				$clientSIP->_sip->newCall();
+				log::add('clientSIP', 'debug', 'Attente d\'un appel');
 				$return = $clientSIP->_sip->listen(array('INVITE','NOTIFY' ,'MESSAGE'));
+				log::add('clientSIP', 'debug', 'Appel en recu => ' . json_encode($return));
 				switch($return){
 					case 'INVITE':
-						sleep(30);
+						sleep(1);
+						$clientSIP->_sip->reply(100,'Ok');
+						sleep(1);
+						$clientSIP->_sip->reply(180,'Ok');
+						sleep(1);
+						$clientSIP->_sip->reply(200,'Ok');
+						sleep(1);
 						$clientSIP->Decrocher();
+                        $clientSIP->calling();
+                        $clientSIP->Racrocher();
 					break;
 					case 'MESSAGE':
 						message::add('sucess', $clientSIP->_sip->getBody());
 					break;
 					case 'NOTIFY':
-						$clientSIP->Decrocher();
+					//	$clientSIP->Decrocher();
 					break;
 				}
 			}
@@ -184,17 +194,9 @@ class clientSIP extends eqLogic {
 		if($this->_sip == null)			
 			$this->CreateConnexion(false);
 		//ajouter les options de compatibilité de jeedom
-		$this->_sip->reply(200,'Ok');
 		event::add('clientSIP::rtsp', $this->_sip->getBody());
 		$this->checkAndUpdateCmd('CallStatus','Appel en cours');
-		$CallStatus=$this->getCmd(null,'CallStatus');
-		$cmd ='ffmpeg -i '.$this->TextToSpeach("Test de communication de Jeedom sur une communication sip").$this->_sip->getFFMEGcodec().$this->_sip->getRtsp();
-		$cmd .= ' >> ' . log::getPathToLog('clientSIP') . ' 2>&1';
-		exec($cmd);
-		while($CallStatus->execCmd() == 'Appel en cours'){
-			sleep(5);
-		}
-		$this->Racrocher();
+		sleep(5);
 	}
 	public function Racrocher() {
 		if($this->_sip == null)			
@@ -212,6 +214,7 @@ class clientSIP extends eqLogic {
 			$this->_sip->send();
 		}
 		$this->checkAndUpdateCmd('CallStatus','Racrocher');
+		event::add('clientSIP::close','');
 		
 	}
 	public function call($number) {	
@@ -227,10 +230,11 @@ class clientSIP extends eqLogic {
 		$this->_sip->setTo('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setMethod('INVITE');
 		$res=$this->_sip->send();
-		while ($this->_sip->getResCode() != '200')
-			sleep(5);
+		sleep(5);
 		//$this->checkAndUpdateCmd('CallStatus','Appel en cours');
 		$this->Decrocher();
+		$this->calling();
+		$this->Racrocher();
 	}
 	public function sendMessage($number,$message) {	
 		log::add('clientSIP', 'debug', 'Envoie un message => ' . $number);
@@ -247,6 +251,11 @@ class clientSIP extends eqLogic {
 		if ($res == '200')
 			event::add('clientSIP::message', 'Le message a bien été transmis');
 	}
+	public function calling(){
+		$cmd ='ffmpeg -i '.$this->TextToSpeach("Test de communication de Jeedom sur une communication sip").$this->_sip->getFFMEGcodec().$this->_sip->getRtsp();
+		$cmd .= ' >> ' . log::getPathToLog('clientSIP');// . ' 2>&1';
+		exec($cmd);
+    }
 	public function AddCommande($Name,$_logicalId,$Type="info", $SubType='string',$Template='default') {
 		$Commande = $this->getCmd(null,$_logicalId);
 		if (!is_object($Commande)){
