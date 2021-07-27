@@ -1,12 +1,5 @@
 <?php
 /**
-* RTCKit\SIP\ContactValue Class
-*/
-declare(strict_types = 1);
-
-namespace RTCKit\SIP\Header;
-
-/**
 * Contact Header Field Value Class
 */
 class ContactValue
