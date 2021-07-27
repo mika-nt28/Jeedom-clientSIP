@@ -1,18 +1,5 @@
 <?php
 /**
-* RTCKit\SIP\CSeqHeader Class
-*/
-declare(strict_types = 1);
-
-namespace RTCKit\SIP\Header;
-
-use RTCKit\SIP\Response;
-use RTCKit\SIP\Exception\InvalidDuplicateHeader;
-use RTCKit\SIP\Exception\InvalidHeaderLineException;
-use RTCKit\SIP\Exception\InvalidHeaderValue;
-use RTCKit\SIP\Exception\InvalidScalarValue;
-
-/**
 * CSeq Header Class
 */
 class CSeqHeader
