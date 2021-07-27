@@ -1,19 +1,5 @@
 <?php
 /**
-* RTCKit\SIP\ViaHeader Class
-*/
-declare(strict_types = 1);
-
-namespace RTCKit\SIP\Header;
-
-use RTCKit\SIP\Message;
-use RTCKit\SIP\Response;
-use RTCKit\SIP\Exception\InvalidHeaderLineException;
-use RTCKit\SIP\Exception\InvalidHeaderParameter;
-use RTCKit\SIP\Exception\InvalidHeaderValue;
-use RTCKit\SIP\Exception\InvalidProtocolVersionException;
-
-/**
 * Via Header Class
 */
 class ViaHeader
