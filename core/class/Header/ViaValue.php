@@ -1,12 +1,5 @@
 <?php
 /**
-* RTCKit\SIP\ViaValue Class
-*/
-declare(strict_types = 1);
-
-namespace RTCKit\SIP\Header;
-
-/**
 * Via Header Field Value Class
 */
 class ViaValue
