@@ -1,12 +1,5 @@
 <?php
 /**
-* RTCKit\SIP\MaxForwardsHeader Class
-*/
-declare(strict_types = 1);
-
-namespace RTCKit\SIP\Header;
-
-/**
 * Scalar Header Class
 */
 class MaxForwardsHeader extends ScalarHeader
