@@ -87,18 +87,7 @@
 		$(".cmd[data-cmd_id=#id#] .btnCall").off().on("click", function() {
 			var num = $('.numDisplay[data-cmd_id=#id#]').val();
 			jeedom.cmd.execute({id: '#id#', value: {title:num}});
-			bootbox.dialog({
-				title: "Appel en cours",
-				message:'Appel en cours de '+num,
-				buttons: {
-					"Racrocher": {
-						className: "btn-danger",
-						callback: function () {
-							updateCmd('Racrocher');
-						}
-					}
-				}
-			});
+			Call('Appel en cours de '+num,{buttonRacrocher()});
 		});
 	</script>
 </div>
