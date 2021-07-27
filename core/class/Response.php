@@ -1,18 +1,4 @@
 <?php
-/**
-* RTCKit\SIP\Response Class
-*/
-declare(strict_types = 1);
-
-namespace RTCKit\SIP;
-
-use RTCKit\SIP\Exception\InvalidMessageStartLineException;
-use RTCKit\SIP\Exception\InvalidProtocolVersionException;
-use RTCKit\SIP\Exception\InvalidStatusCodeException;
-
-/**
-* SIP Response class
-*/
 class Response extends Message
 {
     /* Extended search being performed may take a significant time so a forking
