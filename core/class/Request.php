@@ -1,19 +1,4 @@
 <?php
-/**
-* RTCKit\SIP\Request Class
-*/
-declare(strict_types = 1);
-
-namespace RTCKit\SIP;
-
-use RTCKit\SIP\Exception\InvalidMessageStartLineException;
-use RTCKit\SIP\Exception\InvalidProtocolVersionException;
-use RTCKit\SIP\Exception\InvalidRequestMethod;
-use RTCKit\SIP\Exception\InvalidRequestURI;
-
-/**
-* SIP Request class
-*/
 class Request extends Message
 {
     /** @var string Request method */
