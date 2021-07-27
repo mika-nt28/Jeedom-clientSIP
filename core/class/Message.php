@@ -1,29 +1,5 @@
 <?php
-/**
-* RTCKit\SIP\Message Class
-*/
 declare(strict_types = 1);
-
-namespace RTCKit\SIP;
-
-use RTCKit\SIP\Exception\InvalidBodyLengthException;
-use RTCKit\SIP\Exception\InvalidCSeqValue;
-use RTCKit\SIP\Exception\InvalidHeaderLineException;
-use RTCKit\SIP\Exception\InvalidHeaderSectionException;
-use RTCKit\SIP\Header\CallIdHeader;
-use RTCKit\SIP\Header\ContactHeader;
-use RTCKit\SIP\Header\CSeqHeader;
-use RTCKit\SIP\Header\Header;
-use RTCKit\SIP\Header\FromHeader;
-use RTCKit\SIP\Header\MaxForwardsHeader;
-use RTCKit\SIP\Header\MultiValueHeader;
-use RTCKit\SIP\Header\MultiValueWithParamsHeader;
-use RTCKit\SIP\Header\NameAddrHeader;
-use RTCKit\SIP\Header\RAckHeader;
-use RTCKit\SIP\Header\RSeqHeader;
-use RTCKit\SIP\Header\ScalarHeader;
-use RTCKit\SIP\Header\SingleValueWithParamsHeader;
-use RTCKit\SIP\Header\ViaHeader;
 
 /**
 * Base SIP message class
