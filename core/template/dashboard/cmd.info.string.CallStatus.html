@@ -12,8 +12,11 @@
 			}
 		}
 		jeedom.cmd.update['#id#']({display_value:"#state#",valueDate:'#valueDate#',collectDate:'#collectDate#',alertLevel:'#alertLevel#'});
+		$('body').on('clientSIP::close', function (_event,_options) {
+			dialog.modal("hide");
+		});
 		$('body').on('clientSIP::call', function (_event,_options) {
-			Call('Un appel est en cours, voulez vous répondre');
+			Call('Un appel est en cours, voulez vous répondre',{buttonRacrocher(),buttonDecrocher()});
 		});
 		$('body').on('clientSIP::rtsp', function (_event,_options) {
 			/*var message=$('<div>')
@@ -25,35 +28,35 @@
 					.append($('<param name="AutoPlay" value="True"/>'))
 					.append($('<embed id="vlcEmb" type="application/x-google-vlc-plugin" version="VideoLAN.VLCPlugin.2" autoplay="yes" loop="no" target="'+_options+'" width="640" height="480"/>'))));*/
 			var message = "Appel en cours";
-			Call(message);
+			Call(message,{buttonRacrocher()});
 		});
 		var dialog = '';
-		function Call(message){
-			if(dialog !=''){
-				dialog.	message = message;
-			}else{
-				dialog= bootbox.dialog({
-					title: "{{Appel en cours}}",
-					message: message,
-					buttons: {
-						"Racrocher": {
-							className: "btn-danger",
-							callback: function () {
-								updateCmd('Racrocher');
-							}
-						},
-						success: {
-							label: "Décrocher",
-							className: "btn-success",
-							callback: function () {
-								updateCmd('Decrocher');
-							}
-						},
-					}
-				});
-				dialog.off('shown.bs.modal').on('shown.bs.modal', function(e){
-				});
-			}
+		function buttonRacrocher(){
+			return "Racrocher": {
+				className: "btn-danger",
+				callback: function () {
+					updateCmd('Racrocher');
+				}
+			};
+		}
+		function buttonDecrocher(){
+			return success: {
+				label: "Décrocher",
+				className: "btn-success",
+				callback: function () {
+					updateCmd('Decrocher');
+				}
+			};
+		}
+		function Call(message, buttons){
+			dialog.modal("hide");
+			dialog= bootbox.dialog({
+				title: "{{Appel en cours}}",
+				message: message,
+				buttons: buttons
+			});
+			dialog.off('shown.bs.modal').on('shown.bs.modal', function(e){
+			});
 			dialog.modal("show");
 		}
 		function updateCmd(reponse){
