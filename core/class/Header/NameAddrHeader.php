@@ -1,18 +1,5 @@
 <?php
 /**
-* RTCKit\SIP\Header\NameAddrHeader Class
-*/
-declare(strict_types = 1);
-
-namespace RTCKit\SIP\Header;
-
-use RTCKit\SIP\Response;
-use RTCKit\SIP\Exception\InvalidDuplicateHeader;
-use RTCKit\SIP\Exception\InvalidHeaderLineException;
-use RTCKit\SIP\Exception\InvalidHeaderParameter;
-use RTCKit\SIP\Exception\InvalidHeaderValue;
-
-/**
 * Name-Addr Header Class
 */
 class NameAddrHeader
