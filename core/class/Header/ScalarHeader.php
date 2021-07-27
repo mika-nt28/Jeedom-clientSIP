@@ -1,17 +1,5 @@
 <?php
 /**
-* RTCKit\SIP\ScalarHeader Class
-*/
-declare(strict_types = 1);
-
-namespace RTCKit\SIP\Header;
-
-use RTCKit\SIP\Response;
-use RTCKit\SIP\Exception\InvalidDuplicateHeader;
-use RTCKit\SIP\Exception\InvalidScalarValue;
-use RTCKit\SIP\Exception\InvalidHeaderValue;
-
-/**
 * Scalar Header Class
 */
 class ScalarHeader
