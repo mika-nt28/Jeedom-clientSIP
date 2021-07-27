@@ -1,16 +1,5 @@
 <?php
 /**
-* RTCKit\SIP\CallIdHeader Class
-*/
-declare(strict_types = 1);
-
-namespace RTCKit\SIP\Header;
-
-use RTCKit\SIP\Response;
-use RTCKit\SIP\Exception\InvalidDuplicateHeader;
-use RTCKit\SIP\Exception\InvalidHeaderValue;
-
-/**
 * Call-ID Header Class
 */
 class CallIdHeader
