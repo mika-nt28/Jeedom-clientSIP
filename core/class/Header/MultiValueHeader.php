@@ -1,12 +1,5 @@
 <?php
 /**
-* RTCKit\SIP\Header\MultiValueHeader Class
-*/
-declare(strict_types = 1);
-
-namespace RTCKit\SIP\Header;
-
-/**
 * MultiValueHeader Class
 */
 class MultiValueHeader
