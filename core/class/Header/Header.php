@@ -1,12 +1,5 @@
 <?php
 /**
-* RTCKit\SIP\Header\Header Class
-*/
-declare(strict_types = 1);
-
-namespace RTCKit\SIP\Header;
-
-/**
 * Header Class
 */
 class Header
