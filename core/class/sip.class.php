@@ -446,7 +446,6 @@ class sip{
 				if ($this->rx_msg)	{
 					switch($this->req_method){
 						case "INVITE":
-							$this->reply(180,'Ringing');
 							$this->jeedom->checkAndUpdateCmd('CallStatus','Sonnerie');
 						break;
 						case "MESSAGE":
