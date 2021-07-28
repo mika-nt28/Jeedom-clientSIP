@@ -5,17 +5,17 @@
 class ContactValue
 {
     /** @var string Address portion of the Contact value */
-    public string $addr;
+    public $addr;
 
     /** @var string Display name portion of the Contact value */
-    public string $name;
+    public $name;
 
     /** @var float Q parameter, if provided */
-    public float $q;
+    public $q;
 
     /** @var int Expires parameter, if provided */
-    public int $expires;
+    public $expires;
 
     /** @var array<string, string> Additional/extension parameters */
-    public array $params = [];
+    public $params = [];
 }
