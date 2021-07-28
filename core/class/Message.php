@@ -1,10 +1,6 @@
 <?php
-declare(strict_types = 1);
 
-/**
-* Base SIP message class
-*/
-class Message
+class SIPMessage
 {
     /* Protocol constants */
     public const SIP_VERSION = 'SIP/2.0';
@@ -30,76 +26,76 @@ class Message
     public $version;
 
     /* Via header field */
-    public ViaHeader $via;
+    public $via;
 
     /* From/To header field */
-    public NameAddrHeader $from;
-    public NameAddrHeader $to;
+    public $from;
+    public $to;
 
     /* Contact header field */
-    public ContactHeader $contact;
+    public $contact;
 
     /* Call-ID header field */
-    public CallIdHeader $callId;
+    public $callId;
 
     /* CSeq header field */
-    public CSeqHeader $cSeq;
+    public $cSeq;
 
     /* Scalar header fields */
-    public ScalarHeader $maxForwards;
-    public ScalarHeader $contentLength;
-    public ScalarHeader $expires;
-    public ScalarHeader $minExpires;
-    public ScalarHeader $retryAfter;
-    public ScalarHeader $timestamp;
+    public $maxForwards;
+    public $contentLength;
+    public $expires;
+    public $minExpires;
+    public $retryAfter;
+    public $timestamp;
 
     /* Single value with parameters header fields */
-    public SingleValueWithParamsHeader $contentType;
+    public $contentType;
 
     /* Multiple value header fields */
-    public MultiValueHeader $acceptEncoding;
-    public MultiValueHeader $allow;
-    public MultiValueHeader $allowEvents;
-    public MultiValueHeader $contentEncoding;
-    public MultiValueHeader $inReplyTo;
-    public MultiValueHeader $require;
-    public MultiValueHeader $supported;
-    public MultiValueHeader $unsupported;
-    public MultiValueHeader $proxyRequire;
+    public $acceptEncoding;
+    public $allow;
+    public $allowEvents;
+    public $contentEncoding;
+    public $inReplyTo;
+    public $require;
+    public $supported;
+    public $unsupported;
+    public $proxyRequire;
 
     /* Multiple value with parameters header fields */
-    public MultiValueWithParamsHeader $accept;
-    public MultiValueWithParamsHeader $acceptLanguage;
-    public MultiValueWithParamsHeader $callInfo;
-    public MultiValueWithParamsHeader $contentLanguage;
+    public $accept;
+    public $acceptLanguage;
+    public $callInfo;
+    public $contentLanguage;
 
     /* Reply-To header field */
-    public NameAddrHeader $replyTo;
+    public $replyTo;
 
     /* Generic common header fields */
-    public Header $alertInfo;
-    public Header $authenticationInfo;
-    public Header $authorization;
-    public Header $date;
-    public Header $errorInfo;
-    public Header $proxyAuthenticate;
-    public Header $proxyAuthorization;
-    public Header $recordRoute;
-    public Header $mimeVersion;
-    public Header $organization;
-    public Header $priority;
-    public Header $route;
-    public Header $subject;
-    public Header $userAgent;
-    public Header $warning;
-    public Header $wwwAuthenticate;
+    public $alertInfo;
+    public $authenticationInfo;
+    public $authorization;
+    public $date;
+    public $errorInfo;
+    public $proxyAuthenticate;
+    public $proxyAuthorization;
+    public $recordRoute;
+    public $mimeVersion;
+    public $organization;
+    public $priority;
+    public $route;
+    public $subject;
+    public $userAgent;
+    public $warning;
+    public $wwwAuthenticate;
 
     /* REFER header fields */
-    public Header $referTo;
+    public $referTo;
 
     /* PRACK header fields */
-    public RAckHeader $rAck;
-    public ScalarHeader $rSeq;
+    public $rAck;
+    public $rSeq;
 
     /** @var string Message body */
     public $body;
@@ -118,7 +114,7 @@ class Message
      * @throws InvalidHeaderSectionException
      * @return Message
      */
-    public static function parse(string $text, bool $ignoreBody = false): Message
+    public static function parse(string $text, bool $ignoreBody = false): SIPMessage
     {
         $text = ltrim($text, "\r\n");
         $lines = explode("\r\n", $text);
