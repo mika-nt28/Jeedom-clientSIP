@@ -27,7 +27,7 @@ class Message
     ];
 
     /** @var string Message SIP Version */
-    public string $version;
+    public $version;
 
     /* Via header field */
     public ViaHeader $via;
@@ -102,10 +102,10 @@ class Message
     public ScalarHeader $rSeq;
 
     /** @var string Message body */
-    public string $body;
+    public $body;
 
     /** @var array<string, Header> Additional/extension headers */
-    public array $extraHeaders = [];
+    public $extraHeaders = [];
 
     /**
      * Parses a raw SIP message into a Request or Response
