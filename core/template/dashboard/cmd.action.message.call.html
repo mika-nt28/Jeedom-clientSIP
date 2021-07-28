@@ -87,7 +87,6 @@
 		$(".cmd[data-cmd_id=#id#] .btnCall").off().on("click", function() {
 			var num = $('.numDisplay[data-cmd_id=#id#]').val();
 			jeedom.cmd.execute({id: '#id#', value: {title:num}});
-			Call('Appel en cours de '+num,{buttonRacrocher()});
 		});
 	</script>
 </div>
