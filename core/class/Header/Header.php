@@ -1,4 +1,19 @@
 <?php
+include 'CSeqHeader.php';
+include 'CallIdHeader.php';
+include 'ContactHeader.php';
+include 'ContactValue.php';
+include 'FromHeader.php';
+include 'MaxForwardsHeader.php';
+include 'MultiValueHeader.php';
+include 'MultiValueWithParamsHeader.php';
+include 'NameAddrHeader.php';
+include 'RAckHeader.php';
+include 'ScalarHeader.php';
+include 'SingleValueWithParamsHeader.php';
+include 'ValueWithParams.php';
+include 'ViaHeader.php';
+include 'ViaValue.php';
 /**
 * Header Class
 */
