@@ -5,10 +5,10 @@
 class SingleValueWithParamsHeader
 {
     /** @var string Header field value */
-    public string $value;
+    public $value;
 
     /** @var array<string, string> Parameters */
-    public array $params = [];
+    public $params = [];
 
     final public function __construct() {}
 
