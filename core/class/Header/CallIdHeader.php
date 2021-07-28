@@ -5,7 +5,7 @@
 class CallIdHeader
 {
     /** @var string Call-ID value */
-    public string $value;
+    public $value;
 
     final public function __construct() {}
 
