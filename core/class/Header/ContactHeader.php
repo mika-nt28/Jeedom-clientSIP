@@ -5,10 +5,10 @@
 class ContactHeader
 {
     /** @var list<ContactValue> Contact value(s) */
-    public array $values = [];
+    public $values = [];
 
     /** @var bool Whether value was '*' https://tools.ietf.org/html/rfc3261#section-7.3 */
-    public bool $wildcard = false;
+    public $wildcard = false;
 
     final public function __construct() {}
 
