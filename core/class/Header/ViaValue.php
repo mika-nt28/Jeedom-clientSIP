@@ -5,20 +5,20 @@
 class ViaValue
 {
     /** @var string Via protocol name (i.e. SIP) */
-    public string $protocol;
+    public $protocol;
 
     /** @var string Via protocol version (i.e. 2.0) */
-    public string $version;
+    public $version;
 
     /** @var string Via transport (e.g. UDP, TCP, WSS etc.) */
-    public string $transport;
+    public $transport;
 
     /** @var string Via host */
-    public string $host;
+    public $host;
 
     /** @var string Via branch parameters */
-    public string $branch;
+    public $branch;
 
     /** @var array<string, string> Additional parameters */
-    public array $params = [];
+    public $params = [];
 }
