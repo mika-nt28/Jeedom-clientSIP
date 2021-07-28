@@ -1,4 +1,10 @@
 <?php
+/**
+* Generic SIP exception
+*/
+class SIPException extends DomainException implements Throwable
+{
+}
 require_once  dirname(__FILE__) .'/InvalidBodyLengthException.php';
 require_once  dirname(__FILE__) .'/InvalidCSeqValue.php';
 require_once  dirname(__FILE__) .'/InvalidDuplicateHeader.php';
@@ -12,9 +18,4 @@ require_once  dirname(__FILE__) .'/InvalidRequestMethod.php';
 require_once  dirname(__FILE__) .'/InvalidRequestURI.php';
 require_once  dirname(__FILE__) .'/InvalidScalarValue.php';
 require_once  dirname(__FILE__) .'/InvalidStatusCodeException.php';
-/**
-* Generic SIP exception
-*/
-class SIPException extends DomainException implements Throwable
-{
-}
+?>
