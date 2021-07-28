@@ -5,8 +5,8 @@
 class ValueWithParams
 {
     /** @var string Header field value */
-    public string $value;
+    public $value;
 
     /** @var array<string, string> Parameters */
-    public array $params = [];
+    public $params = [];
 }
