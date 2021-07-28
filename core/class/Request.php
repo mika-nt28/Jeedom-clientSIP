@@ -1,4 +1,5 @@
 <?php
+include '/Message.php';
 class Request extends Message
 {
     /** @var string Request method */
