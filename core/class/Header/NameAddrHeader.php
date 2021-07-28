@@ -5,16 +5,16 @@
 class NameAddrHeader
 {
     /** @var string Address portion of the field value */
-    public string $addr;
+    public $addr;
 
     /** @var string Display name portion of the field value */
-    public string $name;
+    public $name;
 
     /** @var string Tag parameyer */
-    public string $tag;
+    public $tag;
 
     /** @var array<string, string> Additional/extension parameters */
-    public array $params = [];
+    public $params = [];
 
     final public function __construct() {}
 
