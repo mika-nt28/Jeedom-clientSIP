@@ -5,7 +5,7 @@
 class MultiValueWithParamsHeader
 {
     /** @var list<ValueWithParams> Header value(s) */
-    public array $values = [];
+    public $values = [];
 
     final public function __construct() {}
 
