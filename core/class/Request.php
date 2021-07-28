@@ -1,6 +1,5 @@
 <?php
-require_once dirname(__FILE__) . '/Message.php';
-class Request extends Message
+class Request extends SIPMessage
 {
     /** @var string Request method */
     public $method;
@@ -59,7 +58,7 @@ class Request extends Message
             throw new InvalidRequestURI('Missing request URI');
         }
 
-        $this->version ??= Message::SIP_VERSION;
+        $this->version ??= SIPMessage::SIP_VERSION;
         $this->body ??= '';
         $headers = $this->renderHeaders($compact);
 
