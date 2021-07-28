@@ -5,10 +5,10 @@
 class CSeqHeader
 {
     /** @var int Sequence number */
-    public int $sequence;
+    public $sequence;
 
     /** @var string Original request method */
-    public string $method;
+    public $method;
 
     final public function __construct() {}
 
