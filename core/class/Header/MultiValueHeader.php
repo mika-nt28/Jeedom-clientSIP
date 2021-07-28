@@ -5,7 +5,7 @@
 class MultiValueHeader
 {
     /** @var list<string> Header field values */
-    public array $values = [];
+    public $values = [];
 
     final public function __construct() {}
 
