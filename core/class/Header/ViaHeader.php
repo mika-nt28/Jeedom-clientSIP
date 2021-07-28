@@ -5,7 +5,7 @@
 class ViaHeader
 {
     /** @var list<ViaValue> Via value(s) */
-    public array $values = [];
+    public $values = [];
 
     final public function __construct() {}
 
