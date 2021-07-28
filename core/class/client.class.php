@@ -1,10 +1,10 @@
 <?php
-     
-include '/Request.php';
-include '/Header/Header.php';
+require_once dirname(__FILE__) . '/Exception/SIPException.php';
+require_once dirname(__FILE__) . '/Header/Header.php';
+require_once dirname(__FILE__) . '/Request.php';
 
 class client{ 
-     public function __construct($src_ip = null, $src_port = null ,$CallNumber,$userAgent, $socket_bind = true)	{
+	public function __construct($src_ip = null, $src_port = null ,$CallNumber,$userAgent, $socket_bind = true)	{
 		$this->_cHost = $src_ip;
 		$this->_cPort = $src_port;
 	  	$this->_CallNumber = $CallNumber;
@@ -13,10 +13,10 @@ class client{
 		$this->_sPort=config::byKey('Port', 'clientSIP');
 		$this->createSocket($socket_bind);
 	}
-     public function __destruct(){
+	public function __destruct(){
 		$this->closeSocket();
 	}
-     private function createSocket($socket_bind){ 
+	private function createSocket($socket_bind){ 
 		if (!$this->socket = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP)){
 			$err_no = socket_last_error($this->socket);
 			log::add('clientSIP','error',socket_strerror($err_no));
