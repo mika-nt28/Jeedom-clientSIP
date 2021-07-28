@@ -7,13 +7,13 @@
 class RAckHeader
 {
     /** @var int RSeq sequence number */
-    public int $rSequence;
+    public $rSequence;
 
     /** @var int CSeq sequence number */
-    public int $cSequence;
+    public $cSequence;
 
     /** @var string Original request method */
-    public string $method;
+    public $method;
 
     final public function __construct() {}
 
