@@ -1,26 +1,26 @@
 <?php
-include '/CSeqHeader.php';
-include '/CallIdHeader.php';
-include '/ContactHeader.php';
-include '/ContactValue.php';
-include '/FromHeader.php';
-include '/MaxForwardsHeader.php';
-include '/MultiValueHeader.php';
-include '/MultiValueWithParamsHeader.php';
-include '/NameAddrHeader.php';
-include '/RAckHeader.php';
-include '/ScalarHeader.php';
-include '/SingleValueWithParamsHeader.php';
-include '/ValueWithParams.php';
-include '/ViaHeader.php';
-include '/ViaValue.php';
+require_once  dirname(__FILE__) .'/CSeqHeader.php';
+require_once  dirname(__FILE__) .'/CallIdHeader.php';
+require_once  dirname(__FILE__) .'/ContactHeader.php';
+require_once  dirname(__FILE__) .'/ContactValue.php';
+require_once  dirname(__FILE__) .'/FromHeader.php';
+require_once  dirname(__FILE__) .'/MaxForwardsHeader.php';
+require_once  dirname(__FILE__) .'/MultiValueHeader.php';
+require_once  dirname(__FILE__) .'/MultiValueWithParamsHeader.php';
+require_once  dirname(__FILE__) .'/NameAddrHeader.php';
+require_once  dirname(__FILE__) .'/RAckHeader.php';
+require_once  dirname(__FILE__) .'/ScalarHeader.php';
+require_once  dirname(__FILE__) .'/SingleValueWithParamsHeader.php';
+require_once  dirname(__FILE__) .'/ValueWithParams.php';
+require_once  dirname(__FILE__) .'/ViaHeader.php';
+require_once  dirname(__FILE__) .'/ViaValue.php';
 /**
 * Header Class
 */
 class Header
 {
     /** @var list<string> Generic header field values */
-    public array $values = [];
+    public $values = [];
 
     final public function __construct() {}
 
