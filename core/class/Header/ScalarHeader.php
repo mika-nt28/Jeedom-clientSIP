@@ -8,7 +8,7 @@ class ScalarHeader
     public const MAX_VALUE = 4294967295;
 
     /** @var int Header field value */
-    public int $value;
+    public $value;
 
     final public function __construct() {}
 
