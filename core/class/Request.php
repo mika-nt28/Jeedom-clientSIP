@@ -1,12 +1,12 @@
 <?php
-include '/Message.php';
+require_once dirname(__FILE__) . '/Message.php';
 class Request extends Message
 {
     /** @var string Request method */
-    public string $method;
+    public $method;
 
     /** @var string Request URI */
-    public string $uri;
+    public $uri;
 
     /**
      * SIP Request constructor
