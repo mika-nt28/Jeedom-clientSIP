@@ -2,7 +2,7 @@ $('.eqLogicAction[data-action=gotoMoniteur]').off().on('click', function () {
   	bootbox.dialog({
 		title: "{{Moniteur}}",
 		size: "large",
-		message: $('<div>').load('index.php?v=d&modal=clientSIP.moniteur&plugin=clientSIP&type=clientSIP'),
+		message: $('<div>').load('index.php?v=d&modal=clientSIP.monitor&plugin=clientSIP&type=clientSIP'),
 		
 	});
 });
