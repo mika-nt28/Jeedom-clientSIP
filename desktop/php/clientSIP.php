@@ -21,6 +21,11 @@ $eqLogics = eqLogic::byType($plugin->getId());
     				<br>
     				<span>{{Configuration}}</span>
   			</div>
+			<div class="cursor eqLogicAction logoSecondary" data-action="gotoMoniteur">
+				<i class="fas fa-archive"></i>  
+				<br>
+				<span>{{Moniteur}}</span>
+			</div>
   		</div>
   		<legend><i class="fas fa-table"></i> {{Mes équipements virtuel}}</legend>
 	   	<input class="form-control" placeholder="{{Rechercher}}" id="in_searchEqlogic" />
