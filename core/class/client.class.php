@@ -53,7 +53,10 @@ class client{
 			log::add('clientSIP','error',"Failed to send data to ".$this->_sHost.":".$this->_sPort.". Source IP ".$this->_cHost.", source port: ".$this->_cPort.". ".socket_strerror($err_no));
 			die();
 		}
-		event::add('clientSIP::monitor', '[TX]'.htmlentities($data));
+		$Monitor['Time'] = time();
+		$Monitor['Mode'] = '[TX]';
+		$Monitor['Message'] = htmlentities($data);
+		event::add('clientSIP::monitor', json_encode($Monitor));
 	}
 	public function register(){
 		$request = new Request;
