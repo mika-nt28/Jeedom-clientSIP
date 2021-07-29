@@ -176,6 +176,8 @@ class clientSIP extends eqLogic {
 		}
 	}
 	private function RegisterClient(){
+     	$_sip = new client(network ::getNetworkAccess('internal', 'ip', '', false),$this->getConfiguration("Port"),$this->getConfiguration("CallNumber"),$this->getName(),false);
+ $_sip->register();
 		if($this->_sip == null)			
 			$this->CreateConnexion(false);
 		$this->checkAndUpdateCmd('RegStatus','Inactif');
@@ -194,8 +196,6 @@ class clientSIP extends eqLogic {
 	public function Decrocher() {
 		if($this->_sip == null)			
 			$this->CreateConnexion(false);
-		//ajouter les options de compatibilité de jeedom
-		event::add('clientSIP::rtsp', $this->_sip->getBody());
 		$this->checkAndUpdateCmd('CallStatus','Appel en cours');
 		sleep(5);
 	}
@@ -215,8 +215,6 @@ class clientSIP extends eqLogic {
 			$this->_sip->send();
 		}
 		$this->checkAndUpdateCmd('CallStatus','Racrocher');
-		event::add('clientSIP::close','');
-		
 	}
 	public function call($number) {	
 		log::add('clientSIP', 'debug', 'Appel en demandé => ' . $number);
@@ -249,8 +247,6 @@ class clientSIP extends eqLogic {
 		$this->_sip->setTo('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setMethod('MESSAGE');
 		$res=$this->_sip->send();
-		if ($res == '200')
-			event::add('clientSIP::message', 'Le message a bien été transmis');
 	}
 	public function calling(){
 		$cmd ='ffmpeg -i '.$this->TextToSpeach("Test de communication de Jeedom sur une communication sip").$this->_sip->getFFMEGcodec().$this->_sip->getRtsp();
