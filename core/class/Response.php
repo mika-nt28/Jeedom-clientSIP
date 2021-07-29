@@ -1,5 +1,5 @@
 <?php
-class Response extends Message
+class Response extends SIPMessage
 {
     /* Extended search being performed may take a significant time so a forking
     proxy must send a 100 Trying response. */
@@ -338,10 +338,10 @@ class Response extends Message
     ];
 
     /** @var int Response code */
-    public int $code;
+    public $code;
 
     /** @var string Response reason */
-    public string $reason;
+    public $reason;
 
     /**
      * SIP Response constructor
@@ -351,7 +351,7 @@ class Response extends Message
      * @throws InvalidProtocolVersionException
      * @throws InvalidStatusCodeException
      */
-    public function __construct(?string $startLine = null)
+   /* public function __construct(?string $startLine = null)
     {
         if (is_null($startLine)) {
             return;
@@ -375,7 +375,7 @@ class Response extends Message
 
         $this->version = $sttsLine[0];
         $this->reason = $sttsLine[2];
-    }
+    }*/
 
     /**
      * SIP Response Renderer
@@ -402,8 +402,8 @@ class Response extends Message
             }
         }
 
-        $this->version ??= Message::SIP_VERSION;
-        $this->body ??= '';
+        $this->version = SIPMessage::SIP_VERSION;
+        $this->body = '';
         $headers = $this->renderHeaders($compact);
 
         return "{$this->version} {$this->code} {$this->reason}\r\n{$headers}\r\n{$this->body}";
