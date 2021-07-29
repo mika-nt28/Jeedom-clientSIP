@@ -1,7 +1,11 @@
 <?php
 require_once dirname(__FILE__) . '/Exception/SIPException.php';
 require_once dirname(__FILE__) . '/Header/Header.php';
+
+require_once dirname(__FILE__) . '/Message.php';
 require_once dirname(__FILE__) . '/Request.php';
+require_once dirname(__FILE__) . '/Response.php';
+//require_once dirname(__FILE__) . '/StreamParser.php';
 
 class client{ 
 	public function __construct($src_ip = null, $src_port = null ,$CallNumber,$userAgent, $socket_bind = true)	{
@@ -43,6 +47,14 @@ class client{
 	private function closeSocket(){
 		socket_close($this->socket);
 	}
+  	private function send($data){
+		if (!@socket_sendto($this->socket, $data, strlen($data), 0, $this->_sHost, $this->_sPort))	{
+			$err_no = socket_last_error($this->socket);
+			log::add('clientSIP','error',"Failed to send data to ".$this->_sHost.":".$this->_sPort.". Source IP ".$this->_cHost.", source port: ".$this->_cPort.". ".socket_strerror($err_no));
+			die();
+		}
+		event::add('clientSIP::monitor', '[TX]'.htmlentities($data));
+	}
 	public function register(){
 		$request = new Request;
 		$request->version = 'SIP/2.0';
@@ -54,7 +66,7 @@ class client{
 		$request->via->values[0]->protocol = 'SIP';
 		$request->via->values[0]->version = '2.0';
 		$request->via->values[0]->transport = 'UDP';
-		$request->via->values[0]->host = .$this->_sHost.':'.$this->_sPort;
+		$request->via->values[0]->host = 'sip:'.$this->_sHost.':'.$this->_sPort;
 		$request->via->values[0]->branch = 'z9hG4bK.eAV4o0nXr';
 
 		$request->from = new NameAddrHeader;
@@ -84,7 +96,7 @@ class client{
 		$request->userAgent = new Header;
 		$request->userAgent->values[0] = $this->_userAgent;
 
-		$request->render();
+		$this->send($request->render());
 	}
 }
 ?>
