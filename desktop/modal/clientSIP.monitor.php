@@ -23,7 +23,7 @@ if (!isConnect('admin')) {
 	$('body').off('clientSIP::monitor').on('clientSIP::monitor', function (_event,_options) {
 		var monitors=jQuery.parseJSON(_options);
 		$('#table_Monitor tbody').prepend($("<tr>")
-			.append($("<td>").text(monitors.time))
+			.append($("<td>").text(monitors.Time))
 			.append($("<td>").text(monitors.Mode))
 			.append($("<td>").text(monitors.Message)));		
 		if($('#table_Monitor tbody tr').length >= 255)
