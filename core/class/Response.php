@@ -351,7 +351,7 @@ class Response extends SIPMessage
      * @throws InvalidProtocolVersionException
      * @throws InvalidStatusCodeException
      */
-   /* public function __construct(?string $startLine = null)
+    public function __construct(?string $startLine = null)
     {
         if (is_null($startLine)) {
             return;
@@ -375,7 +375,7 @@ class Response extends SIPMessage
 
         $this->version = $sttsLine[0];
         $this->reason = $sttsLine[2];
-    }*/
+    }
 
     /**
      * SIP Response Renderer
