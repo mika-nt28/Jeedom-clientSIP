@@ -15,7 +15,7 @@ class Request extends SIPMessage
      * @throws InvalidProtocolVersionException
      * @throws InvalidRequestURI
      */
-    public function __construct(?string $startLine = null)
+    public function __construct($startLine = null)
     {
         if (is_null($startLine)) {
             return;
@@ -58,8 +58,8 @@ class Request extends SIPMessage
             throw new InvalidRequestURI('Missing request URI');
         }
 
-        $this->version ??= SIPMessage::SIP_VERSION;
-        $this->body ??= '';
+        $this->version = SIPMessage::SIP_VERSION;
+        $this->body = '';
         $headers = $this->renderHeaders($compact);
 
         return "{$this->method} {$this->uri} {$this->version}\r\n{$headers}\r\n{$this->body}";
