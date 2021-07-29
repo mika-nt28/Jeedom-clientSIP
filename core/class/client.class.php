@@ -5,7 +5,6 @@ require_once dirname(__FILE__) . '/Header/Header.php';
 require_once dirname(__FILE__) . '/Message.php';
 require_once dirname(__FILE__) . '/Request.php';
 require_once dirname(__FILE__) . '/Response.php';
-//require_once dirname(__FILE__) . '/StreamParser.php';
 
 class client{ 
 	public function __construct($src_ip = null, $src_port = null ,$CallNumber,$userAgent, $socket_bind = true)	{
@@ -58,6 +57,81 @@ class client{
 		$Monitor['Message'] = $data;
 		event::add('clientSIP::monitor', json_encode($Monitor));
 	}
+	private function read()	{
+		$from = "";
+		$port = 0;
+		$data = null;
+		if (!@socket_recvfrom($this->socket, $data, 10000, 0, $from, $port))	{
+			die();
+		}
+		$Monitor['Time'] = date('d/m/Y H:i:s');
+		$Monitor['Mode'] = '[RX]';
+		$Monitor['Message'] = $data;
+		event::add('clientSIP::monitor', json_encode($Monitor));
+		$message = Message::parse($data);
+		$this->getReponse($message);
+	/*	if(get_class($message) === Request::class){
+			$response = new Request;	
+			$response->method = $message->method;
+			$response->uri = $message->uri;
+		}
+		if(get_class($message) === Response::class){
+			$response = new Response;
+			$response->code = 200;
+		}*/
+	}
+	private function getReponse($message){
+		switch($message->code){
+			case '100':
+				//$this->reply(100,'Trying');
+			break;
+			case '180':
+				//$this->reply(180,'Ringing');
+			break;
+			case '200':
+			//	$this->_sip->reply(200,'OK');
+			break;
+			case '407':
+			/*	$this->cseq++;
+				$this->auth();
+				$data = $this->formatRequest();
+				$this->sendData($data);
+				$this->readMessage();*/
+			break;
+			case '401':
+				/*$this->cseq++;
+				$this->authWWW();
+				$data = $this->formatRequest();
+				$this->sendData($data);
+				$this->readMessage();*/
+			break;
+			case '486':
+			break;
+		}
+		switch($message->method){
+			case 'INVITE':
+				if($message->code == 200){
+					$this->getACK($message);
+				}
+			break;
+		}
+	}
+	private function getACK($message){
+		$response = new Request;	
+		$response->method = 'ACK';
+		$response->uri = $message->uri;
+		$response->version = $message->version;
+		$response->via = $message->via;
+		$response->from = $message->from;
+		$response->to = $message->to;
+		$response->cSeq = $message->cSeq;
+		$response->callId = $message->callId;
+		$response->maxForwards = $message->maxForwards;
+		$response->contact = $message->contact;
+		$response->userAgent = new Header;
+		$response->userAgent->values[0] = $this->_userAgent;
+		$this->send($response->render());
+	}
 	public function register(){
 		$request = new Request;
 		$request->version = 'SIP/2.0';
@@ -100,6 +174,7 @@ class client{
 		$request->userAgent->values[0] = $this->_userAgent;
 
 		$this->send($request->render());
+		$this->read();
 	}
 }
 ?>
