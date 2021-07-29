@@ -53,23 +53,23 @@ class client{
 			log::add('clientSIP','error',"Failed to send data to ".$this->_sHost.":".$this->_sPort.". Source IP ".$this->_cHost.", source port: ".$this->_cPort.". ".socket_strerror($err_no));
 			die();
 		}
-		$Monitor['Time'] = time();
+		$Monitor['Time'] = date('d/m/Y H:i:s');
 		$Monitor['Mode'] = '[TX]';
-		$Monitor['Message'] = htmlentities($data);
+		$Monitor['Message'] = $data;
 		event::add('clientSIP::monitor', json_encode($Monitor));
 	}
 	public function register(){
 		$request = new Request;
 		$request->version = 'SIP/2.0';
 		$request->method = 'REGISTER';
-		$request->uri = 'sip:'.$this->_cHost;
+		$request->uri = 'sip:'.$this->_CallNumber.'@'.$this->_sHost.':'.$this->_sPort;
 
 		$request->via = new ViaHeader;
 		$request->via->values[0] = new ViaValue;
 		$request->via->values[0]->protocol = 'SIP';
 		$request->via->values[0]->version = '2.0';
 		$request->via->values[0]->transport = 'UDP';
-		$request->via->values[0]->host = 'sip:'.$this->_sHost.':'.$this->_sPort;
+		$request->via->values[0]->host = $this->_cHost.':'.$this->_cPort;
 		$request->via->values[0]->branch = 'z9hG4bK.eAV4o0nXr';
 
 		$request->from = new NameAddrHeader;
