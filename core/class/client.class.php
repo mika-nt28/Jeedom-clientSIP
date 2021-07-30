@@ -166,9 +166,12 @@ class client{
 		$request->contact = new ContactHeader;
 		$request->contact->values[0] = new ContactValue;
 		$request->contact->values[0]->addr = 'sip:'.$this->_CallNumber.'@'.$this->_cHost.':'.$this->_cPort.';transport=udp';
-		$request->contact->values[0]->q = 0.7;
-		$request->contact->values[0]->expires = 3600;
+		//$request->contact->values[0]->q = 0.7;
+		//$request->contact->values[0]->expires = 3600;
 		//$request->contact->values[0]->params['+sip.instance'] = '"<urn:uuid:5cc54b96-ab90-4652-b4e5-de74c8e56fb7>"';
+		
+		$request->allow = new MultiValueHeader;
+		$request->allow->values[0] = 'INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, NOTIFY, MESSAGE, SUBSCRIBE, INFO';
 
 		$request->userAgent = new Header;
 		$request->userAgent->values[0] = $this->_userAgent;
