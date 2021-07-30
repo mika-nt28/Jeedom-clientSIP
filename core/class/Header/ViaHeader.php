@@ -36,13 +36,13 @@ class ViaHeader
                 $val = new ViaValue;
                 $val->protocol = rtrim($psplit[0]);
 
-                if ($val->protocol !== Message::SIP_PROTOCOL_NAME) {
+                if ($val->protocol !== SIPMessage::SIP_PROTOCOL_NAME) {
                     throw new InvalidProtocolVersionException('Unsupported SIP protocol in Via header: ' . $val->protocol, Response::VERSION_NOT_SUPPORTED);
                 }
 
                 $val->version = trim($psplit[1]);
 
-                if ($val->version !== Message::SIP_VERSION_NUMBER) {
+                if ($val->version !== SIPMessage::SIP_VERSION_NUMBER) {
                     throw new InvalidProtocolVersionException('Unsupported SIP version number in Via header: ' . $val->version, Response::VERSION_NOT_SUPPORTED);
                 }
 
