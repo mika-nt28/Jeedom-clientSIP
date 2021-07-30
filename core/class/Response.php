@@ -363,7 +363,7 @@ class Response extends SIPMessage
             throw new InvalidMessageStartLineException('Malformed Status-Line: ' . $startLine, self::BAD_REQUEST);
         }
 
-        if ($sttsLine[0] !== Message::SIP_VERSION) {
+        if ($sttsLine[0] !== SIPMessage::SIP_VERSION) {
             throw new InvalidProtocolVersionException('Unsupported SIP version: ' . $sttsLine[0], self::VERSION_NOT_SUPPORTED);
         }
 
