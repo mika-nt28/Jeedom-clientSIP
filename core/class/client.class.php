@@ -7,10 +7,12 @@ require_once dirname(__FILE__) . '/Request.php';
 require_once dirname(__FILE__) . '/Response.php';
 
 class client{ 
-	public function __construct($src_ip = null, $src_port = null ,$CallNumber,$userAgent, $socket_bind = true)	{
+	public function __construct($src_ip = null, $src_port = null ,$CallNumber,$Username,$Password,$userAgent,$socket_bind = true)	{
 		$this->_cHost = $src_ip;
 		$this->_cPort = $src_port;
 	  	$this->_CallNumber = $CallNumber;
+	  	$this->_Username = $Username;
+	  	$this->_Password = $Password;
 	  	$this->_userAgent = $userAgent;
 		$this->_sHost=config::byKey('Host', 'clientSIP');
 		$this->_sPort=config::byKey('Port', 'clientSIP');
@@ -47,7 +49,7 @@ class client{
 		socket_close($this->socket);
 	}
   	private function send($data){
-		if (!@socket_sendto($this->socket, $data, strlen($data), 0, $this->_sHost, $this->_sPort)){
+      	if (!@socket_sendto($this->socket, $data, strlen($data), 0, $this->_sHost, $this->_sPort)){
 			$err_no = socket_last_error($this->socket);
 			log::add('clientSIP','error',"Impossible d'envoyer la data sur ".$this->_sHost.":".$this->_sPort.". Source IP ".$this->_cHost.", source port: ".$this->_cPort.". ".socket_strerror($err_no));
 			die();
@@ -63,16 +65,16 @@ class client{
 		$data = null;
 		if (!@socket_recvfrom($this->socket, $data, 10000, 0, $from, $port)){
 			$err_no = socket_last_error($this->socket);
-			log::add('clientSIP','error',"Impossible de recevoire la data ".$this->_sHost.":".$this->_sPort.". Source IP ".$this->_cHost.", source port: ".$this->_cPort.". ".socket_strerror($err_no));
-			die();
+		//	log::add('clientSIP','error',"Impossible de recevoire la data ".$this->_sHost.":".$this->_sPort.". Source IP ".$this->_cHost.", source port: ".$this->_cPort.". ".socket_strerror($err_no));
+		//	die();
 		}
 		$Monitor['Time'] = date('d/m/Y H:i:s');
 		$Monitor['Mode'] = '[RX]';
 		$Monitor['Message'] = $data;
 		event::add('clientSIP::monitor', json_encode($Monitor));
-		/*$message = Message::parse($data);
+		$message = SIPMessage::parse($data);
 		$this->getReponse($message);
-		if(get_class($message) === Request::class){
+		/*if(get_class($message) === Request::class){
 			$response = new Request;	
 			$response->method = $message->method;
 			$response->uri = $message->uri;
@@ -94,8 +96,29 @@ class client{
 			//	$this->_sip->reply(200,'OK');
 			break;
 			case '407':
-			/*	$this->cseq++;
-				$this->auth();
+            	
+			$response = new Request;	
+			$response->method = $message->method;
+			$response->uri = $message->uri;
+         /*   $response->proxyAuthenticate = new Header;
+			$response->proxyAuthenticate->values[0] = 'Digest username="z0IrHY5sFW", realm="3CXPhoneSystem", nonce="414d53596103f4c526:4ebbf0e39b940f88fbb7210ef5cbd273", uri="sip:103@192.168.0.95:5060", response="43f22e72bf58936ffb790bc13701729d", algorithm=MD5';*/
+            
+            
+	/*		$response->cSeq->sequence = $message->cSeq->sequence + 1;
+            $response->uri = $message->uri;
+		$response->version = $message->version;
+		$response->via = $message->via;
+		$response->from = $message->from;
+		$response->to = $message->to;
+		$response->cSeq = $message->cSeq;
+		$response->callId = $message->callId;
+		$response->maxForwards = $message->maxForwards;
+		$response->contact = $message->contact;
+		$response->userAgent = new Header;
+		$response->userAgent->values[0] = $this->_userAgent;
+		$this->send($response->render());
+		$this->read();*/
+				/*$this->auth();
 				$data = $this->formatRequest();
 				$this->sendData($data);
 				$this->readMessage();*/
@@ -133,6 +156,7 @@ class client{
 		$response->userAgent = new Header;
 		$response->userAgent->values[0] = $this->_userAgent;
 		$this->send($response->render());
+		$this->read();
 	}
 	public function register(){
 		$request = new Request;
@@ -152,8 +176,8 @@ class client{
 		$request->from->addr = 'sip:'.$this->_CallNumber.'@'.$this->_cHost.':'.$this->_sPort;
 		$request->from->tag = 'SFJbQ2oWh';
 
-		//$request->to = new NameAddrHeader;
-		//$request->to->addr = 'sip:'.$this->_CallNumber.'@'.$this->_cHost.':'.$this->_cPort;
+		$request->to = new NameAddrHeader;
+		$request->to->addr = 'sip:'.$this->_CallNumber.'@'.$this->_cHost.':'.$this->_cPort;
 
 		$request->cSeq = new CSeqHeader;
 		$request->cSeq->sequence = 20;
