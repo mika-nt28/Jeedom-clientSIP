@@ -1,6 +1,7 @@
 <?php
 require_once dirname(__FILE__) . '/Exception/SIPException.php';
 require_once dirname(__FILE__) . '/Header/Header.php';
+require_once dirname(__FILE__) . '/Body/Body.php';
 
 require_once dirname(__FILE__) . '/Message.php';
 require_once dirname(__FILE__) . '/Request.php';
@@ -49,7 +50,20 @@ class client{
 		socket_close($this->socket);
 	}
   	private function send($data){
-      	if (!@socket_sendto($this->socket, $data, strlen($data), 0, $this->_sHost, $this->_sPort)){
+      	/*$data = 'REGISTER sip:103@192.168.0.95:5060 SIP/2.0'."\r\n";
+        $data .= 'Via: SIP/2.0/UDP 192.168.0.106:5060;rport;branch=z9hG4bK-895122'."\r\n";
+        $data .= 'From: <sip:103@192.168.0.95:5060>;tag=33646'."\r\n";
+        $data .= 'To: <sip:103@192.168.0.95:5060>'."\r\n";
+        $data .= 'Contact: <sip:103@192.168.0.106:5060>'."\r\n";
+      //  $data .= 'Proxy-Authorization: Digest username="z0IrHY5sFW", realm="3CXPhoneSystem", nonce="414d53596104178262:79290152d0d095182ccca24fd8af8e5e", uri="sip:103@192.168.0.95:5060", response="dd4f06c07f2ce85d8a9eef4c573b0d0b", algorithm=MD5'."\r\n";
+        $data .= 'Call-ID: 0d0a775618469ab255f7a7635de26c32'."\r\n";
+        $data .= 'CSeq: 20 REGISTER Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, NOTIFY, MESSAGE, SUBSCRIBE, INFO'."\r\n";
+        $data .= 'Max-Forwards: 70'."\r\n";
+        $data .= 'User-Agent: Jeedom'."\r\n";
+        $data .= 'Expires: 1800'."\r\n";
+        $data .= 'Content-Length: 0'."\r\n";
+		$data.= "\r\n";*/
+		if (!@socket_sendto($this->socket, $data, strlen($data), 0, $this->_sHost, $this->_sPort)){
 			$err_no = socket_last_error($this->socket);
 			log::add('clientSIP','error',"Impossible d'envoyer la data sur ".$this->_sHost.":".$this->_sPort.". Source IP ".$this->_cHost.", source port: ".$this->_cPort.". ".socket_strerror($err_no));
 			die();
@@ -72,8 +86,8 @@ class client{
 		$Monitor['Mode'] = '[RX]';
 		$Monitor['Message'] = $data;
 		event::add('clientSIP::monitor', json_encode($Monitor));
-		$message = SIPMessage::parse($data);
-		$this->getReponse($message);
+		//$message = SIPMessage::parse($data);
+		//$this->getReponse($message);
 		/*if(get_class($message) === Request::class){
 			$response = new Request;	
 			$response->method = $message->method;
@@ -176,9 +190,8 @@ class client{
 		$request->from->addr = 'sip:'.$this->_CallNumber.'@'.$this->_cHost.':'.$this->_sPort;
 		$request->from->tag = 'SFJbQ2oWh';
 
-		$request->to = new NameAddrHeader;
-		$request->to->addr = 'sip:'.$this->_CallNumber.'@'.$this->_cHost.':'.$this->_cPort;
-
+		$request->to = $request->from;
+      
 		$request->cSeq = new CSeqHeader;
 		$request->cSeq->sequence = 20;
 		$request->cSeq->method = $request->method;
@@ -191,7 +204,7 @@ class client{
 
 		$request->contact = new ContactHeader;
 		$request->contact->values[0] = new ContactValue;
-		$request->contact->values[0]->addr = 'sip:'.$this->_CallNumber.'@'.$this->_cHost.':'.$this->_cPort.';transport=udp';
+		$request->contact->values[0]->addr = 'sip:'.$this->_CallNumber.'@'.$this->_cHost.':'.$this->_cPort;
 		//$request->contact->values[0]->q = 0.7;
 		//$request->contact->values[0]->expires = 3600;
 		//$request->contact->values[0]->params['+sip.instance'] = '"<urn:uuid:5cc54b96-ab90-4652-b4e5-de74c8e56fb7>"';
