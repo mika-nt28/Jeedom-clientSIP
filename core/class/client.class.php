@@ -25,13 +25,13 @@ class client{
 			log::add('clientSIP','error',socket_strerror($err_no));
 			die();
 		}
-		//if($socket_bind){
+		if($socket_bind){
 			if (!@socket_bind($this->socket, $this->_cHost, $this->_cPort)){
 				$err_no = socket_last_error($this->socket);
 				log::add('clientSIP','error',"Failed to bind ".$this->_cHost.":".$this->_cPort." ".socket_strerror($err_no));
 				die();
 			}
-		//}
+		}
 		if (!@socket_set_option($this->socket, SOL_SOCKET, SO_RCVTIMEO, array("sec"=>10,"usec"=>0))){
 			$err_no = socket_last_error($this->socket);
 			log::add('clientSIP','error',socket_strerror($err_no));
