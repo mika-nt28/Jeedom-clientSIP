@@ -176,7 +176,7 @@ class clientSIP extends eqLogic {
 		}
 	}
 	private function RegisterClient(){
-     	$_sip = new client(network ::getNetworkAccess('internal', 'ip', '', false),$this->getConfiguration("Port"),$this->getConfiguration("CallNumber"),$this->getName(),false);
+     	$_sip = new client(network ::getNetworkAccess('internal', 'ip', '', false),$this->getConfiguration("Port"),$this->getConfiguration("CallNumber"),$this->getConfiguration("Username"),$this->getConfiguration("Password"),$this->getName(),false);
  $_sip->register();
 		if($this->_sip == null)			
 			$this->CreateConnexion(false);
