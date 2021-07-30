@@ -25,14 +25,14 @@ class client{
 			log::add('clientSIP','error',socket_strerror($err_no));
 			die();
 		}
-		if($socket_bind){
+		//if($socket_bind){
 			if (!@socket_bind($this->socket, $this->_cHost, $this->_cPort)){
 				$err_no = socket_last_error($this->socket);
 				log::add('clientSIP','error',"Failed to bind ".$this->_cHost.":".$this->_cPort." ".socket_strerror($err_no));
 				die();
 			}
-		}
-		if (!@socket_set_option($this->socket, SOL_SOCKET, SO_RCVTIMEO, array("sec"=>5,"usec"=>0))){
+		//}
+		if (!@socket_set_option($this->socket, SOL_SOCKET, SO_RCVTIMEO, array("sec"=>10,"usec"=>0))){
 			$err_no = socket_last_error($this->socket);
 			log::add('clientSIP','error',socket_strerror($err_no));
 			die();
@@ -47,9 +47,9 @@ class client{
 		socket_close($this->socket);
 	}
   	private function send($data){
-		if (!@socket_sendto($this->socket, $data, strlen($data), 0, $this->_sHost, $this->_sPort))	{
+		if (!@socket_sendto($this->socket, $data, strlen($data), 0, $this->_sHost, $this->_sPort)){
 			$err_no = socket_last_error($this->socket);
-			log::add('clientSIP','error',"Failed to send data to ".$this->_sHost.":".$this->_sPort.". Source IP ".$this->_cHost.", source port: ".$this->_cPort.". ".socket_strerror($err_no));
+			log::add('clientSIP','error',"Impossible d'envoyer la data sur ".$this->_sHost.":".$this->_sPort.". Source IP ".$this->_cHost.", source port: ".$this->_cPort.". ".socket_strerror($err_no));
 			die();
 		}
 		$Monitor['Time'] = date('d/m/Y H:i:s');
@@ -61,16 +61,18 @@ class client{
 		$from = "";
 		$port = 0;
 		$data = null;
-		if (!@socket_recvfrom($this->socket, $data, 10000, 0, $from, $port))	{
+		if (!@socket_recvfrom($this->socket, $data, 10000, 0, $from, $port)){
+			$err_no = socket_last_error($this->socket);
+			log::add('clientSIP','error',"Impossible de recevoire la data ".$this->_sHost.":".$this->_sPort.". Source IP ".$this->_cHost.", source port: ".$this->_cPort.". ".socket_strerror($err_no));
 			die();
 		}
 		$Monitor['Time'] = date('d/m/Y H:i:s');
 		$Monitor['Mode'] = '[RX]';
 		$Monitor['Message'] = $data;
 		event::add('clientSIP::monitor', json_encode($Monitor));
-		$message = Message::parse($data);
+		/*$message = Message::parse($data);
 		$this->getReponse($message);
-	/*	if(get_class($message) === Request::class){
+		if(get_class($message) === Request::class){
 			$response = new Request;	
 			$response->method = $message->method;
 			$response->uri = $message->uri;
