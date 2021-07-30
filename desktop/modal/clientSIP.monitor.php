@@ -22,10 +22,15 @@ if (!isConnect('admin')) {
 	});	
 	$('body').off('clientSIP::monitor').on('clientSIP::monitor', function (_event,_options) {
 		var monitors=jQuery.parseJSON(_options);
+		var message = monitors.Message.split("\r\n");
+		var html = $('<div>');
+		$.each(message,function(key,line){
+			html.append(line).append('<br>');
+		});
 		$('#table_Monitor tbody').prepend($("<tr>")
 			.append($("<td>").text(monitors.Time))
 			.append($("<td>").text(monitors.Mode))
-			.append($("<td>").text(monitors.Message)));		
+			.append($("<td>").append(html)));		
 		if($('#table_Monitor tbody tr').length >= 255)
 			$('#table_Monitor tbody tr:last').remove();
 		$('#table_Monitor').trigger('update');
