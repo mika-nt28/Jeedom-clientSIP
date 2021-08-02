@@ -14,6 +14,8 @@ require_once  dirname(__FILE__) .'/SingleValueWithParamsHeader.php';
 require_once  dirname(__FILE__) .'/ValueWithParams.php';
 require_once  dirname(__FILE__) .'/ViaHeader.php';
 require_once  dirname(__FILE__) .'/ViaValue.php';
+require_once  dirname(__FILE__) .'/ProxyAuthHeader.php';
+require_once  dirname(__FILE__) .'/ProxyAuthValue.php';
 /**
 * Header Class
 */
