@@ -25,7 +25,7 @@ if (!isConnect('admin')) {
 		var message = monitors.Message.split("\r\n");
 		var html = $('<div>');
 		$.each(message,function(key,line){
-          	html.append($('<div>').text(line)).append('<br>');
+          	html.append($('<div>').text(line));
 		});
 		$('#table_Monitor tbody').prepend($("<tr>")
 			.append($("<td>").text(monitors.Time))
