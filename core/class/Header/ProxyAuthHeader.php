@@ -50,9 +50,9 @@ class ProxyAuthHeader
      */
     public function reponse($params): string
     {
-        $ha1 = md5($params['username'].':'.$params['realm'].':'.$params['password']);
-        $ha2 = md5($params['method'].':'.$params['uri']);
-        $res = md5($ha1.':'.$params['nonce'].':'.$ha2);
+        $ha1 = md5($params['username'].':'.$params['realm'].':'.$params['password']);		
+        $ha2 = md5($params['method'].':'.$params['uri']);		
+        $res = md5($ha1.':'.$params['nonce'].':'.$ha2);		
         return $res;
     }
     /**
@@ -65,23 +65,34 @@ class ProxyAuthHeader
     public function render(string $hname): string
     {
         $ret = "{$hname}: ";
-        $delim = ' ';
+        $delim = '';
         foreach ($this->values as $key => $value) {
           	$value->reponse = $this->reponse($value->params);
             if (!isset($value->digest, $value->reponse)) {
                 throw new InvalidHeaderValue('Malformed ProxyAuthHeader header');
             }
-            $ret .= "{$value->digest}{$delim}";
-            foreach ($value->params as $pk => $pv) {
+           $ret .= "{$delim}{$value->digest}"; 
+           $delim = ' ';
+       
+           /*  foreach ($value->params as $pk => $pv) {
               	if($pk == 'password' || $pk == 'method')
                   continue;
-             	if($pk == 'algorithm')
-                	$ret .= $pk . (!isset($pv[0]) ? '' : "={$pv}");
+             	if($pk == 'algorithm')          	
+                    $ret .="{$delim}{$pk}={$pv}"; 
               	else
-                	$ret .= $pk . (!isset($pv[0]) ? '' : "=\"{$pv}\"");
-                $ret .= ', ';
+                    $ret .="{$delim}{$pk}=\"{$pv}\""; 
+        	    $delim = ', ';
             }
            $ret .='response="'.$value->reponse.'"';
+            */
+            $ret .="{$delim}"; 
+            $delim = ', ';
+            $ret .="username=\"{$value->params['username']}\"{$delim}"; 
+            $ret .="realm=\"{$value->params['realm']}\"{$delim}"; 
+            $ret .="nonce=\"{$value->params['nonce']}\"{$delim}"; 
+            $ret .="uri=\"{$value->params['uri']}\"{$delim}"; 
+            $ret .="response=\"{$value->reponse}\"{$delim}"; 
+            $ret .="algorithm={$value->params['algorithm']}"; 
         }
         return $ret . "\r\n";
     }
