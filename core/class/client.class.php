@@ -65,8 +65,8 @@ class client{
 		$data = null;
 		if (!@socket_recvfrom($this->socket, $data, 10000, 0, $from, $port)){
 			$err_no = socket_last_error($this->socket);
-		//	log::add('clientSIP','error',"Impossible de recevoire la data ".$this->_sHost.":".$this->_sPort.". Source IP ".$this->_cHost.", source port: ".$this->_cPort.". ".socket_strerror($err_no));
-		//	die();
+			log::add('clientSIP','error',"Impossible de recevoire la data ".$this->_sHost.":".$this->_sPort.". Source IP ".$this->_cHost.", source port: ".$this->_cPort.". ".socket_strerror($err_no));
+			die();
 		}
 		$Monitor['Time'] = date('d/m/Y H:i:s');
 		$Monitor['Mode'] = '[RX]';
@@ -97,28 +97,37 @@ class client{
 			break;
 			case '407':
 			$response = new Request;	
-			$request->method = 'REGISTER';
-			$response->uri = $message->uri;
-				
+			$response->method = 'REGISTER';
+			$response->uri = 'sip:'.$this->_CallNumber.'@'.$this->_sHost.':'.$this->_sPort;
 			$response->proxyAuthorization = $message->proxyAuthenticate;
 			$response->proxyAuthorization->values[0]->params['username'] = $this->_Username;
 			$response->proxyAuthorization->values[0]->params['password'] = $this->_Password;
-			$response->proxyAuthorization->values[0]->params['uri'] = $message->uri;
-			$response->proxyAuthorization->values[0]->params['methode'] = 'REGISTER';        
-				
-			$response->cSeq->sequence = $message->cSeq->sequence + 1;
-			$response->uri = $message->uri;
+			$response->proxyAuthorization->values[0]->params['uri'] = $response->uri;
+			$response->proxyAuthorization->values[0]->params['method'] = 'REGISTER';
+			
+			$response->cSeq = $message->cSeq;
+            $response->cSeq->sequence += 1;
 			$response->version = $message->version;
 			$response->via = $message->via;
 			$response->from = $message->from;
 			$response->to = $message->to;
 			$response->cSeq = $message->cSeq;
 			$response->callId = $message->callId;
-			$response->maxForwards = $message->maxForwards;
-			$response->contact = $message->contact;
+			$response->maxForwards = new ScalarHeader;
+		$response->maxForwards->value = 70;
+            
+		$response->contact = new ContactHeader;
+		$response->contact->values[0] = new ContactValue;
+		$response->contact->values[0]->addr = 'sip:'.$this->_CallNumber.'@'.$this->_cHost.':'.$this->_cPort;
+		//$request->contact->values[0]->q = 0.7;
+		//$request->contact->values[0]->expires = 3600;
+		//$request->contact->values[0]->params['+sip.instance'] = '"<urn:uuid:5cc54b96-ab90-4652-b4e5-de74c8e56fb7>"';
+		
+		$response->allow = new MultiValueHeader;
+		$response->allow->values[0] = 'INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, NOTIFY, MESSAGE, SUBSCRIBE, INFO';
 			$response->userAgent = new Header;
 			$response->userAgent->values[0] = $this->_userAgent;
-			//$this->send($response->render());
+			$this->send($response->render());
 			//$this->read();
 			break;
 			case '401':
@@ -142,7 +151,7 @@ class client{
 	private function getACK($message){
 		$response = new Request;	
 		$response->method = 'ACK';
-		$response->uri = $message->uri;
+		$response->uri = 'sip:'.$this->_CallNumber.'@'.$this->_sHost.':'.$this->_sPort;
 		$response->version = $message->version;
 		$response->via = $message->via;
 		$response->from = $message->from;
@@ -150,7 +159,15 @@ class client{
 		$response->cSeq = $message->cSeq;
 		$response->callId = $message->callId;
 		$response->maxForwards = $message->maxForwards;
-		$response->contact = $message->contact;
+		$request->contact = new ContactHeader;
+		$request->contact->values[0] = new ContactValue;
+		$request->contact->values[0]->addr = 'sip:'.$this->_CallNumber.'@'.$this->_cHost.':'.$this->_cPort;
+		//$request->contact->values[0]->q = 0.7;
+		//$request->contact->values[0]->expires = 3600;
+		//$request->contact->values[0]->params['+sip.instance'] = '"<urn:uuid:5cc54b96-ab90-4652-b4e5-de74c8e56fb7>"';
+		
+		$request->allow = new MultiValueHeader;
+		$request->allow->values[0] = 'INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, NOTIFY, MESSAGE, SUBSCRIBE, INFO';
 		$response->userAgent = new Header;
 		$response->userAgent->values[0] = $this->_userAgent;
 		$this->send($response->render());
@@ -169,7 +186,7 @@ class client{
 		$request->via->values[0]->transport = 'UDP';
 		$request->via->values[0]->host = $this->_cHost.':'.$this->_cPort;
 		$request->via->values[0]->branch = 'z9hG4bK-'.rand(10000,99999).';rport';
-     	//$request->via->values[0]->rport ='';
+		$request->via->values[0]->params['rport'] = '';
 
 		$request->from = new NameAddrHeader;
 		$request->from->addr = 'sip:'.$this->_CallNumber.'@'.$this->_cHost.':'.$this->_sPort;
@@ -205,6 +222,8 @@ class client{
 
 		$this->send($request->render());
 		$this->read();
+      			$this->read();
+
 	}
 }
 ?>
