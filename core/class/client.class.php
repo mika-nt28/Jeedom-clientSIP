@@ -22,8 +22,7 @@ class client{
 		$this->closeSocket();
 	}
 	public function isConnect(){
-		if (!$this->socket = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP)){
-		return feof();
+		return feof($this->socket);
 	}
 	private function createSocket($socket_bind){ 
 		if (!$this->socket = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP)){
@@ -38,11 +37,11 @@ class client{
 				die();
 			}
 		}
-		if (!@socket_set_option($this->socket, SOL_SOCKET, SO_RCVTIMEO, array("sec"=>10,"usec"=>0))){
+		/*if (!@socket_set_option($this->socket, SOL_SOCKET, SO_RCVTIMEO, array("sec"=>10,"usec"=>0))){
 			$err_no = socket_last_error($this->socket);
 			log::add('clientSIP','error',socket_strerror($err_no));
 			die();
-		}
+		}*/
 		if (!@socket_set_option($this->socket, SOL_SOCKET, SO_SNDTIMEO, array("sec"=>5,"usec"=>0))){
 			$err_no = socket_last_error($this->socket);
 			log::add('clientSIP','error',socket_strerror($err_no));
@@ -76,28 +75,33 @@ class client{
 		$Monitor['Mode'] = '[RX]';
 		$Monitor['Message'] = $data;
 		event::add('clientSIP::monitor', json_encode($Monitor));
-		$message = SIPMessage::parse($data);
-		$this->getReponse($message);
-		return $message;
+		return SIPMessage::parse($data);
 	}
 	private function getReponse($message){
 		switch($message->code){
 			case '100':
+				$message = $this->read();
+				$this->getReponse($message);
 				//$this->reply(100,'Trying');
 			break;
 			case '180':
+				$message = $this->read();
+				$this->getReponse($message);
 				//$this->reply(180,'Ringing');
 			break;
 			case '200':
-				if(get_class($message) === Request::class){
-					switch($message->method){
+				//if(get_class($message) === Request::class){
+					switch($this->method){
 						case 'INVITE':
 							$this->request('ACK');
 						break;
+						default:
+							$this->reply($message,200);
+                        			break;
 					}
-				}else{
+				//}else{
 					//$this->reply(200,'OK');
-				}
+				//}
 			break;
 			case '407':
 				$request = $this->formatRequest();
@@ -111,7 +115,8 @@ class client{
 				$request->cSeq->sequence += 1;
 				$request->callId = $message->callId;
 				$this->send($request->render());
-				$this->read();
+				$message = $this->read();
+				$this->getReponse($message);
 			break;
 			case '401':
 				/*$this->cseq++;
@@ -127,20 +132,55 @@ class client{
 	public function listen(){
 		return $this->read();
 	}
-	public function reply($code){
-	
+	public function reply($message, $code){
+		$response = new Response;
+		$response->version = $message->version;
+		$response->code = $code;
+
+		$response->via = new ViaHeader;
+		$response->via->values[0] = new ViaValue;
+		$response->via->values[0]->protocol = 'SIP';
+		$response->via->values[0]->version = '2.0';
+		$response->via->values[0]->transport = 'UDP';
+		$response->via->values[0]->host = '192.168.0.2:5050';
+		$response->via->values[0]->branch = 'z9hG4bK.eAV4o0nXr';
+
+		$response->from = $message->from;
+		$response->to = $message->to;
+		$response->contact = $message->contact;
+		$response->callId = $message->callId;
+		$response->cSeq = $message->cSeq;
+
+		$response->callId = new CallIdHeader;
+		$response->callId->value = 'ob0EYyuyC0';
+
+		$response->maxForwards = new ScalarHeader;
+		$response->maxForwards->value = 70;
+		
+		$response->userAgent = new Header;
+		$response->userAgent->values[0] = $this->_userAgent;
+		
+		$this->send($response->render());
+		$message = $this->read();
+		$this->getReponse($message);
+		return $message;
+	}
 	public function newCall($number){
 		$this->method = 'INVITE';
 		$request = $this->formatRequest();
-		$request->to->addr = 'sip:'.$number.'@'.$this->_cHost.':'.$this->_sPort;
+		$request->to->addr = 'sip:'.$number.'@'.$this->_sHost.':'.$this->_sPort;
 		$this->send($request->render());
-		return $this->read();
+		$message = $this->read();
+		$this->getReponse($message);
+		return $message;
 	}
 	public function request($method){
 		$this->method = $method;
 		$request = $this->formatRequest();
 		$this->send($request->render());
-		return $this->read();
+		$message = $this->read();
+		$this->getReponse($message);
+		return $message;
 	}
 	public function formatRequest(){
 		$request = new Request;
@@ -154,7 +194,7 @@ class client{
 		$request->via->values[0]->version = '2.0';
 		$request->via->values[0]->transport = 'UDP';
 		$request->via->values[0]->host = $this->_cHost.':'.$this->_cPort;
-		$request->via->values[0]->branch = 'z9hG4bK-'.rand(10000,99999).';rport';
+		$request->via->values[0]->branch = 'z9hG4bK-'.rand(10000,99999);
 		$request->via->values[0]->params['rport'] = '';
 
 		$request->from = new NameAddrHeader;
@@ -162,7 +202,7 @@ class client{
 		$request->from->tag = rand(10000,99999);
           
 		$request->to = new NameAddrHeader;
-		$request->to->addr = 'sip:'.$this->_CallNumber.'@'.$this->_cHost.':'.$this->_sPort;
+		$request->to->addr = 'sip:'.$this->_CallNumber.'@'.$this->_sHost.':'.$this->_sPort;
 		//$request->to->tag = rand(10000,99999);
 
       
@@ -171,7 +211,7 @@ class client{
 		$request->cSeq->method = $request->method;
 
 		$request->callId = new CallIdHeader;
-		$request->callId->value = '0798d5f6259ddf0255827d5c43a6a0ae';
+		$request->callId->value = md5(uniqid());
 
 		$request->maxForwards = new ScalarHeader;
 		$request->maxForwards->value = 70;
@@ -188,6 +228,7 @@ class client{
 
 		$request->userAgent = new Header;
 		$request->userAgent->values[0] = $this->_userAgent;
+		return $request;
 	}
 }
 ?>
