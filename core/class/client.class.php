@@ -96,15 +96,16 @@ class client{
 			//	$this->_sip->reply(200,'OK');
 			break;
 			case '407':
-            	
 			$response = new Request;	
-		$request->method = 'REGISTER';
+			$request->method = 'REGISTER';
 			$response->uri = $message->uri;
-			$response->proxyAuthenticate = new ProxyAuthHeader;
-			$response->proxyAuthenticate->values[0]['username'] = $this->_Username;
-			$response->proxyAuthenticate->values[0]['password'] = $this->_Password;
-			$response->proxyAuthenticate->values[0]['uri'] = $message->uri;
-			$response->proxyAuthenticate->values[0]['methode'] = 'REGISTER';            
+				
+			$response->proxyAuthorization = $message->proxyAuthenticate;
+			$response->proxyAuthorization->values[0]->params['username'] = $this->_Username;
+			$response->proxyAuthorization->values[0]->params['password'] = $this->_Password;
+			$response->proxyAuthorization->values[0]->params['uri'] = $message->uri;
+			$response->proxyAuthorization->values[0]->params['methode'] = 'REGISTER';        
+				
 			$response->cSeq->sequence = $message->cSeq->sequence + 1;
 			$response->uri = $message->uri;
 			$response->version = $message->version;
@@ -117,8 +118,8 @@ class client{
 			$response->contact = $message->contact;
 			$response->userAgent = new Header;
 			$response->userAgent->values[0] = $this->_userAgent;
-			$this->send($response->render());
-			$this->read();
+			//$this->send($response->render());
+			//$this->read();
 			break;
 			case '401':
 				/*$this->cseq++;
