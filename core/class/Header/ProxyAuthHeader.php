@@ -20,37 +20,25 @@ class ProxyAuthHeader
     public static function parse(array $hbody): ProxyAuthHeader
     {
         $ret = new static;
-
         foreach ($hbody as $hline) {
-            $hvalues = explode(',', $hline);
-
-            foreach ($hvalues as $hvalue) {
-                $ProxyAuth = trim($hvalue);
-               
-                $vsplit = explode(' ', trim($psplit[2]), 2);
-
-                if (count($vsplit) !== 2) {
-                    throw new InvalidHeaderLineException('Invalid ProxyAuthHeader header', Response::BAD_REQUEST);
-                }
-
-                $val->digest = $vsplit[0];
-                $vparams = explode(',', $vsplit[1]);
-                foreach ($vparams as $param) {
-                    $p = explode('=', $param);
-                    $p[0] = trim($p[0]);
-
-                    if (!isset($p[0][0])) {
-                        throw new InvalidHeaderParameter('Empty header parameters', Response::BAD_REQUEST);
-                    }
-
-                    $pv = isset($p[1]) ? trim($p[1]) : '';
-                    $val->params[$p[0]] = $pv;
-                }
-
-                $ret->values[] = $val;
+           $hvalues = explode(' ', trim($hline));
+            $val = new ProxyAuthValue;
+            if (count($hvalues) != 2) {
+                throw new InvalidHeaderLineException('Invalid ProxyAuthHeader header', Response::BAD_REQUEST);
             }
+            $val->digest = $hvalues[0];
+            $vparams = explode(',', $hvalues[1]);
+            foreach ($vparams as $param) {
+                $p = explode('=', $param);
+                $p[0] = trim($p[0]);
+                if (!isset($p[0][0])) {
+                    throw new InvalidHeaderParameter('Empty header parameters', Response::BAD_REQUEST);
+                }
+                $pv = isset($p[1]) ? trim($p[1]) : '';
+                $val->params[$p[0]] = $pv;
+            }
+            $ret->values[] = $val;
         }
-
         return $ret;
     }
    /**
@@ -60,37 +48,11 @@ class ProxyAuthHeader
      * @throws InvalidHeaderValue
      * @return string
      */
-    public function reponse(): string
+    public function reponse($params): string
     {
-       foreach ($this->values as $key => $value) {
-            foreach ($value->params as $pk => $pv) {
-                switch($pk){
-                    case 'realm';
-                      $realm = $pv;
-                    break;
-                    case 'nonce';
-                      $nonce = $pv;
-                    break;
-                    case 'username';
-                      $nusername = $pv;
-                    break;
-                    case 'password';
-                      $password = $pv;
-                    break;
-                    case 'uri';
-                      $uri = $pv;
-                    break;
-                    case 'method';
-                      $method = $pv;
-                    break;
-                }
-              
-                $ret .= ';' . $pk . (!isset($pv[0]) ? '' : "={$pv}");
-            }
-            $ha1 = md5($username.':'.$realm.':'.$password);
-            $ha2 = md5($method.':'.$uri);
-            $res = md5($ha1.':'.$nonce.':'.$ha2);
-        }
+        $ha1 = md5($params['username'].':'.$params['realm'].':'.$params['password']);
+        $ha2 = md5($params['method'].':'.$params['uri']);
+        $res = md5($ha1.':'.$params['nonce'].':'.$ha2);
         return $res;
     }
     /**
@@ -104,14 +66,12 @@ class ProxyAuthHeader
     {
         $ret = "{$hname}: ";
         $delim = '';
-
         foreach ($this->values as $key => $value) {
+          	$value->reponse = $this->reponse($value->params);
             if (!isset($value->digest, $value->reponse)) {
                 throw new InvalidHeaderValue('Malformed ProxyAuthHeader header');
             }
-
             $ret .= "{$delim}{$value->digest}";
-
             foreach ($value->params as $pk => $pv) {
                 $ret .= ',' . $pk . (!isset($pv[0]) ? '' : "={$pv}");
             }
