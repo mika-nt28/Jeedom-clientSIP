@@ -10,10 +10,10 @@ class client{
 	public function __construct($src_ip = null, $src_port = null ,$CallNumber,$Username,$Password,$userAgent,$socket_bind = true)	{
 		$this->_cHost = $src_ip;
 		$this->_cPort = $src_port;
-	  	$this->_CallNumber = $CallNumber;
-	  	$this->_Username = $Username;
-	  	$this->_Password = $Password;
-	  	$this->_userAgent = $userAgent;
+		$this->_CallNumber = $CallNumber;
+		$this->_Username = $Username;
+		$this->_Password = $Password;
+		$this->_userAgent = $userAgent;
 		$this->_sHost=config::byKey('Host', 'clientSIP');
 		$this->_sPort=config::byKey('Port', 'clientSIP');
 		$this->createSocket($socket_bind);
@@ -98,30 +98,27 @@ class client{
 			case '407':
             	
 			$response = new Request;	
-			$response->method = $message->method;
+		$request->method = 'REGISTER';
 			$response->uri = $message->uri;
-            $response->proxyAuthenticate = new Header;
-			$response->proxyAuthenticate->values[0] = 'Digest username="z0IrHY5sFW", realm="3CXPhoneSystem", nonce="414d53596103f4c526:4ebbf0e39b940f88fbb7210ef5cbd273", uri="sip:103@192.168.0.95:5060", response="43f22e72bf58936ffb790bc13701729d", algorithm=MD5';
-            
-            
+			$response->proxyAuthenticate = new ProxyAuthHeader;
+			$response->proxyAuthenticate->values[0]['username'] = $this->_Username;
+			$response->proxyAuthenticate->values[0]['password'] = $this->_Password;
+			$response->proxyAuthenticate->values[0]['uri'] = $message->uri;
+			$response->proxyAuthenticate->values[0]['methode'] = 'REGISTER';            
 			$response->cSeq->sequence = $message->cSeq->sequence + 1;
-            $response->uri = $message->uri;
-		$response->version = $message->version;
-		$response->via = $message->via;
-		$response->from = $message->from;
-		$response->to = $message->to;
-		$response->cSeq = $message->cSeq;
-		$response->callId = $message->callId;
-		$response->maxForwards = $message->maxForwards;
-		$response->contact = $message->contact;
-		$response->userAgent = new Header;
-		$response->userAgent->values[0] = $this->_userAgent;
-		$this->send($response->render());
-		$this->read();
-				/*$this->auth();
-				$data = $this->formatRequest();
-				$this->sendData($data);
-				$this->readMessage();*/
+			$response->uri = $message->uri;
+			$response->version = $message->version;
+			$response->via = $message->via;
+			$response->from = $message->from;
+			$response->to = $message->to;
+			$response->cSeq = $message->cSeq;
+			$response->callId = $message->callId;
+			$response->maxForwards = $message->maxForwards;
+			$response->contact = $message->contact;
+			$response->userAgent = new Header;
+			$response->userAgent->values[0] = $this->_userAgent;
+			$this->send($response->render());
+			$this->read();
 			break;
 			case '401':
 				/*$this->cseq++;
