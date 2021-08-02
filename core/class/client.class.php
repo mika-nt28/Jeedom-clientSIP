@@ -21,6 +21,10 @@ class client{
 	public function __destruct(){
 		$this->closeSocket();
 	}
+	public function isConnect(){
+		if (!$this->socket = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP)){
+		return feof();
+	}
 	private function createSocket($socket_bind){ 
 		if (!$this->socket = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP)){
 			$err_no = socket_last_error($this->socket);
@@ -74,15 +78,7 @@ class client{
 		event::add('clientSIP::monitor', json_encode($Monitor));
 		$message = SIPMessage::parse($data);
 		$this->getReponse($message);
-		/*if(get_class($message) === Request::class){
-			$response = new Request;	
-			$response->method = $message->method;
-			$response->uri = $message->uri;
-		}
-		if(get_class($message) === Response::class){
-			$response = new Response;
-			$response->code = 200;
-		}*/
+		return $message;
 	}
 	private function getReponse($message){
 		switch($message->code){
@@ -93,42 +89,29 @@ class client{
 				//$this->reply(180,'Ringing');
 			break;
 			case '200':
-			//	$this->_sip->reply(200,'OK');
+				if(get_class($message) === Request::class){
+					switch($message->method){
+						case 'INVITE':
+							$this->request('ACK');
+						break;
+					}
+				}else{
+					//$this->reply(200,'OK');
+				}
 			break;
 			case '407':
-			$response = new Request;	
-			$response->method = 'REGISTER';
-			$response->uri = 'sip:'.$this->_CallNumber.'@'.$this->_sHost.':'.$this->_sPort;
-			$response->proxyAuthorization = $message->proxyAuthenticate;
-			$response->proxyAuthorization->values[0]->params['username'] = $this->_Username;
-			$response->proxyAuthorization->values[0]->params['password'] = $this->_Password;
-			$response->proxyAuthorization->values[0]->params['uri'] = $response->uri;
-			$response->proxyAuthorization->values[0]->params['method'] = 'REGISTER';
-			
-			$response->cSeq = $message->cSeq;
-            $response->cSeq->sequence += 1;
-			$response->version = $message->version;
-			$response->via = $message->via;
-			$response->from = $message->from;
-			$response->to = $message->to;
-			$response->cSeq = $message->cSeq;
-			$response->callId = $message->callId;
-			$response->maxForwards = new ScalarHeader;
-		$response->maxForwards->value = 70;
-            
-		$response->contact = new ContactHeader;
-		$response->contact->values[0] = new ContactValue;
-		$response->contact->values[0]->addr = 'sip:'.$this->_CallNumber.'@'.$this->_cHost.':'.$this->_cPort;
-		//$request->contact->values[0]->q = 0.7;
-		//$request->contact->values[0]->expires = 3600;
-		//$request->contact->values[0]->params['+sip.instance'] = '"<urn:uuid:5cc54b96-ab90-4652-b4e5-de74c8e56fb7>"';
-		
-		$response->allow = new MultiValueHeader;
-		$response->allow->values[0] = 'INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, NOTIFY, MESSAGE, SUBSCRIBE, INFO';
-			$response->userAgent = new Header;
-			$response->userAgent->values[0] = $this->_userAgent;
-			$this->send($response->render());
-			//$this->read();
+				$request = $this->formatRequest();
+				$request->from = $message->from;
+				$request->proxyAuthorization = $message->proxyAuthenticate;
+				$request->proxyAuthorization->values[0]->params['username'] = $this->_Username;
+				$request->proxyAuthorization->values[0]->params['password'] = $this->_Password;
+				$request->proxyAuthorization->values[0]->params['uri'] = $request->uri;
+				$request->proxyAuthorization->values[0]->params['method'] = 'REGISTER';
+        			$request->cSeq = $message->cSeq;
+				$request->cSeq->sequence += 1;
+				$request->callId = $message->callId;
+				$this->send($request->render());
+				$this->read();
 			break;
 			case '401':
 				/*$this->cseq++;
@@ -140,43 +123,29 @@ class client{
 			case '486':
 			break;
 		}
-		switch($message->method){
-			case 'INVITE':
-				if($message->code == 200){
-					$this->getACK($message);
-				}
-			break;
-		}
 	}
-	private function getACK($message){
-		$response = new Request;	
-		$response->method = 'ACK';
-		$response->uri = 'sip:'.$this->_CallNumber.'@'.$this->_sHost.':'.$this->_sPort;
-		$response->version = $message->version;
-		$response->via = $message->via;
-		$response->from = $message->from;
-		$response->to = $message->to;
-		$response->cSeq = $message->cSeq;
-		$response->callId = $message->callId;
-		$response->maxForwards = $message->maxForwards;
-		$request->contact = new ContactHeader;
-		$request->contact->values[0] = new ContactValue;
-		$request->contact->values[0]->addr = 'sip:'.$this->_CallNumber.'@'.$this->_cHost.':'.$this->_cPort;
-		//$request->contact->values[0]->q = 0.7;
-		//$request->contact->values[0]->expires = 3600;
-		//$request->contact->values[0]->params['+sip.instance'] = '"<urn:uuid:5cc54b96-ab90-4652-b4e5-de74c8e56fb7>"';
-		
-		$request->allow = new MultiValueHeader;
-		$request->allow->values[0] = 'INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, NOTIFY, MESSAGE, SUBSCRIBE, INFO';
-		$response->userAgent = new Header;
-		$response->userAgent->values[0] = $this->_userAgent;
-		$this->send($response->render());
-		$this->read();
+	public function listen(){
+		return $this->read();
 	}
-	public function register(){
+	public function reply($code){
+	
+	public function newCall($number){
+		$this->method = 'INVITE';
+		$request = $this->formatRequest();
+		$request->to->addr = 'sip:'.$number.'@'.$this->_cHost.':'.$this->_sPort;
+		$this->send($request->render());
+		return $this->read();
+	}
+	public function request($method){
+		$this->method = $method;
+		$request = $this->formatRequest();
+		$this->send($request->render());
+		return $this->read();
+	}
+	public function formatRequest(){
 		$request = new Request;
 		$request->version = 'SIP/2.0';
-		$request->method = 'REGISTER';
+		$request->method = $this->method;
 		$request->uri = 'sip:'.$this->_CallNumber.'@'.$this->_sHost.':'.$this->_sPort;
 
 		$request->via = new ViaHeader;
@@ -219,11 +188,6 @@ class client{
 
 		$request->userAgent = new Header;
 		$request->userAgent->values[0] = $this->_userAgent;
-
-		$this->send($request->render());
-		$this->read();
-      			$this->read();
-
 	}
 }
 ?>
