@@ -35,7 +35,7 @@ class ProxyAuthHeader
                     throw new InvalidHeaderParameter('Empty header parameters', Response::BAD_REQUEST);
                 }
                 $pv = isset($p[1]) ? trim($p[1]) : '';
-                $val->params[$p[0]] = $pv;
+                $val->params[$p[0]] = str_replace('"','',$pv);
             }
             $ret->values[] = $val;
         }
@@ -65,16 +65,23 @@ class ProxyAuthHeader
     public function render(string $hname): string
     {
         $ret = "{$hname}: ";
-        $delim = '';
+        $delim = ' ';
         foreach ($this->values as $key => $value) {
           	$value->reponse = $this->reponse($value->params);
             if (!isset($value->digest, $value->reponse)) {
                 throw new InvalidHeaderValue('Malformed ProxyAuthHeader header');
             }
-            $ret .= "{$delim}{$value->digest}";
+            $ret .= "{$value->digest}{$delim}";
             foreach ($value->params as $pk => $pv) {
-                $ret .= ',' . $pk . (!isset($pv[0]) ? '' : "={$pv}");
+              	if($pk == 'password' || $pk == 'method')
+                  continue;
+             	if($pk == 'algorithm')
+                	$ret .= $pk . (!isset($pv[0]) ? '' : "={$pv}");
+              	else
+                	$ret .= $pk . (!isset($pv[0]) ? '' : "=\"{$pv}\"");
+                $ret .= ', ';
             }
+           $ret .='response="'.$value->reponse.'"';
         }
         return $ret . "\r\n";
     }
