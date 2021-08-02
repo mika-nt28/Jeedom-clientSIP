@@ -370,13 +370,13 @@ class SIPMessage
 
                 /* https://tools.ietf.org/html/rfc3261#section-20.27 */
                 case 'proxy-authenticate':
-                    $msg->proxyAuthenticate = Header::parse($hbody);
+                    $msg->proxyAuthenticate = ProxyAuthHeader::parse($hbody);
 
                     continue 2;
 
                 /* https://tools.ietf.org/html/rfc3261#section-20.28 */
                 case 'proxy-authorization':
-                    $msg->proxyAuthorization = Header::parse($hbody);
+                    $msg->proxyAuthorization = ProxyAuthHeader::parse($hbody);
 
                     continue 2;
 
