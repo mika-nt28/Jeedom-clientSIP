@@ -132,18 +132,19 @@ class clientSIP extends eqLogic {
 			if(!is_object($clientSIP->_sip))
 				$clientSIP->CreateConnexion(true);
 			while($clientSIP->_sip->isConnect()){
-				switch($clientSIP->_sip->listen()->request){
+              	$message = $clientSIP->_sip->listen();
+				switch($message->request){
 					case 'INVITE':
 						sleep(1);
-						$clientSIP->_sip->reply(100)
+                    	$clientSIP->_sip->reply($message,100);
 						sleep(1);
-						$clientSIP->_sip->reply(180);
+						$clientSIP->_sip->reply($message,180);
 						sleep(1);
-						$clientSIP->_sip->reply(200);
+						$clientSIP->_sip->reply($message,200);
 						sleep(1);
 						$clientSIP->checkAndUpdateCmd('CallStatus','Appel en cours');
-						$clientSIP->calling();
-						$clientSIP->Racrocher();
+                        $clientSIP->calling();
+                       	$clientSIP->Racrocher();
 					break;
 					case 'MESSAGE':
 						message::add('sucess', $clientSIP->_sip->getBody());
@@ -222,7 +223,7 @@ class clientSIP extends eqLogic {
 			$this->CreateConnexion(false);
 		$CallStatus=$this->getCmd(null,'CallStatus');
 		if ($this->_sip->request('BYE')->code == '200')		
-			$this->checkAndUpdateCmd('CallStatus','Racrocher');
+          $this->checkAndUpdateCmd('CallStatus','Racrocher');
 
 	/*	if($CallStatus->execCmd() == 'Sonnerie'){
 			$this->_sip->reply(487,'Request Terminated');
@@ -262,22 +263,22 @@ class clientSIP extends eqLogic {
 	}
 	public function sendMessage($number,$message) {	
 		log::add('clientSIP', 'debug', 'Envoie un message => ' . $number);
-		/*$this->checkAndUpdateCmd('CallStatus','Racrocher');	
+		$this->checkAndUpdateCmd('CallStatus','Racrocher');	
 		$this->CreateConnexion();
 		$this->_sip->setUsername($this->_Username);
 		$this->_sip->setPassword($this->_Password);
 		$this->_sip->newCall();
 		$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
-		$this->_sip->setUri('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
+		$this->_sip->setUri('sip:'.$number.'@'.$this->_Host.':'.$this->_Port/*.';transport='.$this->getConfiguration("transport")*/);
 		$this->_sip->setTo('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setMethod('MESSAGE');
-		$res=$this->_sip->send();*/
+		$res=$this->_sip->send();
 	}
 	public function calling(){
 		$cmd ='ffmpeg -i '.$this->TextToSpeach("Test de communication de Jeedom sur une communication sip").$this->_sip->getFFMEGcodec().$this->_sip->getRtsp();
 		$cmd .= ' >> ' . log::getPathToLog('clientSIP');// . ' 2>&1';
 		exec($cmd);
-	}
+    }
 	public function AddCommande($Name,$_logicalId,$Type="info", $SubType='string',$Template='default') {
 		$Commande = $this->getCmd(null,$_logicalId);
 		if (!is_object($Commande)){
