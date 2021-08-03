@@ -15,8 +15,7 @@ class SessionNameBody
      * @param list<string> $hbody body
      * @throws InvalidDuplicateHeader
      * @throws InvalidHeaderLineException
-     * @throws InvalidBodyParameter
-     * @return SingleValueWithParamsBody
+     * @return SessionNameBody
      */
     public static function parse(array $hbody): SessionNameBody
     {
