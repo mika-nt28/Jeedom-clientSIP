@@ -33,8 +33,8 @@ class SessionConnexionBody
 
         $ret = new static;
         $ret->networkType = $tok[0];
-        $ret->adresseType = $tok[0];
-        $ret->adresse = $tok[0];
+        $ret->adresseType = $tok[1];
+        $ret->adresse = $tok[2];
 
         return $ret;
     }
