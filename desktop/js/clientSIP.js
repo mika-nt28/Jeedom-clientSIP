@@ -115,14 +115,14 @@ function addInCallEventAct(_action) {
 									.append('{{Supprimer}}')))))
 						.append($('<div class="form-group">')
 							.append($('<label class="col-sm-2 control-label">')
-								.append('{{Numéro surveiller}}'))
+								.append('{{Numéro de téléphone}}'))
 							.append($('<div class="col-sm-12">')
-								.append($('<input type="text" class="InCallEventAttr form-control roundedRight" data-l1key="Numero"  placeholder="{{Saisir le numero du correspondant ou laisser vide pour un message a tous les contactes}}" style="width: 80px"/>'))))
+								.append($('<input type="number" class="InCallEventAttr form-control roundedRight" data-l1key="Numero"  placeholder="{{Saisir le numero du correspondant ou laisser vide pour un message a tous les contactes}}"/>'))))
 						.append($('<div class="form-group">')
 							.append($('<label class="col-sm-2 control-label">')
 								.append('{{Message a délivrer}}'))
 							.append($('<div class="col-sm-12">')
-								.append($('<input type="text" class="InCallEventAttr form-control roundedRight" data-l1key="Message"  placeholder="{{Saisir le message a transmettre}}" style="width: 80px"/>'))))
+								.append($('<textarea class="InCallEventAttr form-control roundedRight" data-l1key="Message"  placeholder="{{Saisir le message a transmettre}}">'))))
 						.append($('<hr/>'))))));
 	$('#div_InCallEvents').append(div);
 	$('#div_InCallEvents .InCallEventConf:last').setValues(_action, '.InCallEventAttr');
@@ -161,17 +161,17 @@ function addOutCallEventAct(_action) {
 							.append($('<label class="col-sm-2 control-label">')
 								.append('{{Quand faut il que jeedom appel le numero}}'))
 							.append($('<div class="col-sm-12">')
-								.append($('<input type="text" class="OutCallEventAttr form-control roundedRight" data-l1key="Numero"  placeholder="{{Saisir le numero du correspondant ou laisser vide pour un message a tous les contactes}}" style="width: 80px"/>'))))
+								.append('Ajouter ici une liste d\'objet déclancheur)))
 						.append($('<div class="form-group">')
 							.append($('<label class="col-sm-2 control-label">')
-								.append('{{Numéro surveiller}}'))
+								.append('{{Numéro de téléphone}}'))
 							.append($('<div class="col-sm-12">')
-								.append($('<input type="text" class="OutCallEventAttr form-control roundedRight" data-l1key="Numero"  placeholder="{{Saisir le numero du correspondant ou laisser vide pour un message a tous les contactes}}" style="width: 80px"/>'))))
+								.append($('<input type="number" class="OutCallEventAttr form-control roundedRight" data-l1key="Numero"  placeholder="{{Saisir le numero du correspondant ou laisser vide pour un message a tous les contactes}}"/>'))))
 						.append($('<div class="form-group">')
 							.append($('<label class="col-sm-2 control-label">')
 								.append('{{Message a délivrer}}'))
 							.append($('<div class="col-sm-12">')
-								.append($('<input type="text" class="OutCallEventAttr form-control roundedRight" data-l1key="Message"  placeholder="{{Saisir le message a transmettre}}" style="width: 80px"/>'))))
+								.append($('<textarea class="OutCallEventAttr form-control roundedRight" data-l1key="Message"  placeholder="{{Saisir le message a transmettre}}">'))))
 						.append($('<hr/>'))))));
 	$('#div_OutCallEvents').append(div);
 	$('#div_OutCallEvents .OutCallEventConf:last').setValues(_action, '.OutCallEventAttr');
