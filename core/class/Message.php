@@ -21,6 +21,16 @@ class SIPMessage
         't' => 'to',
         'v' => 'via',
     ];
+    /* Compact header definitions */
+    public const COMPACT_BODYS = [
+        'v' => 'version',
+        'o' => 'origine',
+        's' => 'session',
+        'c' => 'connect',
+        't' => 'time',
+        'm' => 'media',
+        'a' => 'codec',
+    ];
 
     /** @var string Message SIP Version */
     public $version;
@@ -125,6 +135,7 @@ class SIPMessage
 
         $count = count($lines);
         $headers = [];
+        $bodys = [];
 
         for ($i = 1; $i < $count; $i++) {
             if (!isset($lines[$i][0])) {
@@ -462,8 +473,68 @@ class SIPMessage
         if ($ignoreBody) {
             return $msg;
         }
+        for ($i = $boundary + 1; $i < $count; $i++) {
+            if (($lines[$i][0] === ' ') || ($lines[$i][0] === "\t")) {
+                if (!isset($bvalue)) {
+                    throw new InvalidHeaderLineException('Malformed Header-Line: ' . $lines[$i], Response::BAD_REQUEST);
+                }
 
-        $msg->body = implode("\r\n", array_slice($lines, $boundary + 1));
+                $hvalue .= $lines[$i];
+            } else {
+                if (isset($bname, $bvalue)) {
+                    $bodys[$bname][] = $bvalue;
+                }
+
+                $delimPos = strpos($lines[$i], ':');
+
+                /* Use of falsey is intentional, neither 0 nor false are not satisfactory here */
+                if (!$delimPos) {
+                    throw new InvalidHeaderLineException('Malformed Header-Line: ' . $lines[$i], Response::BAD_REQUEST);
+                }
+
+                $bname = strtolower(trim(substr($lines[$i], 0, $delimPos)));
+
+                if (isset(self::COMPACT_BODYS[$bname])) {
+                    $bname = self::COMPACT_BODYS[$bname];
+                }
+
+                if (!isset($bodys[$bname])) {
+                    $bodys[$bname] = [];
+                }
+
+                $bvalue = substr($lines[$i], $delimPos + 1);
+            }
+        }
+
+        if (isset($bname, $bvalue[0])) {
+            $bodys[$bname][] = $bvalue;
+        }
+
+
+        foreach ($bodys as $bname => $bbody) {
+            switch ($bname) {
+                case 'version':
+                    continue 2;
+                case 'origine':
+                    continue 2;
+                case 'session':
+                    $msg->SessionName = SessionNameBody::parse($bbody);
+                    continue 2;
+                case 'connect':
+                    $msg->SessionConnexion = SessionConnexionBody::parse($bbody);
+                    continue 2;
+                case 'time':
+                    $msg->SessionActiveTime = SessionActiveTime::parse($bbody);
+                    continue 2;
+                case 'media':
+                    $msg->SessonMediaDescription = SessonMediaDescriptionBody::parse($bbody);
+                    continue 2;
+              case 'codec':
+                    continue 2;
+            }
+        }
+
+      /*  $msg->body = implode("\r\n", array_slice($lines, $boundary + 1));
         $bodyLength = strlen($msg->body);
 
         if (isset($msg->contentLength)) {
@@ -477,9 +548,9 @@ class SIPMessage
                 );
             } else if ($bodyLength > $msg->contentLength->value) {
                 /* Discard suprious noise per https://tools.ietf.org/html/rfc3261#section-18.3 */
-                $msg->body = substr($msg->body, 0, $msg->contentLength->value);
+             /*   $msg->body = substr($msg->body, 0, $msg->contentLength->value);
             }
-        }
+        }*/
 
         return $msg;
     }
