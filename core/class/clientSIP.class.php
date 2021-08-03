@@ -1,6 +1,5 @@
 <?php
 require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
-//include_file('core', 'sip', 'class', 'clientSIP');
 include_file('core', 'client', 'class', 'clientSIP');
 class clientSIP extends eqLogic { 
 	protected $_sip = null;
@@ -45,9 +44,6 @@ class clientSIP extends eqLogic {
 				$cron = cron::byClassAndFunction('clientSIP', 'WaitCall', array('id' => $clientSIP->getId()));
 				if (!is_object($cron) || !$cron->running()) 	
 					return $return;
-			/*	$cron = cron::byClassAndFunction('clientSIP', 'WaitMessage', array('id' => $clientSIP->getId()));
-				if (!is_object($cron) || !$cron->running()) 	
-					return $return;*/
 			}
 		}
 		$return['state'] = 'ok';
@@ -71,7 +67,6 @@ class clientSIP extends eqLogic {
 					$clientSIP->CreateDemon('ConnectSip','*/'.$minute.' * * * *',false); 
 				}
 				$clientSIP->CreateDemon('WaitCall','* * * * * *',true);   
-				//$clientSIP->CreateDemon('WaitMessage','* * * * * *',true);   
 			}
 		}
 	}
@@ -132,158 +127,88 @@ class clientSIP extends eqLogic {
 			if(!is_object($clientSIP->_sip))
 				$clientSIP->CreateConnexion(true);
 			while($clientSIP->_sip->isConnect()){
-              	$message = $clientSIP->_sip->listen();
-				switch($message->request){
+				$message = $clientSIP->_sip->listen();
+				switch($message->method){
 					case 'INVITE':
+						log::add('clientSIP', 'debug', 'Réception d\'un appel');
 						sleep(1);
-                    	$clientSIP->_sip->reply($message,100);
+						$clientSIP->_sip->reply($message,100);
 						sleep(1);
 						$clientSIP->_sip->reply($message,180);
 						sleep(1);
 						$clientSIP->_sip->reply($message,200);
 						sleep(1);
 						$clientSIP->checkAndUpdateCmd('CallStatus','Appel en cours');
-                        $clientSIP->calling();
-                       	$clientSIP->Racrocher();
-					break;
-					case 'MESSAGE':
-						message::add('sucess', $clientSIP->_sip->getBody());
-					break;
-					case 'NOTIFY':
-					//	$clientSIP->Decrocher();
-					break;
-				}
-				/*$clientSIP->_sip->newCall();
-				log::add('clientSIP', 'debug', 'Attente d\'un appel');
-				$return = $clientSIP->_sip->listen(array('INVITE','NOTIFY' ,'MESSAGE'));
-				log::add('clientSIP', 'debug', 'Appel en recu => ' . json_encode($return));
-				switch($return){
-					case 'INVITE':
-						sleep(1);
-						$clientSIP->_sip->reply(100,'Ok');
-						sleep(1);
-						$clientSIP->_sip->reply(180,'Ok');
-						sleep(1);
-						$clientSIP->_sip->reply(200,'Ok');
-						sleep(1);
-						$clientSIP->Decrocher();
-						$clientSIP->calling();
+						$clientSIP->calling($message);
 						$clientSIP->Racrocher();
 					break;
 					case 'MESSAGE':
-						message::add('sucess', $clientSIP->_sip->getBody());
+						//message::add('sucess', $clientSIP->_sip->getBody());
 					break;
 					case 'NOTIFY':
-					//	$clientSIP->Decrocher();
 					break;
-				}*/
+				}
 			}
 		}
 	}	
 	private function CreateConnexion($socket_bind = false){
-		
-		/*$this->_Host=config::byKey('Host', 'clientSIP');
-		$this->_Port=config::byKey('Port', 'clientSIP');
-		$this->_CallNumber=$this->getConfiguration("CallNumber");
-		$this->_Username=$this->getConfiguration("Username");
-		$this->_Password=$this->getConfiguration("Password");*/
-		if($this->_sip == null){
-			$this->_sip = new client(network ::getNetworkAccess('internal', 'ip', '', false),$this->getConfiguration("Port"),$this->getConfiguration("CallNumber"),$this->getConfiguration("Username"),$this->getConfiguration("Password"),$this->getName(),$socket_bind);
-/*
-			$this->_sip = new sip($this,network ::getNetworkAccess('internal', 'ip', '', false),$this->getConfiguration("Port"),null,$socket_bind);
-			if($this->getConfiguration("Proxy")!="") 
-				$this->_sip->setProxy($this->getConfiguration("Proxy"));
-			$this->_sip->setUsername($this->_Username);
-			$this->_sip->setPassword($this->_Password);
-			$this->_sip->setServerMode(true);*/
-		}
+		if($this->_sip == null)
+			//$this->getConfiguration("Expiration");
+			//$this->getConfiguration("Proxy");
+			$this->_sip = new client(network ::getNetworkAccess('internal', 'ip', '', false),
+						$this->getConfiguration("Port"),
+						$this->getConfiguration("CallNumber"),
+						$this->getConfiguration("Username"),
+						$this->getConfiguration("Password"),
+						$this->getName(),
+						$socket_bind);
 	}
 	private function RegisterClient(){
 		if($this->_sip == null)			
 			$this->CreateConnexion(false);
 		$this->checkAndUpdateCmd('RegStatus','Inactif');
-      	$return = $this->_sip->request('REGISTER');
+		$return = $this->_sip->request('REGISTER');
 		if ($return->code == '200')
 			$this->checkAndUpdateCmd('RegStatus','OK');
 		else
 			$this->checkAndUpdateCmd('RegStatus','Echec');
-		/*$this->_sip->addHeader('Expires: '.$this->getConfiguration("Expiration"));
-		$this->_sip->setMethod('REGISTER');
-		if($this->getConfiguration("Proxy")!="") 
-			$this->_sip->setProxy($this->getConfiguration("Proxy"));
-		$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
-		$this->_sip->setUri('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
-		$res = $this->_sip->send();
-		if ($this->_sip->getResCode() == '200')
-			$this->checkAndUpdateCmd('RegStatus','OK');
-		else
-			$this->checkAndUpdateCmd('RegStatus','Echec');	*/		
 	}
 	public function Racrocher() {
 		if($this->_sip == null)			
 			$this->CreateConnexion(false);
 		$CallStatus=$this->getCmd(null,'CallStatus');
 		if ($this->_sip->request('BYE')->code == '200')		
-          $this->checkAndUpdateCmd('CallStatus','Racrocher');
-
-	/*	if($CallStatus->execCmd() == 'Sonnerie'){
-			$this->_sip->reply(487,'Request Terminated');
-			$this->_sip->reply(603,'Decline');
-			$this->_sip->setMethod('CANCEL');
-			$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
-			$this->_sip->send();
-		}else{
-			$this->_sip->setMethod('BYE');
-			$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
-			$this->_sip->send();
-		}
-		$this->checkAndUpdateCmd('CallStatus','Racrocher');*/
+			$this->checkAndUpdateCmd('CallStatus','Racrocher');
 	}
 	public function call($number) {	
 		log::add('clientSIP', 'debug', 'Appel en demandé => ' . $number);
 		$this->checkAndUpdateCmd('CallStatus','Racrocher');
 		if($this->_sip == null)			
 			$this->CreateConnexion();
-			$this->checkAndUpdateCmd('CallStatus','Sonnerie');
+		$this->checkAndUpdateCmd('CallStatus','Sonnerie');
 		if ($this->_sip->newCall($number)->code == '200')
 			$this->checkAndUpdateCmd('CallStatus','Appel en cours');
 		else
 			$this->checkAndUpdateCmd('CallStatus','Racrocher');
-		/*$this->_sip->setUsername($this->_Username);
-		$this->_sip->setPassword($this->_Password);
-		$this->_sip->newCall();
-		$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
-		$this->_sip->setContact('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
-		$this->_sip->setUri('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
-		$this->_sip->setTo('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
-		$this->_sip->setMethod('INVITE');
-		$res=$this->_sip->send();*/
 		sleep(5);
-		$this->calling();
+		$this->calling($message);
 		$this->Racrocher();
 	}
-	public function sendMessage($number,$message) {	
+	public function sendMessage($number,$texte) {	
 		log::add('clientSIP', 'debug', 'Envoie un message => ' . $number);
-	/*	$this->checkAndUpdateCmd('CallStatus','Racrocher');	
-		$this->CreateConnexion();
-		$this->_sip->setUsername($this->_Username);
-		$this->_sip->setPassword($this->_Password);
-		$this->_sip->newCall();
-		$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
-		$this->_sip->setUri('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
-		$this->_sip->setTo('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
-		$this->_sip->setMethod('MESSAGE');
-		$res=$this->_sip->send();*/
+		if($this->_sip == null)			
+			$this->CreateConnexion();
+		if ($this->_sip->newMessage($number,$texte)->code == '200')
+			log::add('clientSIP', 'debug', 'Message envoyé => ' . $number);
 	}
-	public function calling(){
-		
+	public function calling($message){
 		$cmd ='ffmpeg -i ';
 		$cmd .= $this->TextToSpeach("Test de communication de Jeedom sur une communication sip").' ';
 		//$cmd .= $this->_sip->getFFMEGcodec(). ' ';
 		//$cmd .= $this->_sip->getRtsp();
 		$cmd .= '-f mulaw ';
 		$cmd .= 'rtp://192.168.0.95:7074';
-		$cmd .= ' >> ' . log::getPathToLog('clientSIP');// . ' 2>&1';
+		$cmd .= ' >> ' . log::getPathToLog('clientSIP');
 		exec($cmd);
 	}
 	public function AddCommande($Name,$_logicalId,$Type="info", $SubType='string',$Template='default') {
