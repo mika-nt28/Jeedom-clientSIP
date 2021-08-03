@@ -92,7 +92,7 @@ class client{
 			case '200':
 				switch($this->method){
 					case 'INVITE':
-						$this->request('ACK');
+						$this->request('ACK',$message);
 					break;
 					case 'REGISTER':
 					case 'ACK':
@@ -178,9 +178,14 @@ class client{
 		$message = $this->read();
 		return $this->getReponse($message);
 	}
-	public function request($method){
+	public function request($method, $message = null){
 		$this->method = $method;
 		$request = $this->formatRequest();
+		if($message != null){
+			$request->from = $message->from;
+			$request->cSeq = $message->cSeq;
+			$request->callId = $message->callId;
+		}
 		$this->send($request->render());
 		$message = $this->read();
 		return $this->getReponse($message);
