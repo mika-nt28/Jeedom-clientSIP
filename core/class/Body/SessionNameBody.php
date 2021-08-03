@@ -17,13 +17,13 @@ class SessionNameBody
      * @throws InvalidHeaderLineException
      * @return SessionNameBody
      */
-    public static function parse(array $hbody): SessionNameBody
+    public static function parse(array $bbody): SessionNameBody
     {
-        if (isset($hbody[1])) {
+        if (isset($bbody[1])) {
             throw new InvalidDuplicateHeader('Cannot have single value body', Response::BAD_REQUEST);
         }
 
-        $tok = trim($hbody[0]);
+        $tok = trim($bbody[0]);
 
         if ($tok === false) {
             throw new InvalidHeaderLineException('Empty body value', Response::BAD_REQUEST);
@@ -42,10 +42,10 @@ class SessionNameBody
      * @throws InvalidHeaderValue
      * @return string
      */
-    public function render(string $hname): string
+    public function render(string $bname): string
     {
         if (!isset($this->value[0])) {
-            throw new InvalidHeaderValue('Missing body field value for body: ' . $hname);
+            throw new InvalidHeaderValue('Missing body field value for body: ' . $bname);
         }
 
         $ret = "{$hname}: {$this->value}";
