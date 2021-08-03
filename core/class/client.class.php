@@ -1,6 +1,7 @@
 <?php
 require_once dirname(__FILE__) . '/Exception/SIPException.php';
 require_once dirname(__FILE__) . '/Header/Header.php';
+require_once dirname(__FILE__) . '/Body/Body.php';
 
 require_once dirname(__FILE__) . '/Message.php';
 require_once dirname(__FILE__) . '/Request.php';
