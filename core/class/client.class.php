@@ -111,7 +111,7 @@ class client{
 				$request->proxyAuthorization->values[0]->params['password'] = $this->_Password;
 				$request->proxyAuthorization->values[0]->params['uri'] = $request->uri;
 				$request->proxyAuthorization->values[0]->params['method'] = $this->method;
-        			$request->cSeq = $message->cSeq;
+        		$request->cSeq = $message->cSeq;
 				$request->cSeq->sequence += 1;
 				$request->callId = $message->callId;
 				$this->send($request->render());
@@ -183,8 +183,11 @@ class client{
 		$request = $this->formatRequest();
 		if($message != null){
 			$request->from = $message->from;
-			$request->cSeq = $message->cSeq;
+			$request->to = $message->to;
 			$request->callId = $message->callId;
+			$request->cSeq = $message->cSeq;
+			$request->cSeq->sequence += 1;
+			$request->cSeq->method = $this->method;
 		}
 		$this->send($request->render());
 		$message = $this->read();
@@ -216,7 +219,7 @@ class client{
       
 		$request->cSeq = new CSeqHeader;
 		$request->cSeq->sequence = 20;
-		$request->cSeq->method = $request->method;
+		$request->cSeq->method = $this->method;
 
 		$request->callId = new CallIdHeader;
 		$request->callId->value = md5(uniqid());
