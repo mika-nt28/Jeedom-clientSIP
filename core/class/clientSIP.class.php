@@ -140,7 +140,7 @@ class clientSIP extends eqLogic {
 						sleep(1);
 						$clientSIP->checkAndUpdateCmd('CallStatus','Appel en cours');
 						$clientSIP->calling($message);
-						$clientSIP->Racrocher();
+						$clientSIP->Racrocher($message);
 					break;
 					case 'MESSAGE':
 						//message::add('sucess', $clientSIP->_sip->getBody());
@@ -177,7 +177,7 @@ class clientSIP extends eqLogic {
 		if($this->_sip == null)			
 			$this->CreateConnexion(false);
 		$CallStatus=$this->getCmd(null,'CallStatus');
-		if ($this->_sip->request('BYE')->code == '200')		
+		if ($this->_sip->request('BYE',$message)->code == '200')		
 			$this->checkAndUpdateCmd('CallStatus','Racrocher');
 	}
 	public function call($number) {	
@@ -192,7 +192,7 @@ class clientSIP extends eqLogic {
 			$this->checkAndUpdateCmd('CallStatus','Racrocher');
 		sleep(5);
 		$this->calling($message);
-		$this->Racrocher();
+		$this->Racrocher($message);
 	}
 	public function sendMessage($number,$texte) {	
 		log::add('clientSIP', 'debug', 'Envoie un message => ' . $number);
