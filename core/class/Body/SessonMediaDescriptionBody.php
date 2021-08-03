@@ -20,12 +20,12 @@ class SessonMediaDescriptionBody
      * @throws InvalidHeaderLineException
      * @return SessionConnexionBody
      */
-    public static function parse(array $hbody): SessonMediaDescriptionBody
+    public static function parse(array $bbody): SessonMediaDescriptionBody
     {
-        if (isset($hbody[1])) {
+        if (isset($bbody[1])) {
             throw new InvalidDuplicateHeader('Cannot have single value body', Response::BAD_REQUEST);
         }
-        $tok = explode(' ',trim($hbody[0]));
+        $tok = explode(' ',trim($bbody[0]));
         if ($tok === false) {
             throw new InvalidHeaderLineException('Empty body value', Response::BAD_REQUEST);
         }
@@ -44,10 +44,10 @@ class SessonMediaDescriptionBody
      * @throws InvalidHeaderValue
      * @return string
      */
-    public function render(string $hname): string
+    public function render(string $bname): string
     {
-        if (!isset($this->networkType $this->adresseType $this->adresse)) {
-            throw new InvalidHeaderValue('Missing body field value for body: ' . $hname);
+        if (!isset($this->networkType, $this->adresseType, $this->adresse)) {
+            throw new InvalidHeaderValue('Missing body field value for body: ' . $bname);
         }
         $ret = "{$hname}: {$this->type} {$this->port} {$this->protocol} {$this->codec}";
         $ret .= "\r\n";
