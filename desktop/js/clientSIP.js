@@ -161,7 +161,7 @@ function addOutCallEventAct(_action) {
 							.append($('<label class="col-sm-2 control-label">')
 								.append('{{Quand faut il que jeedom appel le numero}}'))
 							.append($('<div class="col-sm-12">')
-								.append('Ajouter ici une liste d\'objet déclancheur)))
+								.append('Ajouter ici une liste d\'objet déclancheur')))
 						.append($('<div class="form-group">')
 							.append($('<label class="col-sm-2 control-label">')
 								.append('{{Numéro de téléphone}}'))
