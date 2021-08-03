@@ -202,7 +202,8 @@ class clientSIP extends eqLogic {
 		if($this->_sip == null)			
 			$this->CreateConnexion(false);
 		$this->checkAndUpdateCmd('RegStatus','Inactif');
-		if ($this->_sip->request('REGISTER')->code == '200')
+      	$return = $this->_sip->request('REGISTER');
+		if ($return->code == '200')
 			$this->checkAndUpdateCmd('RegStatus','OK');
 		else
 			$this->checkAndUpdateCmd('RegStatus','Echec');
@@ -235,8 +236,8 @@ class clientSIP extends eqLogic {
 			$this->_sip->setMethod('BYE');
 			$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
 			$this->_sip->send();
-		}*/
-		$this->checkAndUpdateCmd('CallStatus','Racrocher');
+		}
+		$this->checkAndUpdateCmd('CallStatus','Racrocher');*/
 	}
 	public function call($number) {	
 		log::add('clientSIP', 'debug', 'Appel en demandé => ' . $number);
@@ -263,22 +264,28 @@ class clientSIP extends eqLogic {
 	}
 	public function sendMessage($number,$message) {	
 		log::add('clientSIP', 'debug', 'Envoie un message => ' . $number);
-		$this->checkAndUpdateCmd('CallStatus','Racrocher');	
+	/*	$this->checkAndUpdateCmd('CallStatus','Racrocher');	
 		$this->CreateConnexion();
 		$this->_sip->setUsername($this->_Username);
 		$this->_sip->setPassword($this->_Password);
 		$this->_sip->newCall();
 		$this->_sip->setFrom('sip:'.$this->_CallNumber.'@'.$this->_Host.':'.$this->_Port);
-		$this->_sip->setUri('sip:'.$number.'@'.$this->_Host.':'.$this->_Port/*.';transport='.$this->getConfiguration("transport")*/);
+		$this->_sip->setUri('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setTo('sip:'.$number.'@'.$this->_Host.':'.$this->_Port);
 		$this->_sip->setMethod('MESSAGE');
-		$res=$this->_sip->send();
+		$res=$this->_sip->send();*/
 	}
 	public function calling(){
-		$cmd ='ffmpeg -i '.$this->TextToSpeach("Test de communication de Jeedom sur une communication sip").$this->_sip->getFFMEGcodec().$this->_sip->getRtsp();
+		
+		$cmd ='ffmpeg -i ';
+		$cmd .= $this->TextToSpeach("Test de communication de Jeedom sur une communication sip").' ';
+		//$cmd .= $this->_sip->getFFMEGcodec(). ' ';
+		//$cmd .= $this->_sip->getRtsp();
+		$cmd .= '-f mulaw ';
+		$cmd .= 'rtp://192.168.0.95:7074';
 		$cmd .= ' >> ' . log::getPathToLog('clientSIP');// . ' 2>&1';
 		exec($cmd);
-    }
+	}
 	public function AddCommande($Name,$_logicalId,$Type="info", $SubType='string',$Template='default') {
 		$Commande = $this->getCmd(null,$_logicalId);
 		if (!is_object($Commande)){
