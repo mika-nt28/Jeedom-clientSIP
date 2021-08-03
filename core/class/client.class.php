@@ -81,27 +81,27 @@ class client{
 		switch($message->code){
 			case '100':
 				$message = $this->read();
-				$this->getReponse($message);
+				return $this->getReponse($message);
 				//$this->reply(100,'Trying');
 			break;
 			case '180':
 				$message = $this->read();
-				$this->getReponse($message);
+				return $this->getReponse($message);
 				//$this->reply(180,'Ringing');
 			break;
 			case '200':
-				//if(get_class($message) === Request::class){
-					switch($this->method){
-						case 'INVITE':
-							$this->request('ACK');
-						break;
-						default:
-							$this->reply($message,200);
-                        			break;
-					}
-				//}else{
-					//$this->reply(200,'OK');
-				//}
+				switch($this->method){
+					case 'INVITE':
+						$this->request('ACK');
+					break;
+					case 'REGISTER':
+					case 'ACK':
+					break;
+					default:
+						$this->reply($message,200);
+					break;
+				}
+				return $message;
 			break;
 			case '407':
 				$request = $this->formatRequest();
@@ -110,13 +110,13 @@ class client{
 				$request->proxyAuthorization->values[0]->params['username'] = $this->_Username;
 				$request->proxyAuthorization->values[0]->params['password'] = $this->_Password;
 				$request->proxyAuthorization->values[0]->params['uri'] = $request->uri;
-				$request->proxyAuthorization->values[0]->params['method'] = 'REGISTER';
+				$request->proxyAuthorization->values[0]->params['method'] = $this->method;
         			$request->cSeq = $message->cSeq;
 				$request->cSeq->sequence += 1;
 				$request->callId = $message->callId;
 				$this->send($request->render());
 				$message = $this->read();
-				$this->getReponse($message);
+				return $this->getReponse($message);
 			break;
 			case '401':
 				/*$this->cseq++;
@@ -151,8 +151,7 @@ class client{
 		$response->callId = $message->callId;
 		$response->cSeq = $message->cSeq;
 
-		$response->callId = new CallIdHeader;
-		$response->callId->value = 'ob0EYyuyC0';
+		$response->callId = $message->callId;
 
 		$response->maxForwards = new ScalarHeader;
 		$response->maxForwards->value = 70;
@@ -160,10 +159,7 @@ class client{
 		$response->userAgent = new Header;
 		$response->userAgent->values[0] = $this->_userAgent;
 		
-		$this->send($response->render());
-		$message = $this->read();
-		$this->getReponse($message);
-		return $message;
+		return $this->send($response->render());		
 	}
 	public function newCall($number){
 		$this->method = 'INVITE';
@@ -171,16 +167,14 @@ class client{
 		$request->to->addr = 'sip:'.$number.'@'.$this->_sHost.':'.$this->_sPort;
 		$this->send($request->render());
 		$message = $this->read();
-		$this->getReponse($message);
-		return $message;
+		return $this->getReponse($message);
 	}
 	public function request($method){
 		$this->method = $method;
 		$request = $this->formatRequest();
 		$this->send($request->render());
 		$message = $this->read();
-		$this->getReponse($message);
-		return $message;
+		return $this->getReponse($message);
 	}
 	public function formatRequest(){
 		$request = new Request;
