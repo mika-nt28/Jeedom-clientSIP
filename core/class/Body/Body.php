@@ -2,6 +2,12 @@
 /**
 * Body Class
 */
+
+require_once  dirname(__FILE__) .'/SessionNameBody.php';
+require_once  dirname(__FILE__) .'/SessionConnexionBody.php';
+require_once  dirname(__FILE__) .'/SessionActiveTime.php';
+require_once  dirname(__FILE__) .'/SessonMediaDescriptionBody.php';
+
 class Body
 {
     /** @var list<string> Generic body field values */
