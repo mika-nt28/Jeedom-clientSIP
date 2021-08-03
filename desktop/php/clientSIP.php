@@ -81,6 +81,18 @@ $eqLogics = eqLogic::byType($plugin->getId());
 					{{Commandes}}
 				</a>
 			</li>
+    			<li role="presentation">
+				<a href="#InCallTab" aria-controls="profile" role="tab" data-toggle="tab">
+					<i class="fa fa-list-alt"></i> 
+					{{Appel recus}}
+				</a>
+			</li>
+    			<li role="presentation">
+				<a href="#OutCallTab" aria-controls="profile" role="tab" data-toggle="tab">
+					<i class="fa fa-list-alt"></i> 
+					{{Appel émis}}
+				</a>
+			</li>
   		</ul>
 		<div class="tab-content" style="height:calc(100% - 50px);overflow:auto;overflow-x: hidden;">
 			<div role="tabpanel" class="tab-pane active" id="eqlogictab">
@@ -231,6 +243,38 @@ $eqLogics = eqLogic::byType($plugin->getId());
 					</thead>
 					<tbody></tbody>
 				</table>
+			</div>
+			<div role="tabpanel" class="tab-pane" id="InCallTab">	
+				<form class="form-horizontal">
+					<fieldset>
+						<legend>{{Que faire lorsque Jeedom reçois un appel :}}
+							<sup>
+								<i class="fa fa-question-circle tooltips" title="{{Créer message}}"></i>
+							</sup>
+							<a class="btn btn-success btn-xs CallEventAct" data-action="add">
+								<i class="fa fa-plus-circle"></i>
+								{{Ajouter}}
+							</a>
+						</legend>
+					</fieldset>
+				</form>		
+				<div id="div_InCallEvents"></div>	
+			</div>
+			<div role="tabpanel" class="tab-pane" id="OutCallTab">	
+				<form class="form-horizontal">
+					<fieldset>
+						<legend>{{Que faire lorsque Jeedom émet un appel :}}
+							<sup>
+								<i class="fa fa-question-circle tooltips" title="{{Créer message}}"></i>
+							</sup>
+							<a class="btn btn-success btn-xs CallEventAct" data-action="add">
+								<i class="fa fa-plus-circle"></i>
+								{{Ajouter}}
+							</a>
+						</legend>
+					</fieldset>
+				</form>		
+				<div id="div_OutCallEvents"></div>	
 			</div>
 		</div>
 	</div>
