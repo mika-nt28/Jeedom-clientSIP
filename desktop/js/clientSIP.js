@@ -58,7 +58,7 @@ function saveEqLogic(_eqLogic) {
 		var InCallEventConf = $(this).getValues('.InCallEventAttr')[0];
 		_eqLogic.configuration.InCallEvent.push(InCallEventConf);
 	});
-	$('#div_OutCallEvents .InCallEventConf').each(function () {
+	$('#div_OutCallEvents .OutCallEventConf').each(function () {
 		var OutCallEventConf = $(this).getValues('.OutCallEventAttr')[0];
 		_eqLogic.configuration.OutCallEvent.push(OutCallEventConf);
 	});
@@ -137,7 +137,7 @@ function addOutCallEventAct(_action) {
         return;
     }
     var random = Math.floor((Math.random() * 1000000) + 1);
-    var div = $('<div class="InCallEventConf panel panel-default">')
+    var div = $('<div class="OutCallEventConf panel panel-default">')
     	.append($('<div class="panel-heading">')
     		.append($('<h4 class="panel-title">')
     			.append($('<a data-toggle="collapse" data-parent="#div_OutCallEvents" href="#collapse' + random + '">')
