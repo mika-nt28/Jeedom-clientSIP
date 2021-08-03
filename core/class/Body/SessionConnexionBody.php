@@ -12,7 +12,7 @@ class SessionConnexionBody
     final public function __construct() {}
 
     /**
-     * Single value body field parser, with parameters
+     * Sesson Connexion body field parser
      *
      * @param list<string> $hbody body
      * @throws InvalidDuplicateHeader
@@ -40,7 +40,7 @@ class SessionConnexionBody
     }
 
     /**
-     * Single value body renderer, with optional parameters
+     * Sesson Connexion body renderer, with optional parameters
      *
      * @param string $hname body field name
      * @throws InvalidHeaderValue
