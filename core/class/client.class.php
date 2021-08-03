@@ -161,6 +161,15 @@ class client{
 		
 		return $this->send($response->render());		
 	}
+	public function newMessage($number,$texte){
+		$this->method = 'MESSAGE';
+		$request = $this->formatRequest();
+		$request->to->addr = 'sip:'.$number.'@'.$this->_sHost.':'.$this->_sPort;
+		$request->body = $texte;
+		$this->send($request->render());
+		$message = $this->read();
+		return $this->getReponse($message);
+	}
 	public function newCall($number){
 		$this->method = 'INVITE';
 		$request = $this->formatRequest();
