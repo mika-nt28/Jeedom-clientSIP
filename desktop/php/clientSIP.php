@@ -251,7 +251,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							<sup>
 								<i class="fa fa-question-circle tooltips" title="{{Créer message}}"></i>
 							</sup>
-							<a class="btn btn-success btn-xs CallEventAct" data-action="add">
+							<a class="btn btn-success btn-xs InCallEventAct" data-action="add">
 								<i class="fa fa-plus-circle"></i>
 								{{Ajouter}}
 							</a>
@@ -267,7 +267,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							<sup>
 								<i class="fa fa-question-circle tooltips" title="{{Créer message}}"></i>
 							</sup>
-							<a class="btn btn-success btn-xs CallEventAct" data-action="add">
+							<a class="btn btn-success btn-xs OutCallEventAct" data-action="add">
 								<i class="fa fa-plus-circle"></i>
 								{{Ajouter}}
 							</a>
