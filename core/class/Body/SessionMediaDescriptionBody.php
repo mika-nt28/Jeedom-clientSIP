@@ -22,18 +22,20 @@ class SessionMediaDescriptionBody
      */
     public static function parse(array $bbody): SessionMediaDescriptionBody
     {
-        if (isset($bbody[1])) {
-            throw new InvalidDuplicateHeader('Cannot have single value body', Response::BAD_REQUEST);
+      	$ret = [];
+        foreach($bbody as $cbbody){
+
+          $tok = explode(' ',trim($cbbody));
+            if ($tok === false) {
+                throw new InvalidHeaderLineException('Empty body value', Response::BAD_REQUEST);
+            }
+            $media = new static;
+            $media->type = $tok[0];
+            $media->port = $tok[1];
+            $media->protocol = $tok[2];
+            $media->codec = array_slice($tok,3);
+            $ret[]=$media;
         }
-        $tok = explode(' ',trim($bbody[0]));
-        if ($tok === false) {
-            throw new InvalidHeaderLineException('Empty body value', Response::BAD_REQUEST);
-        }
-        $ret = new static;
-        $ret->type = $tok[0];
-        $ret->port = $tok[1];
-        $ret->protocol = $tok[2];
-        $ret->codec = array_slice($tok,3);
         return $ret;
     }
 
