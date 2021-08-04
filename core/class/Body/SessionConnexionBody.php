@@ -21,22 +21,23 @@ class SessionConnexionBody
      */
     public static function parse(array $bbody): SessionConnexionBody
     {
-        if (isset($bbody[1])) {
-            throw new InvalidDuplicateHeader('Cannot have single value body', Response::BAD_REQUEST);
+      	$ret = [];
+        foreach($bbody as $cbbody){
+
+          $tok = explode(' ',trim($cbbody));
+
+            if ($tok === false) {
+                throw new InvalidHeaderLineException('Empty body value', Response::BAD_REQUEST);
+            }
+
+            $con = new static;
+            $con->networkType = $tok[0];
+            $con->adresseType = $tok[1];
+            $con->adresse = $tok[2];
+		    $ret[]=$con;
+        
         }
-
-        $tok = explode(' ',trim($bbody[0]));
-
-        if ($tok === false) {
-            throw new InvalidHeaderLineException('Empty body value', Response::BAD_REQUEST);
-        }
-
-        $ret = new static;
-        $ret->networkType = $tok[0];
-        $ret->adresseType = $tok[1];
-        $ret->adresse = $tok[2];
-
-        return $ret;
+      return $ret;
     }
 
     /**
