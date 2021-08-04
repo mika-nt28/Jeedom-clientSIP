@@ -5,8 +5,9 @@
 
 require_once  dirname(__FILE__) .'/SessionNameBody.php';
 require_once  dirname(__FILE__) .'/SessionConnexionBody.php';
-require_once  dirname(__FILE__) .'/SessionActiveTime.php';
+require_once  dirname(__FILE__) .'/SessionActiveTimeBody.php';
 require_once  dirname(__FILE__) .'/SessonMediaDescriptionBody.php';
+require_once  dirname(__FILE__) .'/SessionCodecDescriptionBody.php';
 
 class Body
 {
@@ -95,12 +96,13 @@ class Body
                     $ret->SessionConnexion = SessionConnexionBody::parse($bbody);
                     continue 2;
                 case 'time':
-                    $ret->SessionActiveTime = SessionActiveTime::parse($bbody);
+                    $ret->SessionActiveTime = SessionActiveTimeBody::parse($bbody);
                     continue 2;
                 case 'media':
                     $ret->SessionMediaDescription = SessionMediaDescriptionBody::parse($bbody);
                     continue 2;
               case 'codec':
+                    $ret->SessionCodecDescription = SessionCodecDescriptionBody::parse($bbody);
                     continue 2;
             }
         }
@@ -115,6 +117,7 @@ class Body
      */
     public function render(string $bname): string
     {
+        $compact =true;
         $ret = '';
         if (isset($this->SessionVersion)) {
           $ret .= $this->SessionVersion->render($compact ? 'v' : 'version');
