@@ -682,9 +682,10 @@ class SIPMessage
             $ret .= $header->render($name);
         }
 
-      /*  if (isset($this->body)) {
-            $ret .= $this->body->render();
-        }*/
+        if (isset($this->body)) {
+			if($this->body !='')
+              $ret .= $this->body->render();
+        }
         return $ret;
     }
 }
