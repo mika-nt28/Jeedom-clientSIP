@@ -21,16 +21,6 @@ class SIPMessage
         't' => 'to',
         'v' => 'via',
     ];
-    /* Compact header definitions */
-    public const COMPACT_BODYS = [
-        'v' => 'version',
-        'o' => 'origine',
-        's' => 'session',
-        'c' => 'connect',
-        't' => 'time',
-        'm' => 'media',
-        'a' => 'codec',
-    ];
 
     /** @var string Message SIP Version */
     public $version;
