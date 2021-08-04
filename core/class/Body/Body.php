@@ -59,7 +59,7 @@ class Body
                     $bodys[$bname][] = $bvalue;
                 }
 
-                $delimPos = strpos($lines[$i], ':');
+                $delimPos = strpos($lines[$i], '=');
 
                 /* Use of falsey is intentional, neither 0 nor false are not satisfactory here */
                 if (!$delimPos) {
@@ -104,7 +104,7 @@ class Body
                     $ret->SessionMediaDescription = SessionMediaDescriptionBody::parse($bbody);
                     continue 2;
               case 'codec':
-                    $ret->SessionCodecDescription[] = SessionCodecDescriptionBody::parse($bbody);
+                   // $ret->SessionCodecDescription[] = SessionCodecDescriptionBody::parse($bbody);
                     continue 2;
             }
         }
@@ -140,7 +140,7 @@ class Body
           $ret .= $this->SessionMediaDescription->render($compact ? 'm' : 'media');
         }
         if (isset($this->SessionCodec)) {
-          $ret .= $this->SessionCodec->render($compact ? 'a' : 'codec');
+          $ret .= $this->SessionCodecDescription->render($compact ? 'a' : 'codec');
         }
         return $ret;
     }
