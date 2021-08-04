@@ -2,7 +2,7 @@
 /**
 * Session Active Time Class
 */
-class SessionActiveTime
+class SessionActiveTimeBody
 {
     /** @var string Body field value */
     public $start;
@@ -19,7 +19,7 @@ class SessionActiveTime
      * @throws InvalidHeaderLineException
      * @return SessionActiveTime
      */
-    public static function parse(array $bbody): SessionActiveTime
+    public static function parse(array $bbody): SessionActiveTimeBody
     {
         if (isset($bbody[1])) {
             throw new InvalidDuplicateHeader('Cannot have single value body', Response::BAD_REQUEST);
