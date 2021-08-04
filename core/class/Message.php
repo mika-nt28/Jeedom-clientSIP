@@ -125,7 +125,6 @@ class SIPMessage
 
         $count = count($lines);
         $headers = [];
-        $bodys = [];
 
         for ($i = 1; $i < $count; $i++) {
             if (!isset($lines[$i][0])) {
@@ -683,6 +682,9 @@ class SIPMessage
             $ret .= $header->render($name);
         }
 
+        if (isset($this->body)) {
+            $ret .= $this->body->render();
+        }
         return $ret;
     }
 }
