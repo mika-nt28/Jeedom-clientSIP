@@ -8,30 +8,11 @@ class clientSIP extends eqLogic {
 	protected $_Username= null;
 	protected $_Password= null;
 	protected $_CallNumber= null;
-	public static function dependancy_info() {
-		$return = array();
-		$return['log'] = log::getPathToLog(__CLASS__ . '_update');
-		$cmd = "dpkg -l | grep libttspico-utils";
-		exec($cmd, $output, $return_var);
-		if (isset($output[0])) {
-			if (`which pico2wave`) {
-				$return['state'] = 'ok';
-			} else {
-				$return['state'] = 'nok';
-			}
-		} else {
-			$return['state'] = 'nok';
-		}
-		$return['progress_file'] = jeedom::getTmpFolder('clientSIP') . '/compilation_in_progress';
-		return $return;
-	}
-	public static function dependancy_install() {
-		log::remove(__CLASS__ . '_update');
-		return array('script' => dirname(__FILE__) . '/../../resources/install.sh ' . jeedom::getTmpFolder('clientSIP') . '/compilation_in_progress', 'log' => log::getPathToLog(__CLASS__ . '_update'));
-	}
 	public static function deamon_info() {
 		$return = array();
 		$return['log'] = 'clientSIP';
+		//$cmd = "dpkg -l | grep libttspico-utils";
+		//exec($cmd, $output, $return_var);
 		$return['launchable'] = 'ok';
 		$return['state'] = 'nok';
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
@@ -139,7 +120,7 @@ class clientSIP extends eqLogic {
 						$clientSIP->_sip->reply($message,200);
 						sleep(1);
 						$clientSIP->checkAndUpdateCmd('CallStatus','Appel en cours');
-						$clientSIP->calling($message);
+						$clientSIP->calling($message, 'InCallEvent');
 						$clientSIP->Racrocher($message);
 					break;
 					case 'MESSAGE':
@@ -191,7 +172,7 @@ class clientSIP extends eqLogic {
 		else
 			$this->checkAndUpdateCmd('CallStatus','Racrocher');
 		sleep(5);
-		$this->calling($message);
+		$this->calling($message, 'OutCallEvent');
 		$this->Racrocher($message);
 	}
 	public function sendMessage($number,$texte) {	
@@ -201,15 +182,45 @@ class clientSIP extends eqLogic {
 		if ($this->_sip->newMessage($number,$texte)->code == '200')
 			log::add('clientSIP', 'debug', 'Message envoyé => ' . $number);
 	}
-	public function calling($message){
-		$cmd ='ffmpeg -i ';
-		$cmd .= $this->TextToSpeach("Test de communication de Jeedom sur une communication sip").' ';
-		//$cmd .= $this->_sip->getFFMEGcodec(). ' ';
-		//$cmd .= $this->_sip->getRtsp();
-		$cmd .= '-f mulaw ';
-		$cmd .= 'rtp://192.168.0.95:7074';
-		$cmd .= ' >> ' . log::getPathToLog('clientSIP');
-		exec($cmd);
+	public function calling($message, $CallEvents){
+		foreach($this->getConfiguration($CallEvents) as $CallEvent){
+			$number = str_replace('sip:','',explode('@', $message->to->addr)[0]);
+			if($CallEvent['Numero'] != '' && $CallEvent['Numero'] != $number)
+				continue;
+			$cmd ='ffmpeg -i ';
+			$cmd .= $this->TextToSpeach($CallEvent['Message']).' ';
+			$cmd .= $this->_sip->getFFMEGcodec($message). ' ';
+			$cmd .= $this->getRtspUrl($message);
+			$cmd .= ' >> ' . log::getPathToLog('clientSIP');
+			exec($cmd);
+			sleep(5);
+		}
+	}
+	public function getRtspUrl($message){
+		switch($message->body->SessionConnexion->adresseType){
+			default:
+			case 'RTP':
+				return 'rtp://'.$message->body->SessionConnexion->adresse.':'.$message->body->SessionMediaDescription->port;
+		}
+	}
+	public function getFFMEGcodec($message){
+		switch($$message->body->SessionMediaDescription->codec[0]){
+			case 0:
+				//a=rtpmap:0 PCMU/8000
+			return ' -f mulaw ';//-acodec mulaw ';
+			case 3:
+				//a=rtpmap:3 GSM/8000			
+			return ' -f gsm ';//-acodec gsm ';
+			case 4:
+				//a=rtpmap:4 G723/8000		
+			return ' -f g723 ';//-acodec g723 ';
+			case 8:
+				//a=rtpmap:8 PCMA/8000		
+			return ' -f alaw ';//-acodec alaw ';
+			case 18:
+				//a=rtpmap:18 G729/8000
+			return ' -f g729 ';//-acodec g729 ';
+		}
 	}
 	public function AddCommande($Name,$_logicalId,$Type="info", $SubType='string',$Template='default') {
 		$Commande = $this->getCmd(null,$_logicalId);
