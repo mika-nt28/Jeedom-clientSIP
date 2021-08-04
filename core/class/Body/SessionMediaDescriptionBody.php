@@ -2,7 +2,7 @@
 /**
 * Sesson Media Description Body Class
 */
-class SessonMediaDescriptionBody
+class SessionMediaDescriptionBody
 {
 /** @var string Body field value */
     public $type;
@@ -20,7 +20,7 @@ class SessonMediaDescriptionBody
      * @throws InvalidHeaderLineException
      * @return SessionConnexionBody
      */
-    public static function parse(array $bbody): SessonMediaDescriptionBody
+    public static function parse(array $bbody): SessionMediaDescriptionBody
     {
         if (isset($bbody[1])) {
             throw new InvalidDuplicateHeader('Cannot have single value body', Response::BAD_REQUEST);
@@ -33,7 +33,7 @@ class SessonMediaDescriptionBody
         $ret->type = $tok[0];
         $ret->port = $tok[1];
         $ret->protocol = $tok[2];
-        $ret->codec = $tok[3];
+        $ret->codec = array_slice($tok,3);
         return $ret;
     }
 
