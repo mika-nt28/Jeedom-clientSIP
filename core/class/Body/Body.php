@@ -28,7 +28,7 @@ class Body
     public $SessionConnexion;
     public $SessionActiveTime;
     public $SessionMediaDescription;
-    public $SessionCodec;
+    public $SessionCodecDescription = [];
     public $SessionOrigine;
     public $SessionVersion;
     /**
@@ -102,7 +102,7 @@ class Body
                     $ret->SessionMediaDescription = SessionMediaDescriptionBody::parse($bbody);
                     continue 2;
               case 'codec':
-                    $ret->SessionCodecDescription = SessionCodecDescriptionBody::parse($bbody);
+                    $ret->SessionCodecDescription[] = SessionCodecDescriptionBody::parse($bbody);
                     continue 2;
             }
         }
