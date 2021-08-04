@@ -53,7 +53,7 @@ class Body
                     throw new InvalidHeaderLineException('Malformed Body-Line: ' . $lines[$i], Response::BAD_REQUEST);
                 }
 
-                $hvalue .= $lines[$i];
+                $bvalue .= $lines[$i];
             } else {
                 if (isset($bname, $bvalue)) {
                     $bodys[$bname][] = $bvalue;
