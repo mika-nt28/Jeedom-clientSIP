@@ -46,6 +46,8 @@ class Body
         $bodys = [];
         $ret = new static;
         for ($i = 1; $i < $count; $i++) {
+            if ($lines[$i] == '')
+                continue;
             if (($lines[$i][0] === ' ') || ($lines[$i][0] === "\t")) {
                 if (!isset($bvalue)) {
                     throw new InvalidHeaderLineException('Malformed Body-Line: ' . $lines[$i], Response::BAD_REQUEST);
