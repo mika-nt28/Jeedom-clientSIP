@@ -477,7 +477,7 @@ class SIPMessage
                 );
             } else if ($bodyLength > $msg->contentLength->value) {
                 /* Discard suprious noise per https://tools.ietf.org/html/rfc3261#section-18.3 */
-                $>body = substr($body, 0, $msg->contentLength->value);
+                $body = substr($body, 0, $msg->contentLength->value);
             }
         }
         $msg->body = Body::parse($body);
@@ -682,9 +682,9 @@ class SIPMessage
             $ret .= $header->render($name);
         }
 
-        if (isset($this->body)) {
+      /*  if (isset($this->body)) {
             $ret .= $this->body->render();
-        }
+        }*/
         return $ret;
     }
 }
