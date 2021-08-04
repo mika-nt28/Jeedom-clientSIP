@@ -167,7 +167,8 @@ class clientSIP extends eqLogic {
 		if($this->_sip == null)			
 			$this->CreateConnexion();
 		$this->checkAndUpdateCmd('CallStatus','Sonnerie');
-		if ($this->_sip->newCall($number)->code == '200')
+		$message = $this->_sip->newCall($number);
+		if ($message->code == '200')
 			$this->checkAndUpdateCmd('CallStatus','Appel en cours');
 		else
 			$this->checkAndUpdateCmd('CallStatus','Racrocher');
@@ -185,41 +186,41 @@ class clientSIP extends eqLogic {
 	public function calling($message, $CallEvents){
 		foreach($this->getConfiguration($CallEvents) as $CallEvent){
 			$number = str_replace('sip:','',explode('@', $message->to->addr)[0]);
-			if($CallEvent['Numero'] != '' && $CallEvent['Numero'] != $number)
-				continue;
-			$cmd ='ffmpeg -i ';
-			$cmd .= $this->TextToSpeach($CallEvent['Message']).' ';
-			$cmd .= $this->_sip->getFFMEGcodec($message). ' ';
-			$cmd .= $this->getRtspUrl($message);
-			$cmd .= ' >> ' . log::getPathToLog('clientSIP');
-			exec($cmd);
-			sleep(5);
+			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number){
+				$cmd ='ffmpeg -i ';
+				$cmd .= $this->TextToSpeach($CallEvent['Message']).' ';
+				$cmd .= $this->getFFMEGcodec($message). ' ';
+				$cmd .= $this->getRtspUrl($message);
+				$cmd .= ' >> ' . log::getPathToLog('clientSIP');
+				exec($cmd);
+				sleep(5);
+			}
 		}
 	}
 	public function getRtspUrl($message){
-		switch($message->body->SessionConnexion->adresseType){
+		switch($message->body->SessionMediaDescription[0]->protocol){
 			default:
-			case 'RTP':
+			case 'RTP/AVP':
 				return 'rtp://'.$message->body->SessionConnexion->adresse.':'.$message->body->SessionMediaDescription->port;
 		}
 	}
 	public function getFFMEGcodec($message){
-		switch($$message->body->SessionMediaDescription->codec[0]){
+		switch($message->body->SessionMediaDescription[0]->codec[0]){
 			case 0:
 				//a=rtpmap:0 PCMU/8000
-			return ' -f mulaw ';//-acodec mulaw ';
+			return '-f mulaw';//-acodec mulaw ';
 			case 3:
 				//a=rtpmap:3 GSM/8000			
-			return ' -f gsm ';//-acodec gsm ';
+			return '-f gsm';//-acodec gsm ';
 			case 4:
 				//a=rtpmap:4 G723/8000		
-			return ' -f g723 ';//-acodec g723 ';
+			return '-f g723';//-acodec g723 ';
 			case 8:
 				//a=rtpmap:8 PCMA/8000		
-			return ' -f alaw ';//-acodec alaw ';
+			return '-f alaw';//-acodec alaw ';
 			case 18:
 				//a=rtpmap:18 G729/8000
-			return ' -f g729 ';//-acodec g729 ';
+			return '-f g729';//-acodec g729 ';
 		}
 	}
 	public function AddCommande($Name,$_logicalId,$Type="info", $SubType='string',$Template='default') {
@@ -249,10 +250,10 @@ class clientSIP extends eqLogic {
 				$lang == 'fr-FR';
 			}
 			$cmd = "pico2wave -l " . $lang . " -w /tmp/voice.wav \"" . $Texte . "\"";
-			$cmd .= ' >> ' . log::getPathToLog('clientSIP') . ' 2>&1';
+			$cmd .= ' >> ' . log::getPathToLog('clientSIP');
 			exec($cmd);
 			$cmd = "sox /tmp/voice.wav -r 48k " . $SpeachFile;
-			$cmd .= ' >> ' . log::getPathToLog('clientSIP') . ' 2>&1';
+			$cmd .= ' >> ' . log::getPathToLog('clientSIP');
 			exec($cmd);
 		}	
 		return $SpeachFile;
