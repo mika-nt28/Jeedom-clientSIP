@@ -6,7 +6,7 @@
 require_once  dirname(__FILE__) .'/SessionNameBody.php';
 require_once  dirname(__FILE__) .'/SessionConnexionBody.php';
 require_once  dirname(__FILE__) .'/SessionActiveTimeBody.php';
-require_once  dirname(__FILE__) .'/SessonMediaDescriptionBody.php';
+require_once  dirname(__FILE__) .'/SessionMediaDescriptionBody.php';
 require_once  dirname(__FILE__) .'/SessionCodecDescriptionBody.php';
 
 class Body
