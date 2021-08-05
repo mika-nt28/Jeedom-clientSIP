@@ -11,8 +11,20 @@ class clientSIP extends eqLogic {
 	public static function deamon_info() {
 		$return = array();
 		$return['log'] = 'clientSIP';
-		//$cmd = "dpkg -l | grep libttspico-utils";
-		//exec($cmd, $output, $return_var);
+		$return['launchable'] = 'nok';
+		$engine = config::byKey('tts::engine','core','pico');
+			if($engine == 'espeak'){
+				$cmd = "dpkg -l | grep espeak";
+				if(exec($cmd) == '')
+					return $return;
+			
+			}else if($engine == 'pico'){
+				$cmd = "dpkg -l | grep libttspico-utils";
+				if(exec($cmd) == '')
+					return $return;
+			}
+			else
+				return $return;
 		$return['launchable'] = 'ok';
 		$return['state'] = 'nok';
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
@@ -252,18 +264,35 @@ class clientSIP extends eqLogic {
 		return $Commande;
 	}
 	public function TextToSpeach($Texte) {
-		$SpeachFile = jeedom::getTmpFolder('clientSIP').'/' . hash('md5', $Texte) . '.wav';
+		$Texte = str_replace(array('[', ']', '#', '{', '}'), '', $Texte);
+		$md5 = md5($Texte);
+		$tts_dir = jeedom::getTmpFolder('clientSIP');
+		$SpeachFile = $tts_dir . '/' . $md5 . '.mp3';
 		if (!file_exists($SpeachFile)) {
-			$lang = str_replace('_','-',config::byKey('language', 'core'));
-			if ($lang == '') {
-				$lang == 'fr-FR';
+			$engine = config::byKey('tts::engine','core','pico');
+			if($engine == 'espeak'){
+				$voice = init('voice', 'fr+f4');
+				$avconv = 'avconv';
+				if(!com_shell::commandExists('avconv')){
+					$avconv = 'ffmpeg';
+				}
+				$cmd = 'espeak -v' . $voice . ' "' . $Texte . '" --stdout | '.$avconv.' -i - -ar 44100 -ac 2 -ab 192k -f mp3 ' . $SpeachFile . ' > /dev/null 2>&1';
+				log::add('clientSIP', 'debug', $cmd);
+				shell_exec($cmd);
+			}else if($engine == 'pico'){
+				$volume = '-af "volume=' . init('volume', '6') . 'dB"';
+				$lang = str_replace('_','-',init('lang',config::byKey('language')));
+				$avconv = 'avconv';
+				if(!com_shell::commandExists('avconv')){
+					$avconv = 'ffmpeg';
+				}
+				$cmd = 'pico2wave -l=' . $lang . ' -w=' . $md5 . '.wav "' . $Texte . '" > /dev/null 2>&1;';
+				$cmd .= $avconv.' -i ' . $md5 . '.wav -ar 44100 ' . $volume . ' -ac 2 -ab 192k -f mp3 ' . $SpeachFile . ' > /dev/null 2>&1;rm ' . $md5 . '.wav';
+				log::add('clientSIP', 'debug', $cmd);
+				shell_exec($cmd);
+			}else{
+				$engine::tts($SpeachFile,$Texte);
 			}
-			$cmd = "pico2wave -l " . $lang . " -w ".$SpeachFile." \"" . $Texte . "\"";
-			$cmd .= ' >> ' . log::getPathToLog('clientSIP');
-			exec($cmd);
-			/*$cmd = "sox /tmp/voice.wav -r 48k " . $SpeachFile;
-			$cmd .= ' >> ' . log::getPathToLog('clientSIP');
-			exec($cmd);*/
 		}	
 		return $SpeachFile;
 	}
