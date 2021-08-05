@@ -175,9 +175,9 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							</div>
 							<div class="form-group">
 								<label class="col-sm-3 control-label" >
-									{{Autentification}}
+									{{Authentification}}
 									<sup>
-										<i class="fa fa-question-circle tooltips" title="{{Parametre d'autentification au serveur}}"></i>
+										<i class="fa fa-question-circle tooltips" title="{{Parametre d'authentification au serveur}}"></i>
 									</sup>
 								</label>
 								<div class="col-sm-3">
