@@ -481,7 +481,7 @@ class SIPMessage
             }
         }
        // $msg->body = Body::parse($body);
-        $msg->body = $bod);
+        $msg->body = $body;
         return $msg;
     }
 
