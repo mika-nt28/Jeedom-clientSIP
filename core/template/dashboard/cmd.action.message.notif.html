@@ -47,11 +47,11 @@
 			</span>
 			<input type="number" class="numDisplay form-control input-sm" placeholder="Saisir le numero SIP" autocomplete="off" data-cmd_id="#id#" />
 			<span class="input-group-btn">
-				<a class="btn btn-success btn-block btnCall" title="{{Appeler}}">
-					<i class="fas fa-phone"></i>
+				<a class="btn btn-success btn-block btnCall" title="{{Envoyer}}">
+					<i class="fas fa-envelope"></i>
 				</a>
-			</span>
 		</div>
+		<textarea class="form-control input-sm message" rows="2" data-cmd_uid="#uid#" data-cmd_id="#id#"></textarea>
 		<div id="sip-dialpad" class="dropdown-menu">
 			<button type="button" class="btn btn-primary digit" data-digit="1">1<span></span></button>
 			<button type="button" class="btn btn-primary digit" data-digit="2">2<span>ABC</span></button>
@@ -86,7 +86,8 @@
 		});
 		$(".cmd[data-cmd_id=#id#] .btnCall").off().on("click", function() {
 			var num = $('.numDisplay[data-cmd_id=#id#]').val();
-			jeedom.cmd.execute({id: '#id#', value: {title:num}});
+			var message = $('.message[data-cmd_id=#id#]').val();
+			jeedom.cmd.execute({id: '#id#', value: {title:num,message:message}});
 		});
 	</script>
 </div>
