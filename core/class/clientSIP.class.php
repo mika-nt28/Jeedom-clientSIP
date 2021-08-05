@@ -169,7 +169,7 @@ class clientSIP extends eqLogic {
 		else
 			$this->checkAndUpdateCmd('RegStatus','Echec');
 	}
-	public function Racrocher() {
+	public function Racrocher($message) {
 		if($this->_sip == null)			
 			$this->CreateConnexion(false);
 		$CallStatus=$this->getCmd(null,'CallStatus');
@@ -213,7 +213,8 @@ class clientSIP extends eqLogic {
 				$cmd .= $this->getFFMEGcodec($message). ' ';
 				$cmd .= $this->getRtspUrl($message);
 				$cmd .= ' >> ' . log::getPathToLog('clientSIP');*/
-				exec($cmd);
+				shell_exec($cmd);			
+				log::add('clientSIP', 'debug', $cmd);
 				sleep(5);
 			}
 		}
@@ -277,8 +278,8 @@ class clientSIP extends eqLogic {
 					$avconv = 'ffmpeg';
 				}
 				$cmd = 'espeak -v' . $voice . ' "' . $Texte . '" --stdout | '.$avconv.' -i - -ar 44100 -ac 2 -ab 192k -f mp3 ' . $SpeachFile . ' > /dev/null 2>&1';
+				shell_exec($cmd);			
 				log::add('clientSIP', 'debug', $cmd);
-				shell_exec($cmd);
 			}else if($engine == 'pico'){
 				$volume = '-af "volume=' . init('volume', '6') . 'dB"';
 				$lang = str_replace('_','-',init('lang',config::byKey('language')));
@@ -288,8 +289,8 @@ class clientSIP extends eqLogic {
 				}
 				$cmd = 'pico2wave -l=' . $lang . ' -w=' . $md5 . '.wav "' . $Texte . '" > /dev/null 2>&1;';
 				$cmd .= $avconv.' -i ' . $md5 . '.wav -ar 44100 ' . $volume . ' -ac 2 -ab 192k -f mp3 ' . $SpeachFile . ' > /dev/null 2>&1;rm ' . $md5 . '.wav';
+				shell_exec($cmd);			
 				log::add('clientSIP', 'debug', $cmd);
-				shell_exec($cmd);
 			}else{
 				$engine::tts($SpeachFile,$Texte);
 			}
