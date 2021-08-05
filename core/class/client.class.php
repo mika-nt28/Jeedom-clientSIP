@@ -15,6 +15,7 @@ class client{
 		$this->_Username = $Username;
 		$this->_Password = $Password;
 		$this->_userAgent = $userAgent;
+		$this->_Stun=config::byKey('Stun', 'clientSIP');
 		$this->_sHost=config::byKey('Host', 'clientSIP');
 		$this->_sPort=config::byKey('Port', 'clientSIP');
 		$this->createSocket($socket_bind);
