@@ -31,14 +31,17 @@ class clientSIP extends eqLogic {
 		return $return;
 	}
 	public static function deamon_start($_debug = false) {
-		unlink("/tmp/PhpSIP.lock");
 		log::remove('clientSIP');
 		self::deamon_stop();
 		$deamon_info = self::deamon_info();
 		if ($deamon_info['launchable'] != 'ok') 
 			return;
-		if ($deamon_info['state'] == 'ok') 
-			return;
+		$directory=jeedom::getTmpFolder('clientSIP');
+		$directory = calculPath($directory);
+		if(!file_exists($directory))
+			exec('sudo mkdir -p -m 777 '.$directory);
+		if (!is_writable($directory)) 
+			exec('sudo chmod 777 -R '.$directory);
 		$cache = cache::byKey('clientSIP::HistoryCall');
 		$cache->remove();
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
@@ -187,11 +190,17 @@ class clientSIP extends eqLogic {
 		foreach($this->getConfiguration($CallEvents) as $CallEvent){
 			$number = str_replace('sip:','',explode('@', $message->to->addr)[0]);
 			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number){
-				$cmd ='ffmpeg -i ';
+				$SdpFile = jeedom::getTmpFolder('clientSIP').'/' . $this->getName(). '.sdp';
+				$fp =fopen($SdpFile,"w");
+				fwrite($fp,$message->body);
+				fclose($fp);
+				$cmd ='ffmpeg -loglevel debug -protocol_whitelist file,crypto,udp,rtp -re -vcodec libvpx -acodec opus -i '.$SdpFile.' -vcodec libx264 -acodec aac -y ';
+				$cmd .= $this->TextToSpeach($CallEvent['Message']); 
+				/*$cmd ='ffmpeg -i ';
 				$cmd .= $this->TextToSpeach($CallEvent['Message']).' ';
 				$cmd .= $this->getFFMEGcodec($message). ' ';
 				$cmd .= $this->getRtspUrl($message);
-				$cmd .= ' >> ' . log::getPathToLog('clientSIP');
+				$cmd .= ' >> ' . log::getPathToLog('clientSIP');*/
 				exec($cmd);
 				sleep(5);
 			}
@@ -243,18 +252,18 @@ class clientSIP extends eqLogic {
 		return $Commande;
 	}
 	public function TextToSpeach($Texte) {
-		$SpeachFile = '/tmp/' . hash('md5', $Texte) . '.mp3';
+		$SpeachFile = jeedom::getTmpFolder('clientSIP').'/' . hash('md5', $Texte) . '.wav';
 		if (!file_exists($SpeachFile)) {
 			$lang = str_replace('_','-',config::byKey('language', 'core'));
 			if ($lang == '') {
 				$lang == 'fr-FR';
 			}
-			$cmd = "pico2wave -l " . $lang . " -w /tmp/voice.wav \"" . $Texte . "\"";
+			$cmd = "pico2wave -l " . $lang . " -w ".$SpeachFile." \"" . $Texte . "\"";
 			$cmd .= ' >> ' . log::getPathToLog('clientSIP');
 			exec($cmd);
-			$cmd = "sox /tmp/voice.wav -r 48k " . $SpeachFile;
+			/*$cmd = "sox /tmp/voice.wav -r 48k " . $SpeachFile;
 			$cmd .= ' >> ' . log::getPathToLog('clientSIP');
-			exec($cmd);
+			exec($cmd);*/
 		}	
 		return $SpeachFile;
 	}
