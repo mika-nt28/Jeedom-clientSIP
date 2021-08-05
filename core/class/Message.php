@@ -480,7 +480,8 @@ class SIPMessage
                 $body = substr($body, 0, $msg->contentLength->value);
             }
         }
-        $msg->body = Body::parse($body);
+       // $msg->body = Body::parse($body);
+        $msg->body = $bod);
         return $msg;
     }
 
