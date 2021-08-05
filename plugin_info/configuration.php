@@ -12,6 +12,12 @@
 			<legend>Serveur SIP</legend>
 			<fieldset>
 				<div class="form-group">
+					<label class="col-lg-4 control-label">{{STUN :}}</label>
+					<div class="col-lg-4">
+						<input class="configKey form-control" data-l1key="Stun" />
+					</div>
+				</div>
+				<div class="form-group">
 					<label class="col-lg-4 control-label">{{Adresse IP :}}</label>
 					<div class="col-lg-4">
 						<input class="configKey form-control" data-l1key="Host" />
