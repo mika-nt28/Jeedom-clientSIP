@@ -1,3 +1,5 @@
+$("#div_InCallEvents .InCallEventConf").sortable({axis: "y", cursor: "move", items: ".InCallEventConf", placeholder: "ui-state-highlight", tolerance: "intersect", forcePlaceholderSize: true});
+$("#div_InCallEvents .OutCallEventConf").sortable({axis: "y", cursor: "move", items: ".OutCallEventConf", placeholder: "ui-state-highlight", tolerance: "intersect", forcePlaceholderSize: true});
 $('.eqLogicAction[data-action=gotoMoniteur]').off().on('click', function () {	
   	bootbox.dialog({
 		title: "{{Moniteur}}",
