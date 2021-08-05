@@ -202,19 +202,19 @@ class clientSIP extends eqLogic {
 		foreach($this->getConfiguration($CallEvents) as $CallEvent){
 			$number = str_replace('sip:','',explode('@', $message->to->addr)[0]);
 			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number){
-				$SdpFile = jeedom::getTmpFolder('clientSIP').'/' . $this->getName(). '.sdp';
+				$SdpFile = jeedom::getTmpFolder('clientSIP').'/' . $message->callId->value . '.sdp';
 				$fp =fopen($SdpFile,"w");
 				fwrite($fp,$message->body);
 				fclose($fp);
-				$cmd ='ffmpeg -loglevel debug -protocol_whitelist file,crypto,udp,rtp -re -vcodec libvpx -acodec opus -i '.$SdpFile.' -vcodec libx264 -acodec aac -y ';
+				$cmd ='ffmpeg -re -i ';
 				$cmd .= $this->TextToSpeach($CallEvent['Message']); 
-				/*$cmd ='ffmpeg -i ';
-				$cmd .= $this->TextToSpeach($CallEvent['Message']).' ';
-				$cmd .= $this->getFFMEGcodec($message). ' ';
-				$cmd .= $this->getRtspUrl($message);
-				$cmd .= ' >> ' . log::getPathToLog('clientSIP');*/
+				$cmd .= ' -f rtsp -muxdelay 0.1 '; 
+				$cmd .=  $SdpFile; 
+				
 				shell_exec($cmd);			
 				log::add('clientSIP', 'debug', $cmd);
+				
+				shell_exec('sudo rm '.$SdpFile);			
 				sleep(5);
 			}
 		}
