@@ -122,7 +122,8 @@ class clientSIP extends eqLogic {
 		if (is_object($clientSIP) && $clientSIP->getIsEnable()) {
 			if(!is_object($clientSIP->_sip))
 				$clientSIP->CreateConnexion(true);
-			while($clientSIP->_sip->isConnect()){
+			//while($clientSIP->_sip->isConnect()){
+			while(true){
 				$message = $clientSIP->_sip->listen();
 				switch($message->method){
 					case 'INVITE':
