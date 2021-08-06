@@ -522,9 +522,10 @@ class SIPMessage
         if (isset($this->maxForwards)) {
             $ret .= $this->maxForwards->render('Max-Forwards');
         }
-
+       
         if (isset($this->contentLength)) {
-            $ret .= $this->contentLength->render($compact ? 'l' : 'Content-Length');
+		$this->contentLength->value = strlen($this->body);
+		$ret .= $this->contentLength->render($compact ? 'l' : 'Content-Length');
         }
 
         if (isset($this->expires)) {
@@ -684,8 +685,7 @@ class SIPMessage
         }
 
         if (isset($this->body)) {
-			if($this->body !='')
-              $ret .= $this->body->render();
+              $ret .= $this->body;
         }
         return $ret;
     }
