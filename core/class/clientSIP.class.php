@@ -206,11 +206,13 @@ class clientSIP extends eqLogic {
 				$fp =fopen($SdpFile,"w");
 				fwrite($fp,$message->body);
 				fclose($fp);
-				$cmd ='ffmpeg -re -i ';
-				$cmd .= $this->TextToSpeach($CallEvent['Message']); 
-				$cmd .= ' -f rtsp -muxdelay 0.1 '; 
-				$cmd .=  $SdpFile; 
-				
+				$cmd ='ffmpeg';
+				$cmd .= ' -loglevel debug';
+				$cmd .= ' -protocol_whitelist file,crypto,udp,rtp';
+				$cmd .= ' -re';
+				$cmd .= ' -i '.$SdpFile;
+				//$cmd .= '-acodec aac';
+				$cmd .= ' -i ' . $this->TextToSpeach($CallEvent['Message']);
 				shell_exec($cmd);			
 				log::add('clientSIP', 'debug', $cmd);
 				
