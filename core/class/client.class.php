@@ -15,6 +15,7 @@ class client{
 		$this->_Username = $Username;
 		$this->_Password = $Password;
 		$this->_userAgent = $userAgent;
+		$this->_Stun=config::byKey('Stun', 'clientSIP');
 		$this->_sHost=config::byKey('Host', 'clientSIP');
 		$this->_sPort=config::byKey('Port', 'clientSIP');
 		$this->createSocket($socket_bind);
@@ -120,7 +121,7 @@ class client{
 				$request->proxyAuthorization->values[0]->params['password'] = $this->_Password;
 				$request->proxyAuthorization->values[0]->params['uri'] = $request->uri;
 				$request->proxyAuthorization->values[0]->params['method'] = $this->method;
-        		$request->cSeq = $message->cSeq;
+				$request->cSeq = $message->cSeq;
 				$request->cSeq->sequence += 1;
 				$request->callId = $message->callId;
 				$this->send($request->render());
@@ -156,7 +157,6 @@ class client{
 
 		$response->from = $message->from;
 		$response->to = $message->to;
-		$response->contact = $message->contact;
 		$response->callId = $message->callId;
 		$response->cSeq = $message->cSeq;
 
@@ -183,6 +183,9 @@ class client{
 		$this->method = 'INVITE';
 		$request = $this->formatRequest();
 		$request->to->addr = 'sip:'.$number.'@'.$this->_sHost.':'.$this->_sPort;
+		//$request->contentType = new SingleValueWithParamsHeader;
+		//$request->contentType->value ='application/sdp';
+		//$request->body =exec('sudo ffmpeg ');
 		$this->send($request->render());
 		$message = $this->read();
 		return $this->getReponse($message);
@@ -218,13 +221,12 @@ class client{
 		$request->via->values[0]->params['rport'] = '';
 
 		$request->from = new NameAddrHeader;
-		$request->from->addr = 'sip:'.$this->_CallNumber.'@'.$this->_cHost.':'.$this->_sPort;
+		$request->from->addr = 'sip:'.$this->_CallNumber.'@'.$this->_sHost.':'.$this->_sPort;
 		$request->from->tag = rand(10000,99999);
           
 		$request->to = new NameAddrHeader;
 		$request->to->addr = 'sip:'.$this->_CallNumber.'@'.$this->_sHost.':'.$this->_sPort;
 		//$request->to->tag = rand(10000,99999);
-
       
 		$request->cSeq = new CSeqHeader;
 		$request->cSeq->sequence = 20;

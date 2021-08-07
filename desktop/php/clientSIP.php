@@ -164,17 +164,6 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							</div>
 							<div class="form-group">
 								<label class="col-sm-3 control-label" >
-									{{Proxy}}
-									<sup>
-										<i class="fa fa-question-circle tooltips" title="{{Saisir le proxy de connexion}}"></i>
-									</sup>
-								</label>
-								<div class="col-sm-3">
-									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="Proxy" placeholder="{{Proxy}}"/>
-								</div>
-							</div>
-							<div class="form-group">
-								<label class="col-sm-3 control-label" >
 									{{Numéro de téléphone}}
 									<sup>
 										<i class="fa fa-question-circle tooltips" title="{{Saisir le numéro de téléphone  de se client}}"></i>
@@ -186,9 +175,9 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							</div>
 							<div class="form-group">
 								<label class="col-sm-3 control-label" >
-									{{Autentification}}
+									{{Authentification}}
 									<sup>
-										<i class="fa fa-question-circle tooltips" title="{{Parametre d'autentification au serveur}}"></i>
+										<i class="fa fa-question-circle tooltips" title="{{Parametre d'authentification au serveur}}"></i>
 									</sup>
 								</label>
 								<div class="col-sm-3">

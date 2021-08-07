@@ -122,7 +122,8 @@ class clientSIP extends eqLogic {
 		if (is_object($clientSIP) && $clientSIP->getIsEnable()) {
 			if(!is_object($clientSIP->_sip))
 				$clientSIP->CreateConnexion(true);
-			while($clientSIP->_sip->isConnect()){
+			//while($clientSIP->_sip->isConnect()){
+			while(true){
 				$message = $clientSIP->_sip->listen();
 				switch($message->method){
 					case 'INVITE':
@@ -206,11 +207,13 @@ class clientSIP extends eqLogic {
 				$fp =fopen($SdpFile,"w");
 				fwrite($fp,$message->body);
 				fclose($fp);
-				$cmd ='ffmpeg -re -i ';
-				$cmd .= $this->TextToSpeach($CallEvent['Message']); 
-				$cmd .= ' -f rtsp -muxdelay 0.1 '; 
-				$cmd .=  $SdpFile; 
-				
+				$cmd ='ffmpeg';
+				$cmd .= ' -loglevel debug';
+				$cmd .= ' -protocol_whitelist file,crypto,udp,rtp';
+				$cmd .= ' -re';
+				$cmd .= ' -i '.$SdpFile;
+				//$cmd .= '-acodec aac';
+				$cmd .= ' -i ' . $this->TextToSpeach($CallEvent['Message']);
 				shell_exec($cmd);			
 				log::add('clientSIP', 'debug', $cmd);
 				
