@@ -31,7 +31,7 @@ class Request extends SIPMessage
             throw new InvalidRequestURI('Cannot enclose <> request URIs', Response::BAD_REQUEST);
         }
 
-        if ($rqstLine[2] !== Message::SIP_VERSION) {
+        if ($rqstLine[2] !== SIPMessage::SIP_VERSION) {
             throw new InvalidProtocolVersionException('Unsupported SIP version: ' . $rqstLine[2], Response::VERSION_NOT_SUPPORTED);
         }
 
