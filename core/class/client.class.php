@@ -102,6 +102,9 @@ class client{
 						$request->cSeq = $message->cSeq;
 						$request->cSeq->sequence += 1;
 						$request->cSeq->method = $this->method;
+						$request->contentType = new SingleValueWithParamsHeader;
+						$request->contentType->value ='application/sdp';
+						$request->body = $this->clientSDP($request);
 						$this->send($request->render());
 					break;
 					case 'REGISTER':
@@ -124,6 +127,13 @@ class client{
 				$request->cSeq = $message->cSeq;
 				$request->cSeq->sequence += 1;
 				$request->callId = $message->callId;
+				switch($this->method){
+					case 'INVITE':
+						$request->contentType = new SingleValueWithParamsHeader;
+						$request->contentType->value ='application/sdp';
+						$request->body = $this->clientSDP($request);
+					break;
+				}
 				$this->send($request->render());
 				$message = $this->read();
 				return $this->getReponse($message);
@@ -185,7 +195,7 @@ class client{
 		$request->to->addr = 'sip:'.$number.'@'.$this->_sHost.':'.$this->_sPort;
 		$request->contentType = new SingleValueWithParamsHeader;
 		$request->contentType->value ='application/sdp';
-		$request->body = $this->clientSDP($message);
+		$request->body = $this->clientSDP($request);
 		$this->send($request->render());
 		$message = $this->read();
 		return $this->getReponse($message);
