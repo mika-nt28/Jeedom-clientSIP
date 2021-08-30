@@ -523,11 +523,6 @@ class SIPMessage
             $ret .= $this->maxForwards->render('Max-Forwards');
         }
 
-        if (isset($this->contentLength)) {
-		$this->contentLength = strlen($this->body);
-		$ret .= $this->contentLength->render($compact ? 'l' : 'Content-Length');
-        }
-
         if (isset($this->expires)) {
             $ret .= $this->expires->render('Expires');
         }
@@ -542,10 +537,6 @@ class SIPMessage
 
         if (isset($this->timestamp)) {
             $ret .= $this->timestamp->render('Timestamp');
-        }
-
-        if (isset($this->contentType)) {
-            $ret .= $this->contentType->render($compact ? 'c' : 'Content-Type');
         }
 
         if (isset($this->acceptEncoding)) {
@@ -680,6 +671,15 @@ class SIPMessage
             $ret .= $this->rSeq->render('RSeq');
         }
 
+        if (isset($this->contentType)) {
+            $ret .= $this->contentType->render($compact ? 'c' : 'Content-Type');
+        }
+
+        if (isset($this->contentLength)) {
+		$this->contentLength = strlen($this->body);
+		$ret .= $this->contentLength->render($compact ? 'l' : 'Content-Length');
+        }
+	    
         foreach ($this->extraHeaders as $name => $header) {
             $ret .= $header->render($name);
         }
