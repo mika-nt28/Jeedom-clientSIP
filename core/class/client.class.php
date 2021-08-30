@@ -183,9 +183,9 @@ class client{
 		$this->method = 'INVITE';
 		$request = $this->formatRequest();
 		$request->to->addr = 'sip:'.$number.'@'.$this->_sHost.':'.$this->_sPort;
-		//$request->contentType = new SingleValueWithParamsHeader;
-		//$request->contentType->value ='application/sdp';
-		//$request->body =exec('sudo ffmpeg ');
+		$request->contentType = new SingleValueWithParamsHeader;
+		$request->contentType->value ='application/sdp';
+		$request->body = $this->clientSDP($message);
 		$this->send($request->render());
 		$message = $this->read();
 		return $this->getReponse($message);
@@ -251,6 +251,23 @@ class client{
 		$request->userAgent = new Header;
 		$request->userAgent->values[0] = $this->_userAgent;
 		return $request;
+	}
+	private function clientSDP($message){
+		$SDP = "v=0\r\n";
+		$SDP .= "o=".$this->_userAgent." ".$message->callId->value." ".$message->cSeq->value." IN IP4 ".$this->_cHost."\r\n";
+		$SDP .= "s=".$this->_userAgent."\r\n";
+		$SDP .= "c=IN IP4 ".$this->_cHost."\r\n";
+		$SDP .= "t=0 0\r\n";
+		$SDP .= "m=audio 90001 RTP 0 3 4 8 18\r\n";
+		$SDP .= "a=rtpmap:0 PCMU/8000\r\n";
+		$SDP .= "a=rtpmap:3 GSM/8000\r\n";
+           	$SDP .= "a=rtpmap:4 G723/8000\r\n";
+		$SDP .= "a=rtpmap:8 PCMA/8000\r\n";
+		$SDP .= "a=rtpmap:18 G729/8000\r\n";
+		//$SDP .= "m=video 45450 RTP/AVP 34\r\n";
+		//$SDP .= "a=rtpmap:34 H263/8000\r\n";
+		//$SDP .= "a=rtpmap:35 H264/90000\r\n";
+		return $SDP;
 	}
 }
 ?>
