@@ -674,18 +674,12 @@ class SIPMessage
         if (isset($this->contentType)) {
             $ret .= $this->contentType->render($compact ? 'c' : 'Content-Type');
         }
-
-        if (isset($this->contentLength)) {
-		$this->contentLength = strlen($this->body);
-		$ret .= $this->contentLength->render($compact ? 'l' : 'Content-Length');
-        }
+	$this->contentLength = new ScalarHeader;
+	$this->contentLength->value = strlen($this->body);
+	$ret .= $this->contentLength->render($compact ? 'l' : 'Content-Length');
 	    
         foreach ($this->extraHeaders as $name => $header) {
             $ret .= $header->render($name);
-        }
-
-        if (isset($this->body)) {
-              $ret .= $this->body;
         }
         return $ret;
     }
