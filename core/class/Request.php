@@ -59,7 +59,6 @@ class Request extends SIPMessage
         }
 
         $this->version = SIPMessage::SIP_VERSION;
-        $this->body = '';
         $headers = $this->renderHeaders($compact);
 
         return "{$this->method} {$this->uri} {$this->version}\r\n{$headers}\r\n{$this->body}\r\n";
