@@ -195,7 +195,7 @@ class client{
 		$request->body = $texte;
 		$this->send($request->render());
 		$message = $this->read();
-		return $response$this->getReponse($message);
+		return $this->getReponse($message);
 	}
 	public function newCall($number){
 		$this->method = 'INVITE';
