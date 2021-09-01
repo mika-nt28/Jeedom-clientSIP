@@ -83,7 +83,7 @@ class client{
 		return SIPMessage::parse($data);
 	}
 	private function getReponse($message){
-      	$this->_rport = $message->via->values[0]->params['rport'];
+      		$this->_rport = $message->via->values[0]->params['rport'];
 		$this->_csec = $message->cSeq->sequence;
 		switch($message->code){
 			case '100':
@@ -122,8 +122,7 @@ class client{
 				return $message;
 			break;
 			case '407':
-            	log::add('clientSIP','debug',$message->cSeq->method.' == '.$this->method);
-            	if($message->cSeq->method == $this->method){
+		            	if($message->cSeq->method == $this->method){
 					$request = $this->formatRequest();
 					$request->from = $message->from;
 					$request->proxyAuthorization = $message->proxyAuthenticate;
@@ -170,9 +169,9 @@ class client{
 		$response->via->values[0]->protocol = 'SIP';
 		$response->via->values[0]->version = '2.0';
 		$response->via->values[0]->transport = 'UDP';
-		$response->via->values[0]->host = $this->_cHost.':'.$this->_cPort;
+		$response->via->values[0]->host = $this->_sHost.':'.$this->_sPort;
 		$response->via->values[0]->branch = 'z9hG4bK-'.rand(10000,99999);
-		$response->via->values[0]->params['rport'] = '';
+		$response->via->values[0]->params['rport'] = $this->_rport;
 
 		$response->from = $message->from;
 		$response->to = $message->to;
@@ -196,7 +195,7 @@ class client{
 		$request->body = $texte;
 		$this->send($request->render());
 		$message = $this->read();
-		return $this->getReponse($message);
+		return $response$this->getReponse($message);
 	}
 	public function newCall($number){
 		$this->method = 'INVITE';
@@ -228,14 +227,14 @@ class client{
 		$request = new Request;
 		$request->version = 'SIP/2.0';
 		$request->method = $this->method;
-		$request->uri = 'sip:'.$this->_CallNumber.'@'.$this->_sHost.':'.$this->_sPort;
+		$request->uri = 'sip:'.$this->_CallNumber.'@'.$this->_cHost.':'.$this->_cPort;
 
 		$request->via = new ViaHeader;
 		$request->via->values[0] = new ViaValue;
 		$request->via->values[0]->protocol = 'SIP';
 		$request->via->values[0]->version = '2.0';
 		$request->via->values[0]->transport = 'UDP';
-		$request->via->values[0]->host = $this->_cHost.':'.$this->_cPort;
+		$request->via->values[0]->host = $this->_sHost.':'.$this->_sPort;
 		$request->via->values[0]->branch = 'z9hG4bK-'.rand(10000,99999);
 		$request->via->values[0]->params['rport'] = $this->_rport;
 
