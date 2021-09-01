@@ -403,7 +403,6 @@ class Response extends SIPMessage
         }
 
         $this->version = SIPMessage::SIP_VERSION;
-        $this->body = '';
         $headers = $this->renderHeaders($compact);
 
         return "{$this->version} {$this->code} {$this->reason}\r\n{$headers}\r\n{$this->body}";

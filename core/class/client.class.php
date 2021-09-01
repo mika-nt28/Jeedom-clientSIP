@@ -15,6 +15,9 @@ class client{
 		$this->_Username = $Username;
 		$this->_Password = $Password;
 		$this->_userAgent = $userAgent;
+		$this->_rport = '';
+		$this->_csec = 1;
+      
 		$this->_Stun=config::byKey('Stun', 'clientSIP');
 		$this->_sHost=config::byKey('Host', 'clientSIP');
 		$this->_sPort=config::byKey('Port', 'clientSIP');
@@ -80,6 +83,8 @@ class client{
 		return SIPMessage::parse($data);
 	}
 	private function getReponse($message){
+      	$this->_rport = $message->via->values[0]->params['rport'];
+		$this->_csec = $message->cSeq->sequence;
 		switch($message->code){
 			case '100':
 				$message = $this->read();
@@ -100,8 +105,11 @@ class client{
 						$request->to = $message->to;
 						$request->callId = $message->callId;
 						$request->cSeq = $message->cSeq;
-						$request->cSeq->sequence += 1;
+						//$request->cSeq->sequence += 1;
 						$request->cSeq->method = $this->method;
+						$request->contentType = new SingleValueWithParamsHeader;
+						$request->contentType->value ='application/sdp';
+						$request->body = $this->clientSDP($request);
 						$this->send($request->render());
 					break;
 					case 'REGISTER':
@@ -114,17 +122,27 @@ class client{
 				return $message;
 			break;
 			case '407':
-				$request = $this->formatRequest();
-				$request->from = $message->from;
-				$request->proxyAuthorization = $message->proxyAuthenticate;
-				$request->proxyAuthorization->values[0]->params['username'] = $this->_Username;
-				$request->proxyAuthorization->values[0]->params['password'] = $this->_Password;
-				$request->proxyAuthorization->values[0]->params['uri'] = $request->uri;
-				$request->proxyAuthorization->values[0]->params['method'] = $this->method;
-				$request->cSeq = $message->cSeq;
-				$request->cSeq->sequence += 1;
-				$request->callId = $message->callId;
-				$this->send($request->render());
+            	log::add('clientSIP','debug',$message->cSeq->method.' == '.$this->method);
+            	if($message->cSeq->method == $this->method){
+					$request = $this->formatRequest();
+					$request->from = $message->from;
+					$request->proxyAuthorization = $message->proxyAuthenticate;
+					$request->proxyAuthorization->values[0]->params['username'] = $this->_Username;
+					$request->proxyAuthorization->values[0]->params['password'] = $this->_Password;
+					$request->proxyAuthorization->values[0]->params['uri'] = $request->uri;
+					$request->proxyAuthorization->values[0]->params['method'] = $this->method;
+					$request->cSeq = $message->cSeq;
+					//$request->cSeq->sequence += 1;
+					$request->callId = $message->callId;
+					switch($this->method){
+						case 'INVITE':
+							$request->contentType = new SingleValueWithParamsHeader;
+							$request->contentType->value ='application/sdp';
+							$request->body = $this->clientSDP($request);
+						break;
+					}
+					$this->send($request->render());
+				}
 				$message = $this->read();
 				return $this->getReponse($message);
 			break;
@@ -152,8 +170,9 @@ class client{
 		$response->via->values[0]->protocol = 'SIP';
 		$response->via->values[0]->version = '2.0';
 		$response->via->values[0]->transport = 'UDP';
-		$response->via->values[0]->host = '192.168.0.2:5050';
-		$response->via->values[0]->branch = 'z9hG4bK.eAV4o0nXr';
+		$response->via->values[0]->host = $this->_cHost.':'.$this->_cPort;
+		$response->via->values[0]->branch = 'z9hG4bK-'.rand(10000,99999);
+		$response->via->values[0]->params['rport'] = '';
 
 		$response->from = $message->from;
 		$response->to = $message->to;
@@ -183,9 +202,9 @@ class client{
 		$this->method = 'INVITE';
 		$request = $this->formatRequest();
 		$request->to->addr = 'sip:'.$number.'@'.$this->_sHost.':'.$this->_sPort;
-		//$request->contentType = new SingleValueWithParamsHeader;
-		//$request->contentType->value ='application/sdp';
-		//$request->body =exec('sudo ffmpeg ');
+		$request->contentType = new SingleValueWithParamsHeader;
+		$request->contentType->value ='application/sdp';
+		$request->body = $this->clientSDP($request);
 		$this->send($request->render());
 		$message = $this->read();
 		return $this->getReponse($message);
@@ -198,7 +217,7 @@ class client{
 			$request->to = $message->to;
 			$request->callId = $message->callId;
 			$request->cSeq = $message->cSeq;
-			$request->cSeq->sequence += 1;
+			//$request->cSeq->sequence += 1;
 			$request->cSeq->method = $this->method;
 		}
 		$this->send($request->render());
@@ -218,7 +237,7 @@ class client{
 		$request->via->values[0]->transport = 'UDP';
 		$request->via->values[0]->host = $this->_cHost.':'.$this->_cPort;
 		$request->via->values[0]->branch = 'z9hG4bK-'.rand(10000,99999);
-		$request->via->values[0]->params['rport'] = '';
+		$request->via->values[0]->params['rport'] = $this->_rport;
 
 		$request->from = new NameAddrHeader;
 		$request->from->addr = 'sip:'.$this->_CallNumber.'@'.$this->_sHost.':'.$this->_sPort;
@@ -229,7 +248,7 @@ class client{
 		//$request->to->tag = rand(10000,99999);
       
 		$request->cSeq = new CSeqHeader;
-		$request->cSeq->sequence = 20;
+		$request->cSeq->sequence = $this->_csec;
 		$request->cSeq->method = $this->method;
 
 		$request->callId = new CallIdHeader;
@@ -251,6 +270,25 @@ class client{
 		$request->userAgent = new Header;
 		$request->userAgent->values[0] = $this->_userAgent;
 		return $request;
+	}
+	private function clientSDP($message){
+		$SDP = "v=0\r\n";
+		$SDP .= "o=".$this->_userAgent." ".$message->callId->value." ".$message->cSeq->value." IN IP4 ".$this->_cHost."\r\n";
+		$SDP .= "s=".$this->_userAgent."\r\n";
+		$SDP .= "c=IN IP4 ".$this->_cHost."\r\n";
+		$SDP .= "t=0 0\r\n";
+		$SDP .= "m=audio 90001 RTP 0 3 4 8 18 101\r\n";
+		$SDP .= "a=rtpmap:3 GSM/8000\r\n";
+		$SDP .= "a=rtpmap:4 G723/8000\r\n";
+		$SDP .= "a=rtpmap:8 PCMA/8000\r\n";
+		$SDP .= "a=rtpmap:18 G729/8000\r\n";
+		$SDP .= "a=rtpmap:101 telephone-event/8000\r\n";
+		$SDP .= "a=fmtp:101 0-16\r\n";
+		$SDP .= "a=sendrecv\r\n";
+		//$SDP .= "m=video 45450 RTP/AVP 34\r\n";
+		//$SDP .= "a=rtpmap:34 H263/8000\r\n";
+		//$SDP .= "a=rtpmap:35 H264/90000\r\n";
+		return $SDP;
 	}
 }
 ?>
