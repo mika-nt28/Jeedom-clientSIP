@@ -8,14 +8,14 @@ require_once dirname(__FILE__) . '/Request.php';
 require_once dirname(__FILE__) . '/Response.php';
 
 class client{ 
-	public function __construct($src_ip = null, $src_port = null ,$CallNumber,$Username,$Password,$userAgent,$socket_bind = true)	{
+	public function __construct($src_ip = null, $src_port = null ,$ClientNumber,$Username,$Password,$userAgent,$socket_bind = true)	{
 		$this->_cHost = $src_ip;
 		$this->_cPort = $src_port;
-		$this->_CallNumber = $CallNumber;
+		$this->_ClientNumber = $ClientNumber;
+		$this->_CallNumber = 0;
 		$this->_Username = $Username;
 		$this->_Password = $Password;
 		$this->_userAgent = $userAgent;
-		$this->_rport = '';
 		$this->_csec = 1;
       
 		$this->_Stun=config::byKey('Stun', 'clientSIP');
@@ -83,7 +83,6 @@ class client{
 		return SIPMessage::parse($data);
 	}
 	private function getReponse($message){
-      		$this->_rport = $message->via->values[0]->params['rport'];
 		$this->_csec = $message->cSeq->sequence;
 		switch($message->code){
 			case '100':
@@ -171,7 +170,7 @@ class client{
 		$response->via->values[0]->transport = 'UDP';
 		$response->via->values[0]->host = $this->_sHost.':'.$this->_sPort;
 		$response->via->values[0]->branch = 'z9hG4bK-'.rand(10000,99999);
-		$response->via->values[0]->params['rport'] = $this->_rport;
+		$response->via->values[0]->params['rport'] = '';
 
 		$response->from = $message->from;
 		$response->to = $message->to;
@@ -199,8 +198,8 @@ class client{
 	}
 	public function newCall($number){
 		$this->method = 'INVITE';
+		$this->_CallNumber = $number;
 		$request = $this->formatRequest();
-		$request->to->addr = 'sip:'.$number.'@'.$this->_sHost.':'.$this->_sPort;
 		$request->contentType = new SingleValueWithParamsHeader;
 		$request->contentType->value ='application/sdp';
 		$request->body = $this->clientSDP($request);
@@ -227,19 +226,19 @@ class client{
 		$request = new Request;
 		$request->version = 'SIP/2.0';
 		$request->method = $this->method;
-		$request->uri = 'sip:'.$this->_CallNumber.'@'.$this->_cHost.':'.$this->_cPort;
+		$request->uri = 'sip:'.$this->_CallNumber.'@'.$this->_sHost.':'.$this->_sPort;
 
 		$request->via = new ViaHeader;
 		$request->via->values[0] = new ViaValue;
 		$request->via->values[0]->protocol = 'SIP';
 		$request->via->values[0]->version = '2.0';
 		$request->via->values[0]->transport = 'UDP';
-		$request->via->values[0]->host = $this->_sHost.':'.$this->_sPort;
+		$request->via->values[0]->host = $this->_cHost.':'.$this->_cPort;
 		$request->via->values[0]->branch = 'z9hG4bK-'.rand(10000,99999);
-		$request->via->values[0]->params['rport'] = $this->_rport;
+		$request->via->values[0]->params['rport'] = '';
 
 		$request->from = new NameAddrHeader;
-		$request->from->addr = 'sip:'.$this->_CallNumber.'@'.$this->_sHost.':'.$this->_sPort;
+		$request->from->addr = 'sip:'.$this->_ClientNumber.'@'.$this->_sHost.':'.$this->_sPort;
 		$request->from->tag = rand(10000,99999);
           
 		$request->to = new NameAddrHeader;
@@ -258,7 +257,7 @@ class client{
 
 		$request->contact = new ContactHeader;
 		$request->contact->values[0] = new ContactValue;
-		$request->contact->values[0]->addr = 'sip:'.$this->_CallNumber.'@'.$this->_cHost.':'.$this->_cPort;
+		$request->contact->values[0]->addr = 'sip:'.$this->_ClientNumber.'@'.$this->_cHost.':'.$this->_cPort;
 		//$request->contact->values[0]->q = 0.7;
 		//$request->contact->values[0]->expires = 3600;
 		//$request->contact->values[0]->params['+sip.instance'] = '"<urn:uuid:5cc54b96-ab90-4652-b4e5-de74c8e56fb7>"';
