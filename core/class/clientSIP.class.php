@@ -128,10 +128,10 @@ class clientSIP extends eqLogic {
 				switch($message->method){
 					case 'INVITE':
 						log::add('clientSIP', 'debug', 'Réception d\'un appel');
-						sleep(1);
 						$clientSIP->_sip->reply($message,100);
 						sleep(1);
 						$clientSIP->_sip->reply($message,180);
+						$clientSIP->checkAndUpdateCmd('CallStatus','Sonnerie');
 						sleep(1);
 						$clientSIP->_sip->reply($message,200);
 						sleep(1);
