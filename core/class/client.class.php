@@ -275,7 +275,7 @@ class client{
 		$SDP .= "c=IN IP4 ".$this->_cHost."\r\n";
 		$SDP .= "t=0 0\r\n";
 		$SDP .= "m=audio 32767 RTP/AVP 0 3 8\r\n";
-		//$SDP .= "m=audio ".rand(9000,10999)." RTP/AVP 0 3 4 8 18 101\r\n";
+		//$SDP .= "m=audio ".rand(16384,32767)." RTP/AVP 0 3 4 8 18 101\r\n";
 		$SDP .= "a=rtpmap:0 PCMU/8000\r\n";
 		$SDP .= "a=rtpmap:3 GSM/8000\r\n";
 		//$SDP .= "a=rtpmap:4 G723/8000\r\n";
