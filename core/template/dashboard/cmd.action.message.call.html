@@ -45,7 +45,7 @@
 					<i class="fas fa-th"></i>
 				</a>
 			</span>
-			<input type="number" class="numDisplay form-control input-sm" placeholder="Saisir le numero SIP" autocomplete="off" data-cmd_id="#id#" />
+			<input type="number" class="numDisplay form-control input-sm" placeholder="Saisir le numero SIP" autocomplete="off"/>
 			<span class="input-group-btn">
 				<a class="btn btn-success btn-block btnCall" title="{{Appeler}}">
 					<i class="fas fa-phone"></i>
@@ -71,7 +71,7 @@
 		$('.cmd[data-cmd_id=#id#] .dropdown-menu').off().on('click',function(event) {
 			event.preventDefault();
 		});
-		$('.numDisplay[data-cmd_id=#id#]').off().on('keypress',function(event) {
+		$('.cmd[data-cmd_id=#id#] .numDisplay').off().on('keypress',function(event) {
 			// Enter pressed? so Dial.
 			if (event.which === 13) {
 				$('.cmd[data-cmd_id=#id#] .btnCall').trigger('click');
