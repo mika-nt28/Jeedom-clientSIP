@@ -16,7 +16,10 @@ class client{
 		$this->_Username = $Username;
 		$this->_Password = $Password;
 		$this->_userAgent = $userAgent;
-		$this->_cSeq =	cache::byKey('clientSIP::cseq::'.$this->_userAgent)->getValue(1);
+		$this->_cSeq =	cache::byKey('clientSIP::cseq::'.$this->_userAgent)->getValue(0);
+		$this->_ProxyAuthorization = cache::byKey('clientSIP::Proxy-Authorization::'.$this->_userAgent)->getValue('');
+		if($this->_ProxyAuthorization != '')
+			$this->_ProxyAuthorization = new ProxyAuthHeader::parse($this->_ProxyAuthorization);
 		$this->_Stun=config::byKey('Stun', 'clientSIP');
 		$this->_sHost=config::byKey('Host', 'clientSIP');
 		$this->_sPort=config::byKey('Port', 'clientSIP');
@@ -123,7 +126,7 @@ class client{
 			case '407':
 		            	if($message->cSeq->method == $this->method){
 					$this->_cSeq += 1;
-					cache::set('clientSIP::cSeq::'.$this->_userAgent,false, $this->_cSeq);
+					cache::set('clientSIP::cSeq::'.$this->_userAgent,$this->_cSeq,0);
 					$request = $this->formatRequest();
 					$request->from = $message->from;
 					$request->proxyAuthorization = $message->proxyAuthenticate;
@@ -131,6 +134,8 @@ class client{
 					$request->proxyAuthorization->values[0]->params['password'] = $this->_Password;
 					$request->proxyAuthorization->values[0]->params['uri'] = $request->uri;
 					$request->proxyAuthorization->values[0]->params['method'] = $this->method;
+					$this->_ProxyAuthorization = $request->proxyAuthorization->render('Proxy-Authorization');	
+					cache::set('clientSIP::ProxyAuthorization::'.$this->_userAgent,$this->_ProxyAuthorization,0);
 					$request->callId = $message->callId;
 					switch($this->method){
 						case 'INVITE':
@@ -199,7 +204,7 @@ class client{
 	public function newCall($number){
 		$this->method = 'INVITE';
 		$this->_cSeq += 1;
-		cache::set('clientSIP::cSeq::'.$this->_userAgent,false, $this->_cSeq);
+		cache::set('clientSIP::cSeq::'.$this->_userAgent,$this->_cSeq,0);
 		$this->_CallNumber = $number;
 		$request = $this->formatRequest();
 		$request->contentType = new SingleValueWithParamsHeader;
@@ -266,6 +271,9 @@ class client{
 
 		$request->userAgent = new Header;
 		$request->userAgent->values[0] = $this->_userAgent;
+		if(is_object($this->_ProxyAuthorization))
+			$request->proxyAuthorization = $this->_ProxyAuthorization;
+		$this->_ProxyAuthorization = cache::byKey('clientSIP::Proxy-Authorization::'.$this->_userAgent)->getValue('');
 		return $request;
 	}
 	private function clientSDP($message){
