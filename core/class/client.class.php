@@ -16,10 +16,15 @@ class client{
 		$this->_Username = $Username;
 		$this->_Password = $Password;
 		$this->_userAgent = $userAgent;
-		$this->_cSeq =	cache::byKey('clientSIP::cseq::'.$this->_userAgent)->getValue(0);
-		$this->_ProxyAuthorization = cache::byKey('clientSIP::Proxy-Authorization::'.$this->_userAgent)->getValue('');
-		if($this->_ProxyAuthorization != '')
-			$this->_ProxyAuthorization = new ProxyAuthHeader::parse($this->_ProxyAuthorization);
+		$this->_cSeq =	cache::byKey('clientSIP::cSeq::'.$this->_userAgent)->getValue(0);
+		if(cache::byKey('clientSIP::ProxyAuthorization::realm::'.$this->_userAgent)->getValue('') != ''){
+			$this->_ProxyAuthorization = new ProxyAuthHeader();
+			$this->_ProxyAuthorization->values[0]->params['username'] = $this->_Username;
+			$this->_ProxyAuthorization->values[0]->params['password'] = $this->_Password;
+			$this->_ProxyAuthorization->values[0]->params['algorithm'] = cache::byKey('clientSIP::ProxyAuthorization::algorithm::'.$this->_userAgent)->getValue('');
+			$this->_ProxyAuthorization->values[0]->params['nonce'] = cache::byKey('clientSIP::ProxyAuthorization::nonce::'.$this->_userAgent)->getValue('');
+			$this->_ProxyAuthorization->values[0]->params['realm'] = cache::byKey('clientSIP::ProxyAuthorization::realm::'.$this->_userAgent)->getValue('');
+		}
 		$this->_Stun=config::byKey('Stun', 'clientSIP');
 		$this->_sHost=config::byKey('Host', 'clientSIP');
 		$this->_sPort=config::byKey('Port', 'clientSIP');
@@ -134,8 +139,10 @@ class client{
 					$request->proxyAuthorization->values[0]->params['password'] = $this->_Password;
 					$request->proxyAuthorization->values[0]->params['uri'] = $request->uri;
 					$request->proxyAuthorization->values[0]->params['method'] = $this->method;
-					$this->_ProxyAuthorization = $request->proxyAuthorization->render('Proxy-Authorization');	
-					cache::set('clientSIP::ProxyAuthorization::'.$this->_userAgent,$this->_ProxyAuthorization,0);
+					$this->_ProxyAuthorization = $request->proxyAuthorization;	
+					cache::set('clientSIP::ProxyAuthorization::algorithm::'.$this->_userAgent,$request->proxyAuthorization->values[0]->params['algorithm'] ,0);
+					cache::set('clientSIP::ProxyAuthorization:nonce:::'.$this->_userAgent,$request->proxyAuthorization->values[0]->params['nonce'] ,0);
+					cache::set('clientSIP::ProxyAuthorization:realm:::'.$this->_userAgent,$request->proxyAuthorization->values[0]->params['realm'] ,0);
 					$request->callId = $message->callId;
 					switch($this->method){
 						case 'INVITE':
@@ -271,9 +278,12 @@ class client{
 
 		$request->userAgent = new Header;
 		$request->userAgent->values[0] = $this->_userAgent;
-		if(is_object($this->_ProxyAuthorization))
+		if(is_object($this->_ProxyAuthorization)){
 			$request->proxyAuthorization = $this->_ProxyAuthorization;
-		$this->_ProxyAuthorization = cache::byKey('clientSIP::Proxy-Authorization::'.$this->_userAgent)->getValue('');
+			$request->proxyAuthorization->values[0]->params['uri'] = $request->uri;
+			$request->proxyAuthorization->values[0]->params['method'] = $this->method;
+		}
+
 		return $request;
 	}
 	private function clientSDP($message){
