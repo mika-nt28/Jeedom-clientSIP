@@ -122,7 +122,6 @@ class clientSIP extends eqLogic {
 		if (is_object($clientSIP) && $clientSIP->getIsEnable()) {
 			if(!is_object($clientSIP->_sip))
 				$clientSIP->CreateConnexion(true);
-			//while($clientSIP->_sip->isConnect()){
 			while(true){
 				$message = $clientSIP->_sip->listen();
 				switch($message->method){
@@ -133,14 +132,16 @@ class clientSIP extends eqLogic {
 						$clientSIP->_sip->reply($message,180);
 						$clientSIP->checkAndUpdateCmd('CallStatus','Sonnerie');
 						sleep(1);
-						$clientSIP->_sip->reply($message,200);
+						$message = $clientSIP->_sip->reply($message,200);
 						sleep(1);
-						$clientSIP->checkAndUpdateCmd('CallStatus','Appel en cours');
-						$clientSIP->calling($message, 'InCallEvent');
-						$clientSIP->Racrocher($message);
+						if($message->method == 'ACK'){
+							$clientSIP->checkAndUpdateCmd('CallStatus','Appel en cours');
+							$clientSIP->calling($message, 'InCallEvent');
+							$clientSIP->Racrocher($message);
+						}
 					break;
 					case 'MESSAGE':
-						//message::add('sucess', $clientSIP->_sip->getBody());
+						message::add('sucess', $message->body);
 					break;
 					case 'NOTIFY':
 					break;
@@ -207,45 +208,20 @@ class clientSIP extends eqLogic {
 				$fp =fopen($SdpFile,"w");
 				fwrite($fp,$message->body);
 				fclose($fp);
+              			//Recevoir 
+              			//ffmpeg -protocol_whitelist file,udp,rtcp,rtp -i '.$SdpFile.' -y rec.wav
 				$cmd ='ffmpeg';
-				$cmd .= ' -loglevel debug';
-				$cmd .= ' -protocol_whitelist file,crypto,udp,rtp';
 				$cmd .= ' -re';
-				$cmd .= ' -i '.$SdpFile;
-				//$cmd .= '-acodec aac';
+				$cmd .= ' -fflags';
+				$cmd .= ' +genpts';
 				$cmd .= ' -i ' . $this->TextToSpeach($CallEvent['Message']);
+				$cmd .= ' -acodec pcm_mulaw';
+				$cmd .= ' -f rtp -y rtp://'.network ::getNetworkAccess('internal', 'ip', '', false).':32767';
 				shell_exec($cmd);			
-				log::add('clientSIP', 'debug', $cmd);
-				
+				log::add('clientSIP', 'debug', $cmd);		
 				shell_exec('sudo rm '.$SdpFile);			
 				sleep(5);
 			}
-		}
-	}
-	public function getRtspUrl($message){
-		switch($message->body->SessionMediaDescription[0]->protocol){
-			default:
-			case 'RTP/AVP':
-				return 'rtp://'.$message->body->SessionConnexion->adresse.':'.$message->body->SessionMediaDescription->port;
-		}
-	}
-	public function getFFMEGcodec($message){
-		switch($message->body->SessionMediaDescription[0]->codec[0]){
-			case 0:
-				//a=rtpmap:0 PCMU/8000
-			return '-f mulaw';//-acodec mulaw ';
-			case 3:
-				//a=rtpmap:3 GSM/8000			
-			return '-f gsm';//-acodec gsm ';
-			case 4:
-				//a=rtpmap:4 G723/8000		
-			return '-f g723';//-acodec g723 ';
-			case 8:
-				//a=rtpmap:8 PCMA/8000		
-			return '-f alaw';//-acodec alaw ';
-			case 18:
-				//a=rtpmap:18 G729/8000
-			return '-f g729';//-acodec g729 ';
 		}
 	}
 	public function AddCommande($Name,$_logicalId,$Type="info", $SubType='string',$Template='default') {
@@ -279,8 +255,8 @@ class clientSIP extends eqLogic {
 				$avconv = 'avconv';
 				if(!com_shell::commandExists('avconv')){
 					$avconv = 'ffmpeg';
-				}
-				$cmd = 'espeak -v' . $voice . ' "' . $Texte . '" --stdout | '.$avconv.' -i - -ar 44100 -ac 2 -ab 192k -f mp3 ' . $SpeachFile . ' > /dev/null 2>&1';
+				}				
+				$cmd = 'espeak -v' . $voice . ' "' . $Texte . '" --stdout | '.$avconv.' -i - -ar 44100 -ac 2 -ab 192k -f mp3 ' . $SpeachFile;
 				shell_exec($cmd);			
 				log::add('clientSIP', 'debug', $cmd);
 			}else if($engine == 'pico'){
@@ -290,10 +266,11 @@ class clientSIP extends eqLogic {
 				if(!com_shell::commandExists('avconv')){
 					$avconv = 'ffmpeg';
 				}
-				$cmd = 'pico2wave -l=' . $lang . ' -w=' . $md5 . '.wav "' . $Texte . '" > /dev/null 2>&1;';
-				$cmd .= $avconv.' -i ' . $md5 . '.wav -ar 44100 ' . $volume . ' -ac 2 -ab 192k -f mp3 ' . $SpeachFile . ' > /dev/null 2>&1;rm ' . $md5 . '.wav';
-				shell_exec($cmd);			
+				$cmd = 'pico2wave -l=' . $lang . ' -w=' .$SpeachFile .' "' . $Texte . '"';
+				$cmd .= $avconv.' -i ' . $md5 . '.wav -ar 44100 ' . $volume . ' -ac 2 -ab 192k -f mp3 ' . $SpeachFile;
+				shell_exec($cmd);
 				log::add('clientSIP', 'debug', $cmd);
+				shell_exec('sudo rm ' . $md5 . '.wav');			
 			}else{
 				$engine::tts($SpeachFile,$Texte);
 			}
