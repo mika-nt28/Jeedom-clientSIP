@@ -12,7 +12,7 @@ class client{
 		$this->_cHost = $src_ip;
 		$this->_cPort = $src_port;
 		$this->_ClientNumber = $ClientNumber;
-		$this->_CallNumber = 0;
+		$this->_CallNumber = $ClientNumber;
 		$this->_Username = $Username;
 		$this->_Password = $Password;
 		$this->_userAgent = $userAgent;
@@ -141,8 +141,8 @@ class client{
 					$request->proxyAuthorization->values[0]->params['method'] = $this->method;
 					$this->_ProxyAuthorization = $request->proxyAuthorization;	
 					cache::set('clientSIP::ProxyAuthorization::algorithm::'.$this->_userAgent,$request->proxyAuthorization->values[0]->params['algorithm'] ,0);
-					cache::set('clientSIP::ProxyAuthorization:nonce:::'.$this->_userAgent,$request->proxyAuthorization->values[0]->params['nonce'] ,0);
-					cache::set('clientSIP::ProxyAuthorization:realm:::'.$this->_userAgent,$request->proxyAuthorization->values[0]->params['realm'] ,0);
+					cache::set('clientSIP::ProxyAuthorization:nonce::'.$this->_userAgent,$request->proxyAuthorization->values[0]->params['nonce'] ,0);
+					cache::set('clientSIP::ProxyAuthorization:realm::'.$this->_userAgent,$request->proxyAuthorization->values[0]->params['realm'] ,0);
 					$request->callId = $message->callId;
 					switch($this->method){
 						case 'INVITE':
@@ -209,6 +209,8 @@ class client{
 		return $this->getReponse($message);
 	}
 	public function newCall($number){
+      	if($number =='')
+          return false;
 		$this->method = 'INVITE';
 		$this->_cSeq += 1;
 		cache::set('clientSIP::cSeq::'.$this->_userAgent,$this->_cSeq,0);
