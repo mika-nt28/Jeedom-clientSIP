@@ -26,12 +26,11 @@ class clientSIP extends eqLogic {
 			else
 				return $return;
 		$return['launchable'] = 'ok';
-		$return['state'] = 'nok';
+		$return['state'] = 'ok';
 		$pid_file = jeedom::getTmpFolder('clientSIP') . '/clientSIP.pid';
 		if (file_exists($pid_file)) {
 			if (!@posix_getsid(trim(file_get_contents($pid_file)))) {
 				$return['state'] = 'nok';
-				shell_exec('sudo rm -rf ' . $pid_file . ' 2>&1 > /dev/null;rm -rf ' . $pid_file . ' 2>&1 > /dev/null;');
 				return $return;	
 			}
 		}else{
@@ -42,13 +41,15 @@ class clientSIP extends eqLogic {
 			if($clientSIP->getIsEnable()){
 				if($clientSIP->getConfiguration("Expiration") != ''){
 					$cron = cron::byClassAndFunction('clientSIP', 'ConnectSip', array('id' => $clientSIP->getId()));
-					if (!is_object($cron))  	
+					if (!is_object($cron)){ 
+						$return['state'] = 'nok'; 	
 						return $return;
+					}
 				}
 				$cron = cron::byClassAndFunction('clientSIP', 'WaitCall', array('id' => $clientSIP->getId()));
-				if (!is_object($cron) || !$cron->running()) 	
-					return $return;
-			}
+				if (!is_object($cron) || !$cron->running()) {
+					$return['state'] = 'nok';
+				}
 		}
 		$return['state'] = 'ok';
 		return $return;
@@ -75,7 +76,6 @@ class clientSIP extends eqLogic {
 		$cmd .= ' --callback ' . network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/clientSIP/core/php/callback.php';
 		$cmd .= ' --apikey ' . jeedom::getApiKey('clientSIP');
 		$cmd .= ' --pid ' . jeedom::getTmpFolder('clientSIP') . '/clientSIP.pid';
-		$cmd .= ' --RTSPhost ' . network ::getNetworkAccess('internal', 'ip', '', false);
 		$cmd .= ' --RTSPport 32767';
 		log::add('clientSIP', 'info', 'Lancement démon clientSIP : ' . $cmd);
 		$result = exec($cmd . ' >> ' . log::getPathToLog('clientSIP') . ' 2>&1 &');
@@ -250,7 +250,7 @@ class clientSIP extends eqLogic {
 				$Message[] = $this->TextToSpeach($CallEvent['Message']);
 		}
 		
-		$value['apikey'] =jeedom::getApiKey('clientSIP'),);
+		$value['apikey'] = jeedom::getApiKey('clientSIP');
 		$value['host'] = '';//Rechercher dans le SDP :$message->body
 		$value['port'] = 8080;//Rechercher dans le SDP :$message->body
 		$value['cmd'] = 'playMessage';
@@ -278,7 +278,7 @@ class clientSIP extends eqLogic {
 		return $Commande;
 	}
 	public function sendDTMF($DTMF) {
-		$value['apikey'] =jeedom::getApiKey('clientSIP'),);
+		$value['apikey'] = jeedom::getApiKey('clientSIP');
 		$value['cmd'] = 'sendDTMF';
 		$value['dtmf'] = $DTMF;
 		self::socket_connection(json_encode($value));
