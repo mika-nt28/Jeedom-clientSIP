@@ -10,14 +10,17 @@ import traceback
 import threading
 import globals
 
-import cv2
-
 try:
 	from jeedom.jeedom import *
 except ImportError:
 	print("Error: importing module from jeedom folder")
 	sys.exit(1)
-  
+try:
+	from RTSP.RTSP import *
+except ImportError:
+	print("Error: importing module from RTSP folder")
+	sys.exit(1)
+Server = None
 def read_socket(cycle):
 	while True :
 		try:
@@ -30,55 +33,29 @@ def read_socket(cycle):
 					logging.error("Invalid apikey from socket : " + str(message))
 					return
 				logging.debug("Received command from jeedom : "+str(message['cmd']))
-				if message['cmd'] == 'sendRTSP':
+				Client = RtspClient(message['host'],message['port'])
+				if message['cmd'] == 'sendDTMF':
 					pass
 				if message['cmd'] == 'playMessage':
 					for message['Message'] in Message:
-						#Stream Message
+						Client.streamCamera(self,camera=0)
 						time.sleep(message['pause'])
 		except Exception as e:
 			logging.error("Exception on socket : %s" % str(e))
 			logging.debug(traceback.format_exc())
 		time.sleep(cycle)	
 def listen():
-	threads = []
-	currentThreads = None
+	global Server
 	jeedom_socket.open()
 	thread.start_new_thread(read_socket,(globals.cycle,))
-	rtsp_server = 'rtsp://' + str(globals.RTSPhost) + ":" + str(globals.RTSPport)
-	cap = cv2.VideoCapture(rtsp_server)
-	sizeStr = str(int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))) + \
-	'x' + str(int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
-	fps = int(cap.get(cv2.CAP_PROP_FPS))
-
-	command = ['ffmpeg',
-		'-re',
-		'-s', sizeStr,
-		'-r', str(fps),  # rtsp fps (from input server)
-		'-i', '-',
-
-		# You can change ffmpeg parameter after this item.
-		'-pix_fmt', 'yuv420p',
-		'-r', '30',  # output fps
-		'-g', '50',
-		'-c:v', 'libx264',
-		'-b:v', '2M',
-		'-bufsize', '64M',
-		'-maxrate', "4M",
-		'-preset', 'veryfast',
-		'-rtsp_transport', 'tcp',
-		'-segment_times', '5',
-		'-f', 'rtsp',
-		rtsp_server]
-
-	process = sp.Popen(command, stdin=sp.PIPE)
-
-	while(cap.isOpened()):
-		ret, frame = cap.read()
-		ret2, frame2 = cv2.imencode('.png', frame)
-		process.stdin.write(frame2.tobytes())	
+	Server = RtspServeur(globals.RTSPport)
+	while(True):
+		Recive = Server.stream() 
+		#Analyse DMTF
+		#Analyse SpeachToText
 	shutdown()  
 def shutdown():
+	global Server
 	logging.debug("Shutdown")
 	logging.debug("Removing PID file " + str(globals.pidfile))
 	try:
@@ -97,7 +74,6 @@ parser.add_argument("--apikey", help="Identification jeedom plugin", type=str)
 parser.add_argument("--socketport", help="Socket Port", type=str)
 parser.add_argument("--sockethost", help="Socket Host", type=str)
 parser.add_argument("--RTSPport", help="RTSP Port", type=str)
-parser.add_argument("--RTSPhost", help="RTSP Host", type=str)
 args = parser.parse_args()
 
 if args.loglevel:
@@ -114,8 +90,6 @@ if args.sockethost:
 	globals.sockethost = args.sockethost
 if args.RTSPport:
 	globals.RTSPport = int(args.RTSPport)
-if args.RTSPhost:
-	globals.RTSPhost = args.RTSPhost
 
 jeedom_utils.set_log_level(globals.log_level)
 logging.info("Start Face Detection Daemon for Jeedom plugin")
@@ -125,7 +99,7 @@ logging.info("Apikey : " + str(globals.apikey))
 logging.info("Callback : " + str(globals.callback))
 logging.info("Cycle : " + str(globals.cycle))
 logging.info("Deamon Socket connexion : " + str(globals.sockethost) + ":" + str(globals.socketport))
-logging.info("RTSP connexion : " + str(globals.RTSPhost) + ":" + str(globals.RTSPport))
+logging.info("RTSP connexion : 127.0.0.1:" + str(globals.RTSPport))
 try:
 	jeedom_utils.write_pid(str(globals.pidfile))
 	globals.JEEDOM_COM = jeedom_com(apikey = globals.apikey,url = globals.callback,cycle=0)
