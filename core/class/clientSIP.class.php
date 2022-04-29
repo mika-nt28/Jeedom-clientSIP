@@ -246,29 +246,13 @@ class clientSIP extends eqLogic {
 		$Message = array();
 		foreach($this->getConfiguration($CallEvents) as $CallEvent){
 			$number = str_replace('sip:','',explode('@', $message->to->addr)[0]);
-			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number){
+			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number)
 				$Message[] = $this->TextToSpeach($CallEvent['Message']);
-				/*$SdpFile = jeedom::getTmpFolder('clientSIP').'/' . $message->callId->value . '.sdp';
-				$fp =fopen($SdpFile,"w");
-				fwrite($fp,$message->body);
-				fclose($fp);
-              			//Recevoir 
-              			//ffmpeg -protocol_whitelist file,udp,rtcp,rtp -i '.$SdpFile.' -y rec.wav
-				$cmd ='ffmpeg';
-				$cmd .= ' -re';
-				$cmd .= ' -fflags';
-				$cmd .= ' +genpts';
-				$cmd .= ' -i ' . $this->TextToSpeach($CallEvent['Message']);
-				$cmd .= ' -acodec pcm_mulaw';
-				$cmd .= ' -f rtp -y rtp://'.network ::getNetworkAccess('internal', 'ip', '', false).':32767';
-				shell_exec($cmd);			
-				log::add('clientSIP', 'debug', $cmd);		
-				shell_exec('sudo rm '.$SdpFile);			
-				sleep(5);*/
-			}
 		}
 		
 		$value['apikey'] =jeedom::getApiKey('clientSIP'),);
+		$value['host'] = '';//Rechercher dans le SDP :$message->body
+		$value['port'] = 8080;//Rechercher dans le SDP :$message->body
 		$value['cmd'] = 'playMessage';
 		$value['pause'] = 5;
 		$value['Message'] = $Message;
