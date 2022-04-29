@@ -9,12 +9,9 @@ class RtspServeur():
     self.socket.bind(self.addr)
     self.socket.Setblocking(0)
   def stream(self):
-    while True:
-      data = None
-      try:
-        data, _ = self.socket.recvfrom(921600)
-        receive_data = np.frombuffer(data, dtype='uint8')
-        #Analyse DMTF
-        #Analyse SpeachToText
-      except BlockingIOError as e:
-        pass
+    data = None
+    try:
+      data, _ = self.socket.recvfrom(921600)
+      return np.frombuffer(data, dtype='uint8')
+    except BlockingIOError as e:
+      pass
