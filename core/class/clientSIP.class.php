@@ -75,6 +75,8 @@ class clientSIP extends eqLogic {
 		$cmd .= ' --callback ' . network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/clientSIP/core/php/callback.php';
 		$cmd .= ' --apikey ' . jeedom::getApiKey('clientSIP');
 		$cmd .= ' --pid ' . jeedom::getTmpFolder('clientSIP') . '/clientSIP.pid';
+		$cmd .= ' --RTSPhost ' . network ::getNetworkAccess('internal', 'ip', '', false);
+		$cmd .= ' --RTSPport 32767';
 		log::add('clientSIP', 'info', 'Lancement démon clientSIP : ' . $cmd);
 		$result = exec($cmd . ' >> ' . log::getPathToLog('clientSIP') . ' 2>&1 &');
 	
