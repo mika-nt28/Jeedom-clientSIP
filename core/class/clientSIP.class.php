@@ -50,10 +50,11 @@ class clientSIP extends eqLogic {
 				if (!is_object($cron) || !$cron->running()) {
 					$return['state'] = 'nok';
 				}
-		}
+			}
+        }
 		$return['state'] = 'ok';
 		return $return;
-	}
+    }
 	public static function deamon_start($_debug = false) {
 		log::remove('clientSIP');
 		self::deamon_stop();
