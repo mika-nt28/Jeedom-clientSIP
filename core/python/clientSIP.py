@@ -16,7 +16,8 @@ except ImportError:
 	print("Error: importing module from jeedom folder")
 	sys.exit(1)
 try:
-	from RTSP.RTSP import *
+	from RTSP.RtspClient import *
+	from RTSP.RtspServeur import *
 except ImportError:
 	print("Error: importing module from RTSP folder")
 	sys.exit(1)
