@@ -12,7 +12,7 @@ class RtspClient():
 	def streamCamera(self,camera=0):
 		cap = cv2.VideoCapture(camera)
 		cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+		cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 		while True:
 			_, img = cap.read()
 			img = cv2.flip(img, 1)
