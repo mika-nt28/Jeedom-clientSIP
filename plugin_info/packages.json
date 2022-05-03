@@ -16,7 +16,6 @@
 		"scipy" : {},
 		"imutils" : {},
 		"opencv-python" : {},
-		"opencv-contrib-python" : {},
-		"rtsp" : {}
+		"opencv-contrib-python" : {}
 	}
 }
