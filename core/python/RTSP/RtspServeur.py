@@ -1,12 +1,11 @@
 import numpy as np
-from socket import *
+import socket
 
 class RtspServeur():
 	def __init__(self,port):
-		self.addr = ('0.0.0.0 ', port)
-		self.socket = socket(af_inet, sock_dgram)
-		self.socket.bind(self.addr)
-		self.socket.Setblocking(0)
+		self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		self.socket.bind(('0.0.0.0', port))
+		self.socket.setblocking(0)
 	def stream(self):
 		data = None
 		try:
