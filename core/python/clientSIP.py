@@ -57,7 +57,7 @@ def listen():
 			DTMF = Server.DTMF_detetor(Recive)
 			if DTMF != None:
 				logging.debug("Détéction DTMF: ."+str(DTMF))
-				globals.JEEDOM_COM.add_changes('devices',DTMF)
+				globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,DTMF)
 			#Analyse SpeachToText
 	shutdown()  
 def shutdown():
@@ -77,6 +77,7 @@ parser.add_argument("--loglevel", help="Niveau de log daemon", type=str)
 parser.add_argument("--pidfile", help="Value to write", type=str)
 parser.add_argument("--callback", help="Url to return detection", type=str)
 parser.add_argument("--apikey", help="Identification jeedom plugin", type=str)
+parser.add_argument("--jeedomId", help="Identification équipement jeedom", type=str)
 parser.add_argument("--socketport", help="Socket Port", type=str)
 parser.add_argument("--sockethost", help="Socket Host", type=str)
 parser.add_argument("--RTSPport", help="RTSP Port", type=str)
@@ -90,6 +91,8 @@ if args.callback:
 	globals.callback = args.callback
 if args.apikey:
 	globals.apikey = args.apikey
+if args.jeedomId:
+	globals.jeedomId = args.jeedomId
 if args.socketport:
 	globals.socketport = int(args.socketport)
 if args.sockethost:
