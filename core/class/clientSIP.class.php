@@ -27,17 +27,17 @@ class clientSIP extends eqLogic {
 				return $return;
 		$return['launchable'] = 'ok';
 		$return['state'] = 'ok';
-		$pid_file = jeedom::getTmpFolder('clientSIP') . '/clientSIP.pid';
-		if (file_exists($pid_file)) {
-			if (!@posix_getsid(trim(file_get_contents($pid_file)))) {
+		foreach(eqLogic::byType('clientSIP') as $clientSIP){
+			$pid_file = jeedom::getTmpFolder('clientSIP') . '/clientSIP_'.$clientSIP->getId().'.pid';
+			if (file_exists($pid_file)) {
+				if (!@posix_getsid(trim(file_get_contents($pid_file)))) {
+					$return['state'] = 'nok';
+					return $return;	
+				}
+			}else{
 				$return['state'] = 'nok';
 				return $return;	
 			}
-		}else{
-			$return['state'] = 'nok';
-			return $return;	
-		}
-		foreach(eqLogic::byType('clientSIP') as $clientSIP){
 			if($clientSIP->getIsEnable()){
 				if($clientSIP->getConfiguration("Expiration") != ''){
 					$cron = cron::byClassAndFunction('clientSIP', 'ConnectSip', array('id' => $clientSIP->getId()));
@@ -51,10 +51,10 @@ class clientSIP extends eqLogic {
 					$return['state'] = 'nok';
 				}
 			}
-        }
+		}
 		$return['state'] = 'ok';
 		return $return;
-    }
+	}
 	public static function deamon_start($_debug = false) {
 		log::remove('clientSIP');
 		self::deamon_stop();
@@ -70,18 +70,19 @@ class clientSIP extends eqLogic {
 		$cache = cache::byKey('clientSIP::HistoryCall');
 		$cache->remove();
 		$path = realpath(dirname(__FILE__) . '/../python');
-		$cmd = 'sudo /usr/bin/python3 ' . $path . '/clientSIP.py';
-		$cmd .= ' --loglevel ' . log::convertLogLevel(log::getLogLevel('clientSIP'));
-		$cmd .= ' --sockethost 127.0.0.1';
-		$cmd .= ' --socketport 9090';
-		$cmd .= ' --callback ' . network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/clientSIP/core/php/callback.php';
-		$cmd .= ' --apikey ' . jeedom::getApiKey('clientSIP');
-		$cmd .= ' --pid ' . jeedom::getTmpFolder('clientSIP') . '/clientSIP.pid';
-		$cmd .= ' --RTSPport 32767';
-		log::add('clientSIP', 'info', 'Lancement démon clientSIP : ' . $cmd);
-		$result = exec($cmd . ' >> ' . log::getPathToLog('clientSIP') . ' 2>&1 &');
-	
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
+			$cmd = 'sudo /usr/bin/python3 ' . $path . '/clientSIP.py';
+			$cmd .= ' --loglevel ' . log::convertLogLevel(log::getLogLevel('clientSIP'));
+			$cmd .= ' --sockethost 127.0.0.1';
+			$cmd .= ' --socketport 9090';
+			$cmd .= ' --callback ' . network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/clientSIP/core/php/callback.php';
+			$cmd .= ' --apikey ' . jeedom::getApiKey('clientSIP');
+			$cmd .= ' --pid ' . jeedom::getTmpFolder('clientSIP') . '/clientSIP_'.$clientSIP->getId().'.pid';
+			$cmd .= ' --jeedomId '.$clientSIP->getId();
+			$cmd .= ' --RTSPport 32767';
+			log::add('clientSIP', 'info', 'Lancement démon clientSIP : ' . $cmd);
+			$result = exec($cmd . ' >> ' . log::getPathToLog('clientSIP') . ' 2>&1 &');
+	
 			if($clientSIP->getIsEnable()){
 				if($clientSIP->getConfiguration("Expiration") != ''){
 					$minute=round($clientSIP->getConfiguration("Expiration")/60,0);
@@ -95,7 +96,7 @@ class clientSIP extends eqLogic {
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
 			$clientSIP->checkAndUpdateCmd('RegStatus','Inactif');
 			$clientSIP->checkAndUpdateCmd('CallStatus','Racrocher');
-			$pid_file = jeedom::getTmpFolder('clientSIP') . '/clientSIP.pid';
+			$pid_file = jeedom::getTmpFolder('clientSIP') . '/clientSIP_'.$clientSIP->getId().'.pid';
 			if (file_exists($pid_file)) {
 				$pid = intval(trim(file_get_contents($pid_file)));
 				system::kill($pid);
@@ -117,7 +118,6 @@ class clientSIP extends eqLogic {
 				$cache->remove();
 		}
 	}	
-	
 	public static function socket_connection($value){
 		try {
 			$socket = socket_create(AF_INET, SOCK_STREAM, 0);
