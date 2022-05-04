@@ -52,8 +52,13 @@ def listen():
 	Server = RtspServeur(globals.RTSPport)
 	while(True):
 		Recive = Server.stream() 
-		#Analyse DMTF
-		#Analyse SpeachToText
+		if Recive != None:
+			#Analyse DMTF
+			DTMF = Server.DTMF_detetor(Recive)
+			if DTMF != None:
+				logging.debug("Détéction DTMF: ."+str(DTMF))
+				globals.JEEDOM_COM.add_changes('devices',DTMF)
+			#Analyse SpeachToText
 	shutdown()  
 def shutdown():
 	global Server
