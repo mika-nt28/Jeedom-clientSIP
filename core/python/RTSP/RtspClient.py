@@ -1,12 +1,13 @@
-import sys
-from tkinter import Tk
-from RTSP.ClientWorker import *
+#import sys
+#from tkinter import Tk
+#from RTSP.ClientWorker import *
 class RtspClient():
 	def __init__(self,serverAddr,serverPort,rtpPort):
 		self.serverAddr = serverAddr
 		self.serverPort = serverPort
 		self.rtpPort = rtpPort
 	def stream(self,fileName):
+		pass
 		root = Tk()
 		# Create a new client
 		app = Client(root, self.serverAddr, self.serverPort, self.rtpPort, fileName)
