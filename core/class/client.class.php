@@ -17,6 +17,14 @@ class client{
 		$this->_Password = $Password;
 		$this->_userAgent = $userAgent;
 		$this->_cSeq =	cache::byKey('clientSIP::cSeq::'.$this->_userAgent)->getValue(0);
+		if(cache::byKey('clientSIP::authorization::realm::'.$this->_userAgent)->getValue('') != ''){
+			$this->_authorization = new Header();
+			$this->_authorization->values[0]->params['username'] = $this->_Username;
+			$this->_authorization->values[0]->params['password'] = $this->_Password;
+			$this->_authorization->values[0]->params['algorithm'] = cache::byKey('clientSIP::authorization::algorithm::'.$this->_userAgent)->getValue('');
+			$this->_authorization->values[0]->params['nonce'] = cache::byKey('clientSIP::authorization::nonce::'.$this->_userAgent)->getValue('');
+			$this->_authorization->values[0]->params['realm'] = cache::byKey('clientSIP::authorization::realm::'.$this->_userAgent)->getValue('');
+		}
 		if(cache::byKey('clientSIP::ProxyAuthorization::realm::'.$this->_userAgent)->getValue('') != ''){
 			$this->_ProxyAuthorization = new ProxyAuthHeader();
 			$this->_ProxyAuthorization->values[0]->params['username'] = $this->_Username;
@@ -24,7 +32,7 @@ class client{
 			$this->_ProxyAuthorization->values[0]->params['algorithm'] = cache::byKey('clientSIP::ProxyAuthorization::algorithm::'.$this->_userAgent)->getValue('');
 			$this->_ProxyAuthorization->values[0]->params['nonce'] = cache::byKey('clientSIP::ProxyAuthorization::nonce::'.$this->_userAgent)->getValue('');
 			$this->_ProxyAuthorization->values[0]->params['realm'] = cache::byKey('clientSIP::ProxyAuthorization::realm::'.$this->_userAgent)->getValue('');
-		}
+		}					
 		$this->_Stun=config::byKey('Stun', 'clientSIP');
 		$this->_sHost=config::byKey('Host', 'clientSIP');
 		$this->_sPort=config::byKey('Port', 'clientSIP');
@@ -128,6 +136,34 @@ class client{
 				}
 				return $message;
 			break;
+			case '401':
+		            	if($message->cSeq->method == $this->method){
+					$this->_cSeq += 1;
+					cache::set('clientSIP::cSeq::'.$this->_userAgent,$this->_cSeq,0);
+					$request = $this->formatRequest();
+					$request->from = $message->from;
+					$request->authorization = $message->wwwAuthenticate;
+					$request->authorization->values[0]->params['username'] = $this->_Username;
+					$request->authorization->values[0]->params['password'] = $this->_Password;
+					$request->authorization->values[0]->params['uri'] = $request->uri;
+					$request->authorization->values[0]->params['method'] = $this->method;
+					$this->_authorization = $request->authorization;	
+					cache::set('clientSIP::authorization::algorithm::'.$this->_userAgent,$request->authorization->values[0]->params['algorithm'] ,0);
+					cache::set('clientSIP::authorization:nonce::'.$this->_userAgent,$request->authorization->values[0]->params['nonce'] ,0);
+					cache::set('clientSIP::authorization:realm::'.$this->_userAgent,$request->authorization->values[0]->params['realm'] ,0);
+					$request->callId = $message->callId;
+					switch($this->method){
+						case 'INVITE':
+							$request->contentType = new SingleValueWithParamsHeader;
+							$request->contentType->value ='application/sdp';
+							$request->body = $this->clientSDP($request);
+						break;
+					}
+					$this->send($request->render());
+				}
+				$message = $this->read();
+				return $this->getReponse($message);
+			break;
 			case '407':
 		            	if($message->cSeq->method == $this->method){
 					$this->_cSeq += 1;
@@ -155,13 +191,6 @@ class client{
 				}
 				$message = $this->read();
 				return $this->getReponse($message);
-			break;
-			case '401':
-				/*$this->cseq++;
-				$this->authWWW();
-				$data = $this->formatRequest();
-				$this->sendData($data);
-				$this->readMessage();*/
 			break;
 			case '486':
 			break;
@@ -285,7 +314,11 @@ class client{
 			$request->proxyAuthorization->values[0]->params['uri'] = $request->uri;
 			$request->proxyAuthorization->values[0]->params['method'] = $this->method;
 		}
-
+		if(is_object($this->_authorization)){
+			$request->authorization = $this->_authorization;
+			$request->authorization->values[0]->params['uri'] = $request->uri;
+			$request->authorization->values[0]->params['method'] = $this->method;
+		}
 		return $request;
 	}
 	private function clientSDP($message){
