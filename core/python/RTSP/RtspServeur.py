@@ -1,5 +1,5 @@
 import sys, socket
-from ServerWorker import ServerWorker
+from RTSP.ServerWorker import *
 
 class RtspServeur():
 	def __init__(self,port):
