@@ -34,12 +34,12 @@ def read_socket(cycle):
 					logging.error("Invalid apikey from socket : " + str(message))
 					return
 				logging.debug("Received command from jeedom : "+str(message['cmd']))
-				Client = RtspClient(message['host'],message['port'])
+				Client = RtspClient(message['host'],message['port'],globals.RTSPport)
 				if message['cmd'] == 'sendDTMF':
 					pass
 				if message['cmd'] == 'playMessage':
 					for message['Message'] in Message:
-						Client.streamCamera(self,camera=0)
+						Client.stream(Message)
 						time.sleep(message['pause'])
 		except Exception as e:
 			logging.error("Exception on socket : %s" % str(e))
@@ -50,15 +50,7 @@ def listen():
 	jeedom_socket.open()
 	thread.start_new_thread(read_socket,(globals.cycle,))
 	Server = RtspServeur(globals.RTSPport)
-	while(True):
-		Recive = Server.stream() 
-		if Recive != None:
-			#Analyse DMTF
-			DTMF = Server.DTMF_detetor(Recive)
-			if DTMF != None:
-				logging.debug("Détéction DTMF: ."+str(DTMF))
-				globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,DTMF)
-			#Analyse SpeachToText
+	Server.waitClient() 
 	shutdown()  
 def shutdown():
 	global Server
