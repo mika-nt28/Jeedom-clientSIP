@@ -1,6 +1,6 @@
 import sys
 from tkinter import Tk
-from ClientWorker import ClientWorker
+from RTSP.ClientWorker import *
 class RtspClient():
 	def __init__(self,serverAddr,serverPort,rtpPort):
 		self.serverAddr = serverAddr
