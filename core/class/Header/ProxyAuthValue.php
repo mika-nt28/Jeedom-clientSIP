@@ -1,14 +1,14 @@
 <?php
 /**
-* ProxyAuth Header Field Value Class
+* Auth Header Field Value Class
 */
-class ProxyAuthValue
+class AuthValue
 {
 
-    /** @var string ProxyAuth digest parameters */
+    /** @var string Auth digest parameters */
     public $digest;
   
-    /** @var string ProxyAuth reponse parameters */
+    /** @var string Auth reponse parameters */
     public $reponse;
 
     /** @var array<string, string> Additional parameters */
