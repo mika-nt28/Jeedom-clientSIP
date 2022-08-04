@@ -26,17 +26,30 @@ class clientSIP extends eqLogic {
 			else
 				return $return;
 		$return['launchable'] = 'ok';
-		$return['state'] = 'nok';
+		$return['state'] = 'ok';
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
+			$pid_file = jeedom::getTmpFolder('clientSIP') . '/clientSIP_'.$clientSIP->getId().'.pid';
+			if (file_exists($pid_file)) {
+				if (!@posix_getsid(trim(file_get_contents($pid_file)))) {
+					$return['state'] = 'nok';
+					return $return;	
+				}
+			}else{
+				$return['state'] = 'nok';
+				return $return;	
+			}
 			if($clientSIP->getIsEnable()){
 				if($clientSIP->getConfiguration("Expiration") != ''){
 					$cron = cron::byClassAndFunction('clientSIP', 'ConnectSip', array('id' => $clientSIP->getId()));
-					if (!is_object($cron))  	
+					if (!is_object($cron)){ 
+						$return['state'] = 'nok'; 	
 						return $return;
+					}
 				}
 				$cron = cron::byClassAndFunction('clientSIP', 'WaitCall', array('id' => $clientSIP->getId()));
-				if (!is_object($cron) || !$cron->running()) 	
-					return $return;
+				if (!is_object($cron) || !$cron->running()) {
+					$return['state'] = 'nok';
+				}
 			}
 		}
 		$return['state'] = 'ok';
@@ -56,7 +69,20 @@ class clientSIP extends eqLogic {
 			exec('sudo chmod 777 -R '.$directory);
 		$cache = cache::byKey('clientSIP::HistoryCall');
 		$cache->remove();
+		$path = realpath(dirname(__FILE__) . '/../python');
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
+			$cmd = 'sudo /usr/bin/python3 ' . $path . '/clientSIP.py';
+			$cmd .= ' --loglevel ' . log::convertLogLevel(log::getLogLevel('clientSIP'));
+			$cmd .= ' --sockethost 127.0.0.1';
+			$cmd .= ' --socketport 9090';
+			$cmd .= ' --callback ' . network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/clientSIP/core/php/callback.php';
+			$cmd .= ' --apikey ' . jeedom::getApiKey('clientSIP');
+			$cmd .= ' --pid ' . jeedom::getTmpFolder('clientSIP') . '/clientSIP_'.$clientSIP->getId().'.pid';
+			$cmd .= ' --jeedomId '.$clientSIP->getId();
+			$cmd .= ' --RTSPport 32767';
+			log::add('clientSIP', 'info', 'Lancement démon clientSIP : ' . $cmd);
+			$result = exec($cmd . ' >> ' . log::getPathToLog('clientSIP') . ' 2>&1 &');
+	
 			if($clientSIP->getIsEnable()){
 				if($clientSIP->getConfiguration("Expiration") != ''){
 					$minute=round($clientSIP->getConfiguration("Expiration")/60,0);
@@ -70,6 +96,12 @@ class clientSIP extends eqLogic {
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
 			$clientSIP->checkAndUpdateCmd('RegStatus','Inactif');
 			$clientSIP->checkAndUpdateCmd('CallStatus','Racrocher');
+			$pid_file = jeedom::getTmpFolder('clientSIP') . '/clientSIP_'.$clientSIP->getId().'.pid';
+			if (file_exists($pid_file)) {
+				$pid = intval(trim(file_get_contents($pid_file)));
+				system::kill($pid);
+			}
+			system::kill('clientSIP.py');
 			if($clientSIP->getConfiguration("Expiration") != ''){
 				$cron = cron::byClassAndFunction('clientSIP', 'ConnectSip', array('id' => $clientSIP->getId()));
 				if (is_object($cron)) 	
@@ -86,6 +118,17 @@ class clientSIP extends eqLogic {
 				$cache->remove();
 		}
 	}	
+	public static function socket_connection($value){
+		try {
+			$socket = socket_create(AF_INET, SOCK_STREAM, 0);
+			socket_connect($socket, '127.0.0.1', 9090);
+			socket_write($socket, $value, strlen($value));
+			socket_close($socket);
+			return true;
+		} catch (Exception $e) {
+			return false;
+		}
+	}
 	public function postSave() {
 		$this->AddCommande('Etat connexion','RegStatus','info', 'string');
 		$this->AddCommande('Etat appel','CallStatus','info', 'string','CallStatus');
@@ -201,28 +244,20 @@ class clientSIP extends eqLogic {
 			log::add('clientSIP', 'debug', 'Message envoyé => ' . $number);
 	}
 	public function calling($message, $CallEvents){
+		$Message = array();
 		foreach($this->getConfiguration($CallEvents) as $CallEvent){
 			$number = str_replace('sip:','',explode('@', $message->to->addr)[0]);
-			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number){
-				$SdpFile = jeedom::getTmpFolder('clientSIP').'/' . $message->callId->value . '.sdp';
-				$fp =fopen($SdpFile,"w");
-				fwrite($fp,$message->body);
-				fclose($fp);
-              			//Recevoir 
-              			//ffmpeg -protocol_whitelist file,udp,rtcp,rtp -i '.$SdpFile.' -y rec.wav
-				$cmd ='ffmpeg';
-				$cmd .= ' -re';
-				$cmd .= ' -fflags';
-				$cmd .= ' +genpts';
-				$cmd .= ' -i ' . $this->TextToSpeach($CallEvent['Message']);
-				$cmd .= ' -acodec pcm_mulaw';
-				$cmd .= ' -f rtp -y rtp://'.network ::getNetworkAccess('internal', 'ip', '', false).':32767';
-				shell_exec($cmd);			
-				log::add('clientSIP', 'debug', $cmd);		
-				shell_exec('sudo rm '.$SdpFile);			
-				sleep(5);
-			}
+			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number)
+				$Message[] = $this->TextToSpeach($CallEvent['Message']);
 		}
+		
+		$value['apikey'] = jeedom::getApiKey('clientSIP');
+		$value['host'] = '';//Rechercher dans le SDP :$message->body
+		$value['port'] = 8080;//Rechercher dans le SDP :$message->body
+		$value['cmd'] = 'playMessage';
+		$value['pause'] = 5;
+		$value['Message'] = $Message;
+		self::socket_connection(json_encode($value));
 	}
 	public function AddCommande($Name,$_logicalId,$Type="info", $SubType='string',$Template='default') {
 		$Commande = $this->getCmd(null,$_logicalId);
@@ -242,6 +277,12 @@ class clientSIP extends eqLogic {
 		}
 		$Commande->save();
 		return $Commande;
+	}
+	public function sendDTMF($DTMF) {
+		$value['apikey'] = jeedom::getApiKey('clientSIP');
+		$value['cmd'] = 'sendDTMF';
+		$value['dtmf'] = $DTMF;
+		self::socket_connection(json_encode($value));
 	}
 	public function TextToSpeach($Texte) {
 		$Texte = str_replace(array('[', ']', '#', '{', '}'), '', $Texte);

@@ -6,7 +6,7 @@
 	"author" : "Halbout Michael",
 	"require" : "3.0",
 	"category" : "communication",
-	"hasDependency" : false,
+	"hasDependency" : true,
  	"hasOwnDeamon" : true,
 	"hasTtsEngine" : true,
 	"compatibility" : ["miniplus","smart","rpi","docker","diy","mobile","v4"],
