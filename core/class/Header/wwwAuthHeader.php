@@ -1,10 +1,10 @@
 <?php
 /**
-* ProxyAuth Header Class
+* wwwAuth Header Class
 */
 class wwwAuthHeader
 {
-    /** @var list<AuthValue> ProxyAuth value(s) */
+    /** @var list<AuthValue> wwwAuth value(s) */
     public $values = [];
 
     final public function __construct() {
@@ -26,7 +26,7 @@ class wwwAuthHeader
            $hvalues = explode(' ', trim($hline));
             $val = new AuthValue;
             if (count($hvalues) != 2) {
-                throw new InvalidHeaderLineException('Invalid wwwAuthHeader header', Response::BAD_REQUEST);
+                throw new InvalidHeaderLineException('Invalid wwwAuth header', Response::BAD_REQUEST);
             }
             $val->digest = $hvalues[0];
             $vparams = explode(',', $hvalues[1]);
@@ -85,10 +85,12 @@ class wwwAuthHeader
             $ret .="nonce=\"{$value->params['nonce']}\"{$delim}"; 
             $ret .="uri=\"{$value->params['uri']}\"{$delim}"; 
             $ret .="response=\"{$value->reponse}\"{$delim}"; 
-            $ret .="algorithm={$value->params['algorithm']}"; 
-            if($params['qop']){
-                $ret .="nc=00000001";
-                $ret .="cnonce=".$this->cnonce;
+            $ret .="algorithm=\"{$value->params['algorithm']}\"";
+			if(isset($value->params['qop'])){
+                $ret .=$delim; 
+                $ret .="qop=\"{$value->params['qop']}\"{$delim}"; 
+                $ret .="nc=\"00000001\"{$delim}"; 
+                $ret .="cnonce=\"{$this->cnonce}\""; 
             }
         }
         return $ret . "\r\n";
