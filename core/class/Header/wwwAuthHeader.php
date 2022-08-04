@@ -54,11 +54,10 @@ class wwwAuthHeader
     {
         $ha1 = md5($params['username'].':'.$params['realm'].':'.$params['password']);		
         $ha2 = md5($params['method'].':'.$params['uri']);
-        if($params['qop']){
+        if(isset($params['qop']))
           $res = md5($ha1.':'.$params['nonce'].':00000001:'.$this->cnonce.':auth:'.$ha2);
-        }else{
+        else
          $res = md5($ha1.':'.$params['nonce'].':'.$ha2);		
-        }
         return $res;
     }
     /**
@@ -73,13 +72,12 @@ class wwwAuthHeader
         $ret = "{$hname}: ";
         $delim = '';
         foreach ($this->values as $key => $value) {
-          	$value->reponse = $this->reponse($value->params);
-            if (!isset($value->digest, $value->reponse)) {
+            $value->reponse = $this->reponse($value->params);
+            if (!isset($value->digest, $value->reponse)) 
                 throw new InvalidHeaderValue('Malformed wwwAuthHeader header');
-            }
-           $ret .= "{$delim}{$value->digest}"; 
-           $delim = ' ';
-       
+            $ret .= "{$delim}{$value->digest}"; 
+            $delim = ' ';
+
             $ret .="{$delim}"; 
             $delim = ', ';
             $ret .="username=\"{$value->params['username']}\"{$delim}"; 
@@ -89,9 +87,9 @@ class wwwAuthHeader
             $ret .="response=\"{$value->reponse}\"{$delim}"; 
             $ret .="algorithm={$value->params['algorithm']}"; 
             if($params['qop']){
-       
-            $ret .="nc=00000001";
-            $ret .="cnonce=".$this->cnonce;
+                $ret .="nc=00000001";
+                $ret .="cnonce=".$this->cnonce;
+            }
         }
         return $ret . "\r\n";
     }
