@@ -18,12 +18,12 @@ class client{
 		$this->_userAgent = $userAgent;
 		$this->_cSeq =	cache::byKey('clientSIP::cSeq::'.$this->_userAgent)->getValue(0);
 		if(cache::byKey('clientSIP::Authorization::realm::'.$this->_userAgent)->getValue('') != ''){
-			$this->_ProxyAuthorization = new wwwAuthHeader();
-			$this->_ProxyAuthorization->values[0]->params['username'] = $this->_Username;
-			$this->_ProxyAuthorization->values[0]->params['password'] = $this->_Password;
-			$this->_ProxyAuthorization->values[0]->params['algorithm'] = cache::byKey('clientSIP::Authorization::algorithm::'.$this->_userAgent)->getValue('');
-			$this->_ProxyAuthorization->values[0]->params['nonce'] = cache::byKey('clientSIP::Authorization::nonce::'.$this->_userAgent)->getValue('');
-			$this->_ProxyAuthorization->values[0]->params['realm'] = cache::byKey('clientSIP::Authorization::realm::'.$this->_userAgent)->getValue('');
+			$this->_authorization = new wwwAuthHeader();
+			$this->_authorization->values[0]->params['username'] = $this->_Username;
+			$this->_authorization->values[0]->params['password'] = $this->_Password;
+			$this->_authorization->values[0]->params['algorithm'] = cache::byKey('clientSIP::Authorization::algorithm::'.$this->_userAgent)->getValue('');
+			$this->_authorization->values[0]->params['nonce'] = cache::byKey('clientSIP::Authorization::nonce::'.$this->_userAgent)->getValue('');
+			$this->_authorization->values[0]->params['realm'] = cache::byKey('clientSIP::Authorization::realm::'.$this->_userAgent)->getValue('');
 		}
 		if(cache::byKey('clientSIP::ProxyAuthorization::realm::'.$this->_userAgent)->getValue('') != ''){
 			$this->_ProxyAuthorization = new ProxyAuthHeader();
@@ -137,7 +137,7 @@ class client{
 				return $message;
 			break;
 			case '401':
-		            	if($message->cSeq->method == $this->method){
+				if($message->cSeq->method == $this->method){
 					$this->_cSeq += 1;
 					cache::set('clientSIP::cSeq::'.$this->_userAgent,$this->_cSeq,0);
 					$request = $this->formatRequest();
@@ -147,7 +147,6 @@ class client{
 					$request->authorization->values[0]->params['password'] = $this->_Password;
 					$request->authorization->values[0]->params['uri'] = $request->uri;
 					$request->authorization->values[0]->params['method'] = $this->method;
-					$this->_ProxyAuthorization = $request->authorization;	
 					cache::set('clientSIP::Authorization::algorithm::'.$this->_userAgent,$request->authorization->values[0]->params['algorithm'] ,0);
 					cache::set('clientSIP::Authorization:nonce::'.$this->_userAgent,$request->authorization->values[0]->params['nonce'] ,0);
 					cache::set('clientSIP::Authorization:realm::'.$this->_userAgent,$request->authorization->values[0]->params['realm'] ,0);
@@ -162,7 +161,7 @@ class client{
 					}
 					$this->send($request->render());
 				}
-				$message = $this->read();
+				return $message = $this->read();
 				return $this->getReponse($message);
 			break;
 			case '407':
