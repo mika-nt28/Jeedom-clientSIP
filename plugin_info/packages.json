@@ -4,18 +4,9 @@
 		"python3-dev" : {},
 		"python3-requests" : {},
 		"python3-setuptools" : {},
-		"python3-simplejson" : {},
-		"python3-serial" : {},
-		"python3-pyudev" : {},
-		"python3-opencv" : {}
+		"python3-simplejson" : {}
 	},
 	"pip3" : { 
-		"pyudev" : {},
-		"pyserial" : {},
-		"requests" : {},
-		"scipy" : {},
-		"imutils" : {},
-		"opencv-python" : {},
-		"opencv-contrib-python" : {}
+		"requests" : {}
 	}
 }

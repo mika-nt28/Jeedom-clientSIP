@@ -430,7 +430,7 @@ class SIPMessage
 
                 /* https://tools.ietf.org/html/rfc3261#section-20.44 */
                 case 'www-authenticate':
-                    $msg->wwwAuthenticate = Header::parse($hbody);
+                    $msg->wwwAuthenticate = wwwAuthHeader::parse($hbody);
 
                     continue 2;
 
