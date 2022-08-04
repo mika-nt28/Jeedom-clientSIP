@@ -4,7 +4,7 @@
 */
 class ProxyAuthHeader
 {
-    /** @var list<ProxyAuthValue> ProxyAuth value(s) */
+    /** @var list<AuthValue> ProxyAuth value(s) */
     public $values = [];
 
     final public function __construct() {}
@@ -22,7 +22,7 @@ class ProxyAuthHeader
         $ret = new static;
         foreach ($hbody as $hline) {
            $hvalues = explode(' ', trim($hline));
-            $val = new ProxyAuthValue;
+            $val = new AuthValue;
             if (count($hvalues) != 2) {
                 throw new InvalidHeaderLineException('Invalid ProxyAuthHeader header', Response::BAD_REQUEST);
             }
