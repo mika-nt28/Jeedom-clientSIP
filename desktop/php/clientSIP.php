@@ -21,6 +21,11 @@ $eqLogics = eqLogic::byType($plugin->getId());
     				<br>
     				<span>{{Configuration}}</span>
   			</div>
+			<div class="cursor eqLogicAction logoSecondary" data-action="gotoMoniteur">
+				<i class="fas fa-archive"></i>  
+				<br>
+				<span>{{Moniteur}}</span>
+			</div>
   		</div>
   		<legend><i class="fas fa-table"></i> {{Mes équipements virtuel}}</legend>
 	   	<input class="form-control" placeholder="{{Rechercher}}" id="in_searchEqlogic" />
@@ -74,6 +79,18 @@ $eqLogics = eqLogic::byType($plugin->getId());
 				<a href="#commandtab" aria-controls="profile" role="tab" data-toggle="tab">
 					<i class="fa fa-list-alt"></i> 
 					{{Commandes}}
+				</a>
+			</li>
+    			<li role="presentation">
+				<a href="#InCallTab" aria-controls="profile" role="tab" data-toggle="tab">
+					<i class="fa fa-list-alt"></i> 
+					{{Appel recus}}
+				</a>
+			</li>
+    			<li role="presentation">
+				<a href="#OutCallTab" aria-controls="profile" role="tab" data-toggle="tab">
+					<i class="fa fa-list-alt"></i> 
+					{{Appel émis}}
 				</a>
 			</li>
   		</ul>
@@ -147,17 +164,6 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							</div>
 							<div class="form-group">
 								<label class="col-sm-3 control-label" >
-									{{Proxy}}
-									<sup>
-										<i class="fa fa-question-circle tooltips" title="{{Saisir le proxy de connexion}}"></i>
-									</sup>
-								</label>
-								<div class="col-sm-3">
-									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="Proxy" placeholder="{{Proxy}}"/>
-								</div>
-							</div>
-							<div class="form-group">
-								<label class="col-sm-3 control-label" >
 									{{Numéro de téléphone}}
 									<sup>
 										<i class="fa fa-question-circle tooltips" title="{{Saisir le numéro de téléphone  de se client}}"></i>
@@ -169,9 +175,9 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							</div>
 							<div class="form-group">
 								<label class="col-sm-3 control-label" >
-									{{Autentification}}
+									{{Authentification}}
 									<sup>
-										<i class="fa fa-question-circle tooltips" title="{{Parametre d'autentification au serveur}}"></i>
+										<i class="fa fa-question-circle tooltips" title="{{Parametre d'authentification au serveur}}"></i>
 									</sup>
 								</label>
 								<div class="col-sm-3">
@@ -226,6 +232,38 @@ $eqLogics = eqLogic::byType($plugin->getId());
 					</thead>
 					<tbody></tbody>
 				</table>
+			</div>
+			<div role="tabpanel" class="tab-pane" id="InCallTab">	
+				<form class="form-horizontal">
+					<fieldset>
+						<legend>{{Que faire lorsque Jeedom reçois un appel :}}
+							<sup>
+								<i class="fa fa-question-circle tooltips" title="{{Créer message}}"></i>
+							</sup>
+							<a class="btn btn-success btn-xs InCallEventAct" data-action="add">
+								<i class="fa fa-plus-circle"></i>
+								{{Ajouter}}
+							</a>
+						</legend>
+					</fieldset>
+				</form>		
+				<div id="div_InCallEvents"></div>	
+			</div>
+			<div role="tabpanel" class="tab-pane" id="OutCallTab">	
+				<form class="form-horizontal">
+					<fieldset>
+						<legend>{{Que faire lorsque Jeedom émet un appel :}}
+							<sup>
+								<i class="fa fa-question-circle tooltips" title="{{Créer message}}"></i>
+							</sup>
+							<a class="btn btn-success btn-xs OutCallEventAct" data-action="add">
+								<i class="fa fa-plus-circle"></i>
+								{{Ajouter}}
+							</a>
+						</legend>
+					</fieldset>
+				</form>		
+				<div id="div_OutCallEvents"></div>	
 			</div>
 		</div>
 	</div>

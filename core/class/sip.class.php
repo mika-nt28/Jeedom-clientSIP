@@ -1,5 +1,5 @@
 <?php
-class sip{
+class sip{ 
 	private $jeedom;
 	private $min_port = 5065;
 	private $max_port = 5265;
@@ -212,11 +212,10 @@ class sip{
 		$this->extra_headers[] = $header;
 	}
 	public function setFrom($from){
-		if (preg_match('/<.*>$/',$from)){
+ 		if (preg_match('/<.*>$/',$from))
 			$this->from = $from;
-		}else{
-			$this->from = '<'.$from.'>';
-		}
+		else
+			$this->from = ('<'.$from.'>');
 		$m = array();
 		if (!preg_match('/sip:(.*)@/i',$this->from,$m))	{
 			log::add('clientSIP','error',$this->jeedom->getHumanName().'Failed to parse From username.');
@@ -225,19 +224,19 @@ class sip{
 		$this->from_user = $m[1];
 	}
 	public function setTo($to){
-		if (preg_match('/<.*>$/',$to)){
+		if (preg_match('/<.*>$/',$to))
 			$this->to = $to;
-		}else{
-			$this->to = '<'.$to.'>';
-		}
+		else
+			$this->to = ('<'.$to.'>');
 	}
 	private function clientSDP(){
+		$this->session_id = rand(0,99999);
 		$SDP = "v=0\r\n";
-		$SDP .= "o=".$this->jeedom->getName()." ".$this->session_id." ".$this->call_id." IN IP4 ".$this->cseq."\r\n";
-		$SDP .= "s=".$this->jeedom->getName()." Audio Session\r\n";
+		$SDP .= "o=".$this->jeedom->getName()." ".$this->session_id." ".$this->cseq." IN IP4 ".$this->src_ip."\r\n";
+		$SDP .= "s=".$this->jeedom->getName()."\r\n";
 		$SDP .= "c=IN IP4 ".$this->src_ip."\r\n";
 		$SDP .= "t=0 0\r\n";
-		$SDP .= "m=audio 45450 RTP/AVP 0 3 4 8 19\r\n";
+		$SDP .= "m=audio 45450 RTP 0 3 4 8 18\r\n";
 		$SDP .= "a=rtpmap:0 PCMU/8000\r\n";
 		$SDP .= "a=rtpmap:3 GSM/8000\r\n";
            	$SDP .= "a=rtpmap:4 G723/8000\r\n";
@@ -283,8 +282,11 @@ class sip{
 			$this->host = $this->proxy;
 		}
 	}
-	public function setContact($v){
-		$this->contact = $v;
+	public function setContact($contact){
+		if (preg_match('/<.*>$/',$contact))
+			$this->contact = $contact;
+		else
+			$this->contact = ('<'.$contact.'>');
 	}
 	public function setUri($uri){
 		if (strpos($uri,'sip:') === false){
@@ -367,16 +369,13 @@ class sip{
 	private function ActionForRxCode(){
 		switch($this->res_code){
 			case '100':
-				$this->reply(100,'Trying');
-				$this->jeedom->checkAndUpdateCmd('CallStatus','Décroché');
+				//$this->reply(100,'Trying');
 			break;
 			case '180':
-				$this->reply(180,'Ringing');
-				$this->jeedom->checkAndUpdateCmd('CallStatus','Sonnerie');
+				//$this->reply(180,'Ringing');
 			break;
 			case '200':
-				$this->checkAndUpdateCmd('CallStatus','Appel en cours');
-				$this->_sip->reply(200,'OK');
+			//	$this->_sip->reply(200,'OK');
 			break;
 			case '407':
 				$this->cseq++;
@@ -393,7 +392,17 @@ class sip{
 				$this->readMessage();
 			break;
 			case '486':
-				$this->checkAndUpdateCmd('CallStatus','Appel en cours');
+			break;
+		}
+		$this->jeedomStatusForRxCode();
+	}
+	private function jeedomStatusForRxCode(){
+		switch($this->res_code){
+			case '100':
+				$this->jeedom->checkAndUpdateCmd('CallStatus','Décroché');
+			break;
+			case '180':
+				$this->jeedom->checkAndUpdateCmd('CallStatus','Sonnerie');
 			break;
 		}
 	}
@@ -424,7 +433,7 @@ class sip{
 			log::add('clientSIP','error',$this->jeedom->getHumanName()."Failed to send data to ".$ip_address.":".$this->port.". Source IP ".$this->src_ip.", source port: ".$this->src_port.". ".socket_strerror($err_no));
 			die();
 		}
-		log::add('clientSIP','info',$this->jeedom->getHumanName().'TX : '.$data);
+		log::add('clientSIP','info',$this->jeedom->getHumanName().'TX : '.htmlentities($data));
 	}
 	public function listen($methods){ 
 		if (!is_array($methods))	{
@@ -434,8 +443,25 @@ class sip{
 		if ($this->server_mode)	{
 			while (!in_array($this->req_method, $methods))	{
 				$this->readMessage(); 
-				if ($this->rx_msg && !in_array($this->req_method, $methods))	{
-					$this->reply(200,'OK');
+				if ($this->rx_msg)	{
+					switch($this->req_method){
+						case "INVITE":
+							$this->jeedom->checkAndUpdateCmd('CallStatus','Sonnerie');
+						break;
+						case "MESSAGE":
+						break;
+						case "CANCEL":
+						case "NOTIFY":
+						case "BYE":
+						case "REFER":
+						case "OPTIONS":
+						case "SUBSCRIBE":
+						case "PUBLISH":
+						case "REGISTER":
+						default:
+							$this->reply(200,'OK');
+						break;
+					}
 				}
 			}
 		}else{
@@ -444,12 +470,13 @@ class sip{
 			while (!in_array($this->req_method, $methods)){
 				$this->readMessage(); 
 				$i++;
-				if ($i > 5)			{
+				if ($i > 5){
 					log::add('clientSIP','error',$this->jeedom->getHumanName()."Unexpected request ".$this->req_method." received.");
 					die();
 				}
 			}
 		}
+		return $this->req_method;			   
 	}
 	public function setServerMode($v){
 		if (!@socket_set_option($this->socket, SOL_SOCKET, SO_RCVTIMEO, array("sec"=>0,"usec"=>0)))	{
@@ -468,7 +495,8 @@ class sip{
 			die();
 			return $this->res_code;
 		}
-		log::add('clientSIP','info',$this->jeedom->getHumanName().'RX: '.$this->rx_msg);
+		log::add('clientSIP','info',$this->jeedom->getHumanName().'RX: '.htmlentities($this->rx_msg));	
+		$this->jeedomStatusForRxCode();
 		$m = array();
 		if (preg_match('/^SIP\/2\.0 ([0-9]{3})/', $this->rx_msg, $m))	{
 			// Response
@@ -486,7 +514,7 @@ class sip{
 		// Request via
 		$m = array();
 		$this->req_via = array();
-		if (preg_match_all('/^Via: (.*)$/im', $this->rx_msg, $m)){
+		if (preg_match_all('/Via: (.*)$/im', $this->rx_msg, $m)){
 			foreach ($m[1] as $via)	{
 				$this->req_via[] = trim($via);
 			}
@@ -495,12 +523,12 @@ class sip{
 		$this->parseRecordRoute();
 		// To tag
 		$m = array();
-		if (preg_match('/^To: .*;tag=(.*)$/im', $this->rx_msg, $m))	{
+		if (preg_match('/To: .*;tag=(.*)$/im', $this->rx_msg, $m))	{
 			$this->to_tag = trim($m[1]);
 		}
 		// Server Name
 		$m = array(); 
-		if (preg_match('/^Server: (.*)/im', $this->rx_msg, $m))	{
+		if (preg_match('/Server: (.*)/im', $this->rx_msg, $m))	{
 			$this->server = trim($m[1]);
 		}
 		// Response contact
@@ -509,6 +537,7 @@ class sip{
 		$this->res_cseq_method = $this->parseCSeqMethod();
 		// ACK 2XX-6XX - only invites - RFC3261 17.1.2.1
 		if ($this->res_cseq_method == 'INVITE' && in_array(substr($this->res_code,0,1),array('2','3','4','5','6')))	{
+			$this->decodeSDP();
 			$this->ack();
 		}
 		return $this->res_code;
@@ -522,7 +551,7 @@ class sip{
 		// Request via
 		$m = array();
 		$this->req_via = array();
-		if (preg_match_all('/^Via: (.*)$/im',$this->rx_msg,$m))	{
+		if (preg_match_all('/Via: (.*)$/im',$this->rx_msg,$m))	{
 			if ($this->server_mode)	{
 				// set $this->host to top most via
 				$m2 = array();
@@ -540,32 +569,32 @@ class sip{
 		$this->req_cseq_method = $this->parseCSeqMethod();
 		// Request CSeq number
 		$m = array(); 
-		if (preg_match('/^CSeq: ([0-9]+)/im', $this->rx_msg, $m)){
+		if (preg_match('/CSeq: ([0-9]+)/im', $this->rx_msg, $m)){
 			$this->req_cseq_number = trim($m[1]);
 		}
 		// Server Name
 		$m = array(); 
-		if (preg_match('/^Server: (.*)/im', $this->rx_msg, $m)){
+		if (preg_match('/Server: (.*)/im', $this->rx_msg, $m)){
 			$this->server = trim($m[1]);
 		}
 		// Request From
 		$m = array();
-		if (preg_match('/^From: (.*)/im', $this->rx_msg, $m)){
+		if (preg_match('/From: (.*)/im', $this->rx_msg, $m)){
 			$this->req_from = (strpos($m[1],';')) ? substr($m[1],0,strpos($m[1],';')) : $m[1];
 		}
 		// Request From tag
 		$m = array();
-		if (preg_match('/^From:.*;tag=(.*)$/im', $this->rx_msg, $m)){
+		if (preg_match('/From:.*;tag=(.*)$/im', $this->rx_msg, $m)){
 			$this->req_from_tag = trim($m[1]);
 		}
 		// Request To
 		$m = array();
-		if (preg_match('/^To: (.*)/im', $this->rx_msg, $m)){
+		if (preg_match('/To: (.*)/im', $this->rx_msg, $m)){
 			$this->req_to = (strpos($m[1],';')) ? substr($m[1],0,strpos($m[1],';')) : $m[1];
 		}
 		// Request To tag
 		$m = array();
-		if (preg_match('/^To:.*;tag=(.*)$/im', $this->rx_msg, $m)){
+		if (preg_match('/To:.*;tag=(.*)$/im', $this->rx_msg, $m)){
 			$this->req_to_tag = trim($m[1]);
 		}else{
 			$this->req_to_tag = rand(10000,99999);
@@ -573,7 +602,7 @@ class sip{
 		// Call-id
 		if (!$this->call_id){
 			$m = array();
-			if (preg_match('/^Call-ID:(.*@)$/im', $this->rx_msg, $m)){
+			if (preg_match('/Call-ID:(.*@)$/im', $this->rx_msg, $m)){
 				$this->call_id = trim($m[1]);
 			}
 		}
@@ -592,6 +621,12 @@ class sip{
 		$r.= 'From: '.$this->req_from.';tag='.$this->req_from_tag."\r\n";
 		// To
 		$r.= 'To: '.$this->req_to.';tag='.$this->req_to_tag."\r\n";
+		// Contact
+		if ($this->contact != null)	{
+			$r.= 'Contact: '.$this->contact."\r\n";
+		}else if ($this->method != 'MESSAGE'){
+			$r.= 'Contact: <sip:'.$this->from_user.'@'.$this->src_ip.':'.$this->src_port.'>'."\r\n";
+		}
 		// Call-ID
 		$r.= 'Call-ID: '.$this->call_id."\r\n";
 		//CSeq
@@ -604,16 +639,6 @@ class sip{
 		$r.= "Supported: replaces, timer\r\n";
 		// Max-Forwards
 		//$r.= 'Max-Forwards: 70'."\r\n";
-		// Contact
-		if ($this->contact)	{
-			if (substr($this->contact,0,1) == "<") {
-				$r.= 'Contact: '.$this->contact."\r\n";
-			} else {
-				$r.= 'Contact: <'.$this->contact.'>'."\r\n";
-			}
-		}else if ($this->method != 'MESSAGE'){
-			$r.= 'Contact: <sip:'.$this->from_user.'@'.$this->src_ip.':'.$this->src_port.'>'."\r\n";
-		}
 		// User-Agent
 		$r.= 'User-Agent: '.$this->user_agent."\r\n";
 		// Content-Length
@@ -694,6 +719,12 @@ class sip{
 		}else{
 			$r.= 'To: '.$this->to."\r\n";
 		}
+		// Contact
+		if ($this->contact != null)	{
+			$r.= 'Contact: '.$this->contact."\r\n";
+		}else if ($this->method != 'MESSAGE'){
+			$r.= 'Contact: <sip:'.$this->from_user.'@'.$this->src_ip.':'.$this->src_port.'>'."\r\n";
+		}
 		//Server
 		if($this->server)	{
 			$r.= 'Server: '.$this->server."\r\n";
@@ -713,16 +744,7 @@ class sip{
 			$this->cseq--;
 		}
 		$r.= 'CSeq: '.$this->cseq.' '.$this->method."\r\n";
-		// Contact
-		if ($this->contact)	{
-			if (substr($this->contact,0,1) == "<") {
-				$r.= 'Contact: '.$this->contact."\r\n";
-			} else {
-				$r.= 'Contact: <'.$this->contact.'>'."\r\n";
-			}
-		}else if ($this->method != 'MESSAGE'){
-			$r.= 'Contact: <sip:'.$this->from_user.'@'.$this->src_ip.':'.$this->src_port.'>'."\r\n";
-		}
+		$r.= 'Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, NOTIFY, MESSAGE, SUBSCRIBE, INFO'."\r\n";
 		// Content-Type
 		if ($this->content_type){
 			$r.= 'Content-Type: '.$this->content_type."\r\n";
@@ -753,7 +775,7 @@ class sip{
 					$this->content_type = 'application/sdp';
 				break;
 				case 'MESSAGE':
-					$this->content_type = 'text/html; charset=utf-8';
+					$this->content_type = 'text/plain; charset=utf-8';
 				break;
 				default:
 					$this->content_type = null;
@@ -762,7 +784,7 @@ class sip{
 	}
 	private function setVia(){
 		$rand = rand(100000,999999);
-		$this->via = 'SIP/2.0/UDP '.$this->src_ip.':'.$this->src_port.';rport;branch=z9hG4bK'.$rand;
+		$this->via = 'SIP/2.0/UDP '.$this->src_ip.':'.$this->src_port.';rport;branch=z9hG4bK-'.$rand;
 	}
 	public function setFromTag($v){
 		$this->from_tag = $v;
@@ -796,9 +818,60 @@ class sip{
 		}
 		return $temp[1];
 	}
+	public function decodeSDP(){
+		if (!preg_match('/s=(.*)$/imU',$this->rx_msg, $this->sdpSessionName)){
+			log::add('clientSIP','debug',$this->jeedom->getHumanName()."Can't find SDP session name");
+			//die();
+		}
+		if (!preg_match('/c=(.*) (.*) (.*)$/imU',$this->rx_msg, $this->sdpConnexion)){
+			log::add('clientSIP','debug',$this->jeedom->getHumanName()."Can't find parameter to SDP connection information");
+			//die();
+		}
+		//$this->sdpConnexion[0] => c=IN IP4 10.130.130.114
+		//$this->sdpConnexion[1] => IN = Owner’s network type, in this case “IN” for Internet.
+		//$this->sdpConnexion[2] => IP4 = Owner’s address type, in this case IP version 4.
+		//$this->sdpConnexion[3] => 10.130.130.114 = Caller’s SIP phone’s IP address.
+		if (!preg_match('/t=(.*) (.*)$/imU',$this->rx_msg, $this->sdpActiveTime)){
+			log::add('clientSIP','debug',$this->jeedom->getHumanName()."Can't find parameter to SDP active time");
+			//die();
+		}
+		//$this->sdpActiveTime[0] => t=0 0
+		//$this->sdpActiveTime[1] => 0 = Session start time
+		//$this->sdpActiveTime[2] => 0 = Session stop time
+		if (!preg_match('/m=(.*) (.*) (.*) (.*)$/imU',$this->rx_msg, $this->sdpMedia)){
+			log::add('clientSIP','debug',$this->jeedom->getHumanName()."Can't find parameter in SDP media description");
+			//die();
+		}
+		//$this->sdpMedia[0] => m=audio 61896 RTP 0 8 3 101
+		//$this->sdpMedia[1] => audio = Media type of stream. This can also be video, message, audio etc.
+		//$this->sdpMedia[2] => 61896 = The port number on which the media stream will be transmitted.
+		//$this->sdpMedia[3] => RTP = The protocol which will be used to stream the media, in this case Real Time Protocol.
+		//$this->sdpMedia[4] => 0 = The code specifying the codec, in this case codec 0 = G.711 PCMU.
+	}	
 	public function getRtsp(){
-		$rtsp='rtp://'.$this->src_ip.':'.$this->src_port;
-		return $rtsp;
+		switch($this->sdpMedia[3]){
+			case 'RTP':
+				return 'rtp://'.$this->sdpConnexion[3].':'.$this->sdpMedia[2];
+		}
+	}
+	public function getFFMEGcodec(){
+		switch($this->sdpMedia[4]){
+			case 0:
+				//a=rtpmap:0 PCMU/8000
+			return ' -f mulaw ';//-acodec mulaw ';
+			case 3:
+				//a=rtpmap:3 GSM/8000			
+			return ' -f gsm ';//-acodec gsm ';
+			case 4:
+				//a=rtpmap:4 G723/8000		
+			return ' -f g723 ';//-acodec g723 ';
+			case 8:
+				//a=rtpmap:8 PCMA/8000		
+			return ' -f alaw ';//-acodec alaw ';
+			case 18:
+				//a=rtpmap:18 G729/8000
+			return ' -f g729 ';//-acodec g729 ';
+		}
 	}
 	private function auth(){
 		if (!$this->username){
@@ -811,14 +884,14 @@ class sip{
 		}
 		// realm
 		$m = array();
-		if (!preg_match('/^Proxy-Authenticate: .*realm="(.*)"/imU',$this->rx_msg, $m)){
+		if (!preg_match('/Proxy-Authenticate: .*realm="(.*)"/imU',$this->rx_msg, $m)){
 			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find realm in proxy-auth");
 			die();
 		}
 		$realm = $m[1];
 		// nonce
 		$m = array();
-		if (!preg_match('/^Proxy-Authenticate: .*,*nonce="(.*)"/imU',$this->rx_msg, $m)){
+		if (!preg_match('/Proxy-Authenticate: .*,*nonce="(.*)"/imU',$this->rx_msg, $m)){
 			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find nonce in proxy-auth");
 			die();
 		}
@@ -848,14 +921,14 @@ class sip{
 		}
 		// realm
 		$m = array();
-		if (!preg_match('/^WWW-Authenticate: .* realm="(.*)"/imU',$this->rx_msg, $m)){
+		if (!preg_match('/WWW-Authenticate: .* realm="(.*)"/imU',$this->rx_msg, $m)){
 			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find realm in www-auth");
 			die();
 		}
 		$realm = $m[1];
 		// nonce
 		$m = array();
-		if (!preg_match('/^WWW-Authenticate: .*,*nonce="(.*)"/imU',$this->rx_msg, $m)){
+		if (!preg_match('/WWW-Authenticate: .*,*nonce="(.*)"/imU',$this->rx_msg, $m)){
 			log::add('clientSIP','error',$this->jeedom->getHumanName()."Can't find nonce in www-auth");
 			die();
 		}
@@ -945,7 +1018,7 @@ class sip{
 	private function parseRecordRoute(){
 		$this->record_route = array();
 		$m = array();
-		if (preg_match_all('/^Record-Route: (.*)$/im', $this->rx_msg, $m)){
+		if (preg_match_all('/Record-Route: (.*)$/im', $this->rx_msg, $m)){
 			foreach ($m[1] as $route_header){
 				$this->record_route[] = $route_header;
 				foreach (explode(",",$route_header) as $route){
@@ -959,7 +1032,7 @@ class sip{
 	private function parseContact(){
 		$output = null;
 		$m = array();
-		if (preg_match('/^Contact:.*<(.*)>/im', $this->rx_msg, $m)){
+		if (preg_match('/Contact:.*<(.*)>/im', $this->rx_msg, $m)){
 			$output = trim($m[1]);
 			$semicolon = strpos($output, ";");
 			if ($semicolon !== false){
@@ -971,7 +1044,7 @@ class sip{
 	private function parseCSeqMethod(){
 		$output = null;
 		$m = array();
-		if (preg_match('/^CSeq: [0-9]+ (.*)$/im', $this->rx_msg, $m)){
+		if (preg_match('/CSeq: [0-9]+ (.*)$/im', $this->rx_msg, $m)){
 			$output = trim($m[1]);
 		}
 		return $output;
