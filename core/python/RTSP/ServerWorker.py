@@ -55,7 +55,8 @@ class ServerWorker:
 		while True:            
 			data = connSocket.recv(256)
 			if data:
-				print ("DATA RECEIVED: \n", data)
+				logging.debug("DATA RECEIVED: " + str(data))
+				#print ("DATA RECEIVED: \n", data)
 				self.processRtspRequest(data)
 	
 	def processRtspRequest(self, data):
@@ -75,7 +76,8 @@ class ServerWorker:
 		if requestType == self.SETUP:
 			if self.state == self.INIT:
 				# Update state
-				print ("PROCESSING SETUP\n")
+				logging.debug("PROCESSING SETUP")
+				#print ("PROCESSING SETUP\n")
 				
 				try:
 					self.clientInfo['videoStream'] = VideoStream(filename)
@@ -95,7 +97,8 @@ class ServerWorker:
 		# Process PLAY request 		
 		elif requestType == self.PLAY:
 			if self.state == self.READY:
-				print ("PROCESSING PLAY\n")
+				logging.debug("DATA RECEIVED: " + str(data))
+				#print ("PROCESSING PLAY\n")
 				self.state = self.PLAYING
 				
 				# Create a new socket for RTP/UDP
@@ -111,7 +114,8 @@ class ServerWorker:
 		# Process PAUSE request
 		elif requestType == self.PAUSE:
 			if self.state == self.PLAYING:
-				print ("PROCESSING P A U S E\n")
+				logging.debug("PROCESSING PAUSE")
+				#print ("PROCESSING PAUSE\n")
 				self.state = self.READY
 				
 				self.clientInfo['event'].set()
@@ -120,7 +124,8 @@ class ServerWorker:
 		
 		# Process TEARDOWN request
 		elif requestType == self.TEARDOWN:
-			print ("PROCESSING TEARDOWN\n")
+			logging.debug("PROCESSING TEARDOWN")
+			#print ("PROCESSING TEARDOWN\n")
 
 			self.clientInfo['event'].set()
 			
@@ -146,7 +151,8 @@ class ServerWorker:
 					port = int(self.clientInfo['rtpPort'])
 					self.clientInfo['rtpSocket'].sendto(self.makeRtp(data, frameNumber),(address,port))
 				except:
-					print ("Connection Error")
+					logging.debug("Connection Error"))
+					#print ("Connection Error")
 					#print '-'*60
 					#traceback.print_exc(file=sys.stdout)
 					#print '-'*60
@@ -161,16 +167,14 @@ class ServerWorker:
 		pt = 26 # MJPEG type
 		seqnum = frameNbr
 		ssrc = 0 
-		
 		rtpPacket = RtpPacket()
-		
 		rtpPacket.encode(version, padding, extension, cc, seqnum, marker, pt, ssrc, payload)
-		
 		return rtpPacket.getPacket()
 		
 	def replyRtsp(self, code, seq):
 		"""Send RTSP reply to the client."""
 		if code == self.OK_200:
+			logging.debug("200 OK")
 			#print "200 OK"
 			reply = 'RTSP/1.0 200 OK\nCSeq: ' + seq + '\nSession: ' + str(self.clientInfo['session'])
 			connSocket = self.clientInfo['rtspSocket'][0]
@@ -178,9 +182,11 @@ class ServerWorker:
 		
 		# Error messages
 		elif code == self.FILE_NOT_FOUND_404:
-			print ("404 NOT FOUND")
+			logging.debug("404 NOT FOUND")
+			#print ("404 NOT FOUND")
 		elif code == self.CON_ERR_500:
-			print ("500 CONNECTION ERROR")
+			logging.debug("500 CONNECTION ERROR")
+			#print ("500 CONNECTION ERROR")
 	def DTMF_detetor(self,data):
 		if len(data) == 0:
 			return None
