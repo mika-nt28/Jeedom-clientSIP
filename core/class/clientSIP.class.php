@@ -1,13 +1,6 @@
 <?php
 require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
-include_file('core', 'client', 'class', 'clientSIP');
 class clientSIP extends eqLogic { 
-	protected $_sip = null;
-	protected $_Host=null;
-	protected $_Port=null;
-	protected $_Username= null;
-	protected $_Password= null;
-	protected $_CallNumber= null;
 	public static function deamon_info() {
 		$return = array();
 		$return['log'] = 'clientSIP';
@@ -46,10 +39,6 @@ class clientSIP extends eqLogic {
 						return $return;
 					}
 				}
-				$cron = cron::byClassAndFunction('clientSIP', 'WaitCall', array('id' => $clientSIP->getId()));
-				if (!is_object($cron) || !$cron->running()) {
-					$return['state'] = 'nok';
-				}
 			}
 		}
 		$return['state'] = 'ok';
@@ -67,8 +56,6 @@ class clientSIP extends eqLogic {
 			exec('sudo mkdir -p -m 777 '.$directory);
 		if (!is_writable($directory)) 
 			exec('sudo chmod 777 -R '.$directory);
-		$cache = cache::byKey('clientSIP::HistoryCall');
-		$cache->remove();
 		$path = realpath(dirname(__FILE__) . '/../python');
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
 			$cmd = 'sudo /usr/bin/python3 ' . $path . '/clientSIP.py';
@@ -78,8 +65,13 @@ class clientSIP extends eqLogic {
 			$cmd .= ' --callback ' . network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/clientSIP/core/php/callback.php';
 			$cmd .= ' --apikey ' . jeedom::getApiKey('clientSIP');
 			$cmd .= ' --pid ' . jeedom::getTmpFolder('clientSIP') . '/clientSIP_'.$clientSIP->getId().'.pid';
+			$cmd .= ' --serverhost '.config::byKey('Host');
+			$cmd .= ' --serverport '.config::byKey('Port');
+			$cmd .= ' --clienthost '.$clientSIP->getId();
+			$cmd .= ' --clientport '.$clientSIP->getConfiguration("Port");
+			$cmd .= ' --username '.$clientSIP->getConfiguration("Username");
+			$cmd .= ' --userpass '.$clientSIP->getConfiguration("Password");
 			$cmd .= ' --jeedomId '.$clientSIP->getId();
-			$cmd .= ' --RTSPport 32767';
 			log::add('clientSIP', 'info', 'Lancement démon clientSIP : ' . $cmd);
 			$result = exec($cmd . ' >> ' . log::getPathToLog('clientSIP') . ' 2>&1 &');
 	
@@ -88,7 +80,6 @@ class clientSIP extends eqLogic {
 					$minute=round($clientSIP->getConfiguration("Expiration")/60,0);
 					$clientSIP->CreateDemon('ConnectSip','*/'.$minute.' * * * *',false); 
 				}
-				$clientSIP->CreateDemon('WaitCall','* * * * * *',true);   
 			}
 		}
 	}
@@ -107,12 +98,6 @@ class clientSIP extends eqLogic {
 				if (is_object($cron)) 	
 					$cron->remove();
 			}
-			$cron = cron::byClassAndFunction('clientSIP', 'WaitCall', array('id' => $clientSIP->getId()));
-			if (is_object($cron)) 	
-				$cron->remove();
-			$cron = cron::byClassAndFunction('clientSIP', 'WaitMessage', array('id' => $clientSIP->getId()));
-			if (is_object($cron)) 	
-				$cron->remove();
 			$cache = cache::byKey('clientSIP::Port::'.$clientSIP->getId());
 			if (is_object($cache)) 	
 				$cache->remove();
@@ -160,50 +145,7 @@ class clientSIP extends eqLogic {
 		if (is_object($clientSIP) && $clientSIP->getIsEnable())
 			$clientSIP->RegisterClient();
 	}
-	public static function WaitCall($_option){
-		$clientSIP = clientSIP::byId($_option['id']);
-		if (is_object($clientSIP) && $clientSIP->getIsEnable()) {
-			if(!is_object($clientSIP->_sip))
-				$clientSIP->CreateConnexion(true);
-			while(true){
-				$message = $clientSIP->_sip->listen();
-				switch($message->method){
-					case 'INVITE':
-						log::add('clientSIP', 'debug', 'Réception d\'un appel');
-						$clientSIP->_sip->reply($message,100);
-						sleep(1);
-						$clientSIP->_sip->reply($message,180);
-						$clientSIP->checkAndUpdateCmd('CallStatus','Sonnerie');
-						sleep(1);
-						$message = $clientSIP->_sip->reply($message,200);
-						sleep(1);
-						if($message->method == 'ACK'){
-							$clientSIP->checkAndUpdateCmd('CallStatus','Appel en cours');
-							$clientSIP->calling($message, 'InCallEvent');
-							$clientSIP->Racrocher($message);
-						}
-					break;
-					case 'MESSAGE':
-						message::add('sucess', $message->body);
-					break;
-					case 'NOTIFY':
-					break;
-				}
-			}
-		}
-	}	
-	private function CreateConnexion($socket_bind = false){
-		if($this->_sip == null)
-			//$this->getConfiguration("Expiration");
-			//$this->getConfiguration("Proxy");
-			$this->_sip = new client(network ::getNetworkAccess('internal', 'ip', '', false),
-						$this->getConfiguration("Port"),
-						$this->getConfiguration("CallNumber"),
-						$this->getConfiguration("Username"),
-						$this->getConfiguration("Password"),
-						$this->getName(),
-						$socket_bind);
-	}
+	
 	private function RegisterClient(){
 		if($this->_sip == null)			
 			$this->CreateConnexion(false);
@@ -221,29 +163,7 @@ class clientSIP extends eqLogic {
 		if ($this->_sip->request('BYE',$message)->code == '200')		
 			$this->checkAndUpdateCmd('CallStatus','Racrocher');
 	}
-	public function call($number) {	
-		log::add('clientSIP', 'debug', 'Appel en demandé => ' . $number);
-		$this->checkAndUpdateCmd('CallStatus','Racrocher');
-		if($this->_sip == null)			
-			$this->CreateConnexion();
-		$this->checkAndUpdateCmd('CallStatus','Sonnerie');
-		$message = $this->_sip->newCall($number);
-		if ($message->code == '200')
-			$this->checkAndUpdateCmd('CallStatus','Appel en cours');
-		else
-			$this->checkAndUpdateCmd('CallStatus','Racrocher');
-		sleep(5);
-		$this->calling($message, 'OutCallEvent');
-		$this->Racrocher($message);
-	}
-	public function sendMessage($number,$texte) {	
-		log::add('clientSIP', 'debug', 'Envoie un message => ' . $number);
-		if($this->_sip == null)			
-			$this->CreateConnexion();
-		if ($this->_sip->newMessage($number,$texte)->code == '200')
-			log::add('clientSIP', 'debug', 'Message envoyé => ' . $number);
-	}
-	public function calling($message, $CallEvents){
+	public function call($number, $CallEvents){
 		$Message = array();
 		foreach($this->getConfiguration($CallEvents) as $CallEvent){
 			$number = str_replace('sip:','',explode('@', $message->to->addr)[0]);
@@ -252,9 +172,7 @@ class clientSIP extends eqLogic {
 		}
 		
 		$value['apikey'] = jeedom::getApiKey('clientSIP');
-		$value['host'] = '';//Rechercher dans le SDP :$message->body
-		$value['port'] = 8080;//Rechercher dans le SDP :$message->body
-		$value['cmd'] = 'playMessage';
+		$value['cmd'] = 'call';
 		$value['pause'] = 5;
 		$value['Message'] = $Message;
 		self::socket_connection(json_encode($value));
