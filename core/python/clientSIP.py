@@ -15,7 +15,7 @@ try:
 except ImportError:
 	print("Error: importing module from jeedom folder")
 	sys.exit(1)
-from pyVoIP.VoIP import VoIPPhone, InvalidStateError
+from pyVoIP.VoIP import VoIPPhone, InvalidStateError #https://pyvoip.readthedocs.io/en/v1.6.0/
 Phone = None
 def read_socket(cycle):
 	while True :
