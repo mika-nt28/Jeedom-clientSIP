@@ -4,20 +4,6 @@ class clientSIP extends eqLogic {
 	public static function deamon_info() {
 		$return = array();
 		$return['log'] = 'clientSIP';
-		$return['launchable'] = 'nok';
-		$engine = config::byKey('tts::engine','core','pico');
-			if($engine == 'espeak'){
-				$cmd = "dpkg -l | grep espeak";
-				if(exec($cmd) == '')
-					return $return;
-			
-			}else if($engine == 'pico'){
-				$cmd = "dpkg -l | grep libttspico-utils";
-				if(exec($cmd) == '')
-					return $return;
-			}
-			else
-				return $return;
 		$return['launchable'] = 'ok';
 		$return['state'] = 'ok';
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
@@ -30,15 +16,6 @@ class clientSIP extends eqLogic {
 			}else{
 				$return['state'] = 'nok';
 				return $return;	
-			}
-			if($clientSIP->getIsEnable()){
-				if($clientSIP->getConfiguration("Expiration") != ''){
-					$cron = cron::byClassAndFunction('clientSIP', 'ConnectSip', array('id' => $clientSIP->getId()));
-					if (!is_object($cron)){ 
-						$return['state'] = 'nok'; 	
-						return $return;
-					}
-				}
 			}
 		}
 		$return['state'] = 'ok';
@@ -64,23 +41,16 @@ class clientSIP extends eqLogic {
 			$cmd .= ' --socketport 9090';
 			$cmd .= ' --callback ' . network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/clientSIP/core/php/callback.php';
 			$cmd .= ' --apikey ' . jeedom::getApiKey('clientSIP');
-			$cmd .= ' --pid ' . jeedom::getTmpFolder('clientSIP') . '/clientSIP_'.$clientSIP->getId().'.pid';
-			$cmd .= ' --serverhost '.config::byKey('Host');
-			$cmd .= ' --serverport '.config::byKey('Port');
-			$cmd .= ' --clienthost '.$clientSIP->getId();
+			$cmd .= ' --pidfile ' . jeedom::getTmpFolder('clientSIP') . '/clientSIP_'.$clientSIP->getId().'.pid';
+			$cmd .= ' --serverhost '.config::byKey('Host','clientSIP');
+			$cmd .= ' --serverport '.config::byKey('Port','clientSIP');
+			$cmd .= ' --clienthost '.config::byKey('Host','clientSIP');//.network::getNetworkAccess('internal');
 			$cmd .= ' --clientport '.$clientSIP->getConfiguration("Port");
 			$cmd .= ' --username '.$clientSIP->getConfiguration("Username");
 			$cmd .= ' --userpass '.$clientSIP->getConfiguration("Password");
 			$cmd .= ' --jeedomId '.$clientSIP->getId();
 			log::add('clientSIP', 'info', 'Lancement démon clientSIP : ' . $cmd);
 			$result = exec($cmd . ' >> ' . log::getPathToLog('clientSIP') . ' 2>&1 &');
-	
-			if($clientSIP->getIsEnable()){
-				if($clientSIP->getConfiguration("Expiration") != ''){
-					$minute=round($clientSIP->getConfiguration("Expiration")/60,0);
-					$clientSIP->CreateDemon('ConnectSip','*/'.$minute.' * * * *',false); 
-				}
-			}
 		}
 	}
 	public static function deamon_stop() {	
@@ -93,15 +63,6 @@ class clientSIP extends eqLogic {
 				system::kill($pid);
 			}
 			system::kill('clientSIP.py');
-			if($clientSIP->getConfiguration("Expiration") != ''){
-				$cron = cron::byClassAndFunction('clientSIP', 'ConnectSip', array('id' => $clientSIP->getId()));
-				if (is_object($cron)) 	
-					$cron->remove();
-			}
-			$cache = cache::byKey('clientSIP::Port::'.$clientSIP->getId());
-			if (is_object($cache)) 	
-				$cache->remove();
-		}
 	}	
 	public static function socket_connection($value){
 		try {
@@ -120,48 +81,6 @@ class clientSIP extends eqLogic {
 		$this->AddCommande('Appel','call','action','message','call');
 		$this->AddCommande('Message','message','action','message','notif');
 		$this->checkAndUpdateCmd('RegStatus','Inactif');
-	}
-	public function CreateDemon($Name,$Schedule,$deamon=false) {
-		$cron =cron::byClassAndFunction('clientSIP', $Name, array('id' => $this->getId()));
-		if (!is_object($cron)) {
-			$cron = new cron();
-			$cron->setClass('clientSIP');
-			$cron->setFunction($Name);
-			$cron->setOption(array('id' => $this->getId()));
-			$cron->setEnable(1);
-			if($deamon){
-				$cron->setDeamon(1);
-				$cron->setTimeout('999999');
-			}
-			$cron->setSchedule($Schedule);
-			$cron->save();
-		}
-		$cron->start();
-		$cron->run();
-	}
-	public static function ConnectSip($_option){
-		log::add('clientSIP', 'debug', 'Objet mis à jour => ' . json_encode($_option));
-		$clientSIP = clientSIP::byId($_option['id']);
-		if (is_object($clientSIP) && $clientSIP->getIsEnable())
-			$clientSIP->RegisterClient();
-	}
-	
-	private function RegisterClient(){
-		if($this->_sip == null)			
-			$this->CreateConnexion(false);
-		$this->checkAndUpdateCmd('RegStatus','Inactif');
-		$return = $this->_sip->request('REGISTER');
-		if ($return->code == '200')
-			$this->checkAndUpdateCmd('RegStatus','OK');
-		else
-			$this->checkAndUpdateCmd('RegStatus','Echec');
-	}
-	public function Racrocher($message) {
-		if($this->_sip == null)			
-			$this->CreateConnexion(false);
-		$CallStatus=$this->getCmd(null,'CallStatus');
-		if ($this->_sip->request('BYE',$message)->code == '200')		
-			$this->checkAndUpdateCmd('CallStatus','Racrocher');
 	}
 	public function call($number, $CallEvents){
 		$Message = array();
