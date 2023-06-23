@@ -39,7 +39,7 @@ def listen():
 	global Phone
 	jeedom_socket.open()
 	thread.start_new_thread(read_socket,(globals.cycle,))
-	Phone=VoIPPhone(globals.serverhost, globals.serverport,globals.username,globals.userpass, callCallback=answer, myIP=globals.clienthost, sipPort=globals.clientport, rtpPortLow=5000, rtpPortHigh=6000)
+	Phone=VoIPPhone(globals.serverhost, globals.serverport,globals.username,globals.userpass, myIP=globals.clienthost, callCallback=answer, sipPort=globals.clientport, rtpPortLow=5000, rtpPortHigh=6000)
 	Phone.start()
 	shutdown()  
 def shutdown():
@@ -54,12 +54,27 @@ def shutdown():
 	logging.debug("Exit 0")
 	sys.stdout.flush()
 	os._exit(0)
-def answer(call): # This will be your callback function for when you receive a phone call.
+def answer(call):
 	try:
+		#f = wave.open('prompt.wav', 'rb')
+		#frames = f.getnframes()
+		#data = f.readframes(frames)
+		#f.close()
+
 		call.answer()
-		call.hangup()
+		#call.write_audio(data)
+
+		while call.state == CallState.ANSWERED:
+			dtmf = call.get_dtmf()
+			action = {}
+			action['dtmf']= dtmf
+			globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+			call.hangup()
+			time.sleep(0.1)
 	except InvalidStateError:
 		pass
+	except:
+		call.hangup()
 parser = argparse.ArgumentParser(description='SIP RTSP serveur Daemon for Jeedom plugin')
 parser.add_argument("--loglevel", help="Niveau de log daemon", type=str)
 parser.add_argument("--pidfile", help="Value to write", type=str)
@@ -95,13 +110,13 @@ if args.serverport:
 if args.serverhost:
 	globals.serverhost = args.serverhost
 if args.username:
-	globals.username = int(args.username)
+	globals.username = args.username
 if args.userpass:
 	globals.userpass = args.userpass	
 if args.clientport:
 	globals.clientport = int(args.clientport)
 if args.clienthost:
-	globals.clienthost = int(args.clienthost)
+	globals.clienthost = args.clienthost
 
 jeedom_utils.set_log_level(globals.log_level)
 logging.info("Start Face Detection Daemon for Jeedom plugin")
