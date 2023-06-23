@@ -30,7 +30,14 @@ def read_socket(cycle):
 					return
 				logging.debug("Received command from jeedom : "+str(message['cmd']))
 				if message['cmd'] == 'call':
-					pass
+					Phone.call()
+					for Message in message['Message']:
+						f = wave.open(Message, 'rb')
+						frames = f.getnframes()
+						data = f.readframes(frames)
+						f.close()
+						Phone.write_audio(data)
+						time.sleep(int(message['pause']))
 		except Exception as e:
 			logging.error("Exception on socket : %s" % str(e))
 			logging.debug(traceback.format_exc())
@@ -56,17 +63,14 @@ def shutdown():
 	os._exit(0)
 def answer(call):
 	try:
-		#f = wave.open('prompt.wav', 'rb')
-		#frames = f.getnframes()
-		#data = f.readframes(frames)
-		#f.close()
+		globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
 
 		call.answer()
-		#call.write_audio(data)
 
 		while call.state == CallState.ANSWERED:
 			dtmf = call.get_dtmf()
 			action = {}
+			action['Numero']= call.number
 			action['dtmf']= dtmf
 			globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
 			call.hangup()
