@@ -63,6 +63,7 @@ class clientSIP extends eqLogic {
 				system::kill($pid);
 			}
 			system::kill('clientSIP.py');
+		}
 	}	
 	public static function socket_connection($value){
 		try {
@@ -82,6 +83,25 @@ class clientSIP extends eqLogic {
 		$this->AddCommande('Message','message','action','message','notif');
 		$this->checkAndUpdateCmd('RegStatus','Inactif');
 	}
+	public function AddCommande($Name,$_logicalId,$Type="info", $SubType='string',$Template='default') {
+		$Commande = $this->getCmd(null,$_logicalId);
+		if (!is_object($Commande)){
+			$Commande = new clientSIPCmd();
+			$Commande->setId(null);
+			$Commande->setEqLogic_id($this->getId());
+			$Commande->setLogicalId($_logicalId);
+			$Commande->setName($Name);
+			$Commande->setIsVisible(1);
+			$Commande->setType($Type);
+			$Commande->setSubType($SubType);
+			if($Template !=''){
+				$Commande->setTemplate('dashboard',$Template);
+				$Commande->setTemplate('mobile',$Template);
+			}
+			$Commande->save();
+		}
+		return $Commande;
+	}
 	public function call($number, $CallEvents){
 		$Message = array();
 		foreach($this->getConfiguration($CallEvents) as $CallEvent){
@@ -96,24 +116,12 @@ class clientSIP extends eqLogic {
 		$value['Message'] = $Message;
 		self::socket_connection(json_encode($value));
 	}
-	public function AddCommande($Name,$_logicalId,$Type="info", $SubType='string',$Template='default') {
-		$Commande = $this->getCmd(null,$_logicalId);
-		if (!is_object($Commande)){
-			$Commande = new clientSIPCmd();
-			$Commande->setId(null);
-			$Commande->setEqLogic_id($this->getId());
-		}
-		$Commande->setLogicalId($_logicalId);
-		$Commande->setName($Name);
-		$Commande->setIsVisible(1);
-		$Commande->setType($Type);
-		$Commande->setSubType($SubType);
-		if($Template !=''){
-			$Commande->setTemplate('dashboard',$Template);
-			$Commande->setTemplate('mobile',$Template);
-		}
-		$Commande->save();
-		return $Commande;
+	public function sendMessage($number, $Message){
+		$value['apikey'] = jeedom::getApiKey('clientSIP');
+		$value['cmd'] = 'call';
+		$value['pause'] = 5;
+		$value['Message'] = array($this->TextToSpeach($Message));
+		self::socket_connection(json_encode($value));
 	}
 	public function sendDTMF($DTMF) {
 		$value['apikey'] = jeedom::getApiKey('clientSIP');
