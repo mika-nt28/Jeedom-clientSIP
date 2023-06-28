@@ -15,12 +15,16 @@ try:
 except ImportError:
 	print("Error: importing module from jeedom folder")
 	sys.exit(1)
-from pyVoIP.VoIP import VoIPPhone, InvalidStateError #https://pyvoip.readthedocs.io/en/v1.6.0/
+from pyVoIP import * #https://pyvoip.readthedocs.io/en/v1.6.0/
+from pyVoIP.VoIP import * 
+from pyVoIP.SIP import *
+
 Phone = None
 def read_socket(cycle):
+	global Phone
+	global JEEDOM_SOCKET_MESSAGE
 	while True :
 		try:
-			global JEEDOM_SOCKET_MESSAGE
 			if not JEEDOM_SOCKET_MESSAGE.empty():
 				logging.debug("SOCKET-READ------Message received in socket JEEDOM_SOCKET_MESSAGE")
 				message = JEEDOM_SOCKET_MESSAGE.get().decode('utf-8')
@@ -46,12 +50,26 @@ def listen():
 	global Phone
 	jeedom_socket.open()
 	thread.start_new_thread(read_socket,(globals.cycle,))
-	Phone=VoIPPhone(globals.serverhost, globals.serverport,globals.username,globals.userpass, myIP=globals.clienthost, callCallback=answer, sipPort=globals.clientport, rtpPortLow=5000, rtpPortHigh=6000)
+	#Phone=VoIPPhone(globals.serverhost, globals.serverport,globals.username,globals.userpass, myIP=globals.clienthost, callCallback=answer, sipPort=globals.clientport, rtpPortLow=5000, rtpPortHigh=6000)
+	Phone=VoIPPhone(globals.serverhost, globals.serverport,globals.username,globals.userpass, myIP=globals.clienthost, callCallback=answer, sipPort=globals.clientport)
+	Phone.DEBUG = True
 	Phone.start()
+	while True:
+		if globals.PhoneStatus != Phone.get_status().value:
+			globals.PhoneStatus = Phone.get_status().value
+			action = {}
+			action['RegStatus']= globals.PhoneStatus
+			globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+		time.sleep(1)
 	shutdown()  
 def shutdown():
 	global Phone
 	Phone.stop()
+	action = {}
+	globals.PhoneStatus = Phone.get_status().value
+	action = {}
+	action['RegStatus']= globals.PhoneStatus
+	globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
 	logging.debug("Shutdown")
 	logging.debug("Removing PID file " + str(globals.pidfile))
 	try:
@@ -63,18 +81,20 @@ def shutdown():
 	os._exit(0)
 def answer(call):
 	try:
+		action['CallStatus']= call.state.value
 		globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
-
 		call.answer()
-
 		while call.state == CallState.ANSWERED:
 			dtmf = call.get_dtmf()
 			action = {}
 			action['Numero']= call.number
 			action['dtmf']= dtmf
+			action['CallStatus']= call.state.value
 			globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
 			call.hangup()
 			time.sleep(0.1)
+		action['CallStatus']= call.state.value
+		globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
 	except InvalidStateError:
 		pass
 	except:
