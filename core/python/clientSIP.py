@@ -48,20 +48,22 @@ def read_socket(cycle):
 		time.sleep(cycle)	
 def listen():
 	global Phone
-	jeedom_socket.open()
-	thread.start_new_thread(read_socket,(globals.cycle,))
-	#Phone=VoIPPhone(globals.serverhost, globals.serverport,globals.username,globals.userpass, myIP=globals.clienthost, callCallback=answer, sipPort=globals.clientport, rtpPortLow=5000, rtpPortHigh=6000)
-	Phone=VoIPPhone(globals.serverhost, globals.serverport,globals.username,globals.userpass, myIP=globals.clienthost, callCallback=answer, sipPort=globals.clientport)
-	Phone.DEBUG = True
-	Phone.start()
-	while True:
-		if globals.PhoneStatus != Phone.get_status().value:
-			globals.PhoneStatus = Phone.get_status().value
-			action = {}
-			action['RegStatus']= globals.PhoneStatus
-			globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
-		time.sleep(1)
-	shutdown()  
+	try:
+		jeedom_socket.open()
+		thread.start_new_thread(read_socket,(globals.cycle,))
+		#Phone=VoIPPhone(globals.serverhost, globals.serverport,globals.username,globals.userpass, myIP=globals.clienthost, callCallback=answer, sipPort=globals.clientport, rtpPortLow=5000, rtpPortHigh=6000)
+		Phone=VoIPPhone(globals.serverhost, globals.serverport,globals.username,globals.userpass, myIP=globals.clienthost, callCallback=answer, sipPort=globals.clientport)
+		Phone.DEBUG = True
+		Phone.start()
+		while True:
+			if globals.PhoneStatus != Phone.get_status().value:
+				globals.PhoneStatus = Phone.get_status().value
+				action = {}
+				action['RegStatus']= globals.PhoneStatus
+				globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+			time.sleep(1)
+	except:
+		shutdown()
 def shutdown():
 	global Phone
 	Phone.stop()
