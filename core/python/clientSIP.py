@@ -18,6 +18,7 @@ except ImportError:
 from pyVoIP import * #https://pyvoip.readthedocs.io/en/v1.6.0/
 from pyVoIP.VoIP import * 
 from pyVoIP.SIP import *
+import wave
 
 Phone = None
 def read_socket(cycle):
@@ -34,24 +35,31 @@ def read_socket(cycle):
 					return
 				logging.debug("Received command from jeedom : "+str(message['cmd']))
 				if message['cmd'] == 'call':
+					logging.debug("Composition du numero : "+str(message['Numero']))
 					call = Phone.call(message['Numero'])
 					while call.state != CallState.ANSWERED:
+						if globals.CallStatus != call.state.value:
+							globals.CallStatus = call.state.value
+							action = {}
+							action['CallStatus']= globals.CallStatus
+							globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
 						time.sleep(0.1)
-					for Message in message['Message']:
-						logging.debug("Diffusion de l'audio : "+str(Message))
-						f = wave.open(Message, 'rb')
-						frames = f.getnframes()
-						data = f.readframes(frames)
-						f.close()
-						call.write_audio(data)
-						time.sleep(int(message['pause']))
-					dtmf = call.get_dtmf()
-					action['Numero']= call.number
-					action['dtmf']= dtmf
-					action['CallStatus']= call.state.value
-					globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
-					time.sleep(0.1)
-					all.hangup()
+					logging.debug("Reponse diffusion des message")
+					while call.state == CallState.ANSWERED:
+						for Message in message['Message']:
+							logging.debug("Diffusion de l'audio : "+str(Message))
+							f = wave.open(Message, 'rb')
+							frames = f.getnframes()
+							data = f.readframes(frames)
+							f.close()
+							call.write_audio(data)
+							time.sleep(int(message['pause']))
+						dtmf = call.get_dtmf()
+						action['Numero']= call.number
+						action['dtmf']= dtmf
+						globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+						time.sleep(0.1)
+					call.hangup()
 		except Exception as e:
 			logging.error("Exception on socket : %s" % str(e))
 			logging.debug(traceback.format_exc())
