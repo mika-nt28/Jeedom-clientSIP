@@ -34,14 +34,24 @@ def read_socket(cycle):
 					return
 				logging.debug("Received command from jeedom : "+str(message['cmd']))
 				if message['cmd'] == 'call':
-					Phone.call()
+					call = Phone.call(message['Numero'])
+					while call.state != CallState.ANSWERED:
+						time.sleep(0.1)
 					for Message in message['Message']:
+						logging.debug("Diffusion de l'audio : "+str(Message))
 						f = wave.open(Message, 'rb')
 						frames = f.getnframes()
 						data = f.readframes(frames)
 						f.close()
-						Phone.write_audio(data)
+						call.write_audio(data)
 						time.sleep(int(message['pause']))
+					dtmf = call.get_dtmf()
+					action['Numero']= call.number
+					action['dtmf']= dtmf
+					action['CallStatus']= call.state.value
+					globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+					time.sleep(0.1)
+					all.hangup()
 		except Exception as e:
 			logging.error("Exception on socket : %s" % str(e))
 			logging.debug(traceback.format_exc())
