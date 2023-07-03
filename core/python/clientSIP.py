@@ -83,8 +83,6 @@ def shutdown():
 	os._exit(0)
 def answer(call):
 	try:
-		action['CallStatus']= call.state.value
-		globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
 		call.answer()
 		while call.state == CallState.ANSWERED:
 			dtmf = call.get_dtmf()
