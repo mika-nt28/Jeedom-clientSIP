@@ -7,6 +7,7 @@
 		"python3-simplejson" : {}
 	},
 	"pip3" : { 
-		"requests" : {}
+		"requests" : {},
+		"pyVoIP" : {}
 	}
 }

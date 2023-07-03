@@ -15,17 +15,16 @@ try:
 except ImportError:
 	print("Error: importing module from jeedom folder")
 	sys.exit(1)
-try:
-	from RTSP.RtspClient import *
-	from RTSP.RtspServeur import *
-except ImportError:
-	print("Error: importing module from RTSP folder")
-	sys.exit(1)
-Server = None
+from pyVoIP import * #https://pyvoip.readthedocs.io/en/v1.6.0/
+from pyVoIP.VoIP import * 
+from pyVoIP.SIP import *
+
+Phone = None
 def read_socket(cycle):
+	global Phone
+	global JEEDOM_SOCKET_MESSAGE
 	while True :
 		try:
-			global JEEDOM_SOCKET_MESSAGE
 			if not JEEDOM_SOCKET_MESSAGE.empty():
 				logging.debug("SOCKET-READ------Message received in socket JEEDOM_SOCKET_MESSAGE")
 				message = JEEDOM_SOCKET_MESSAGE.get().decode('utf-8')
@@ -34,26 +33,55 @@ def read_socket(cycle):
 					logging.error("Invalid apikey from socket : " + str(message))
 					return
 				logging.debug("Received command from jeedom : "+str(message['cmd']))
-				Client = RtspClient(message['host'],message['port'],globals.RTSPport)
-				if message['cmd'] == 'sendDTMF':
-					pass
-				if message['cmd'] == 'playMessage':
-					for message['Message'] in Message:
-						Client.stream(Message)
-						time.sleep(message['pause'])
+				if message['cmd'] == 'call':
+					call = Phone.call(message['Numero'])
+					while call.state != CallState.ANSWERED:
+						time.sleep(0.1)
+					for Message in message['Message']:
+						logging.debug("Diffusion de l'audio : "+str(Message))
+						f = wave.open(Message, 'rb')
+						frames = f.getnframes()
+						data = f.readframes(frames)
+						f.close()
+						call.write_audio(data)
+						time.sleep(int(message['pause']))
+					dtmf = call.get_dtmf()
+					action['Numero']= call.number
+					action['dtmf']= dtmf
+					action['CallStatus']= call.state.value
+					globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+					time.sleep(0.1)
+					all.hangup()
 		except Exception as e:
 			logging.error("Exception on socket : %s" % str(e))
 			logging.debug(traceback.format_exc())
 		time.sleep(cycle)	
 def listen():
-	global Server
-	jeedom_socket.open()
-	thread.start_new_thread(read_socket,(globals.cycle,))
-	Server = RtspServeur(globals.RTSPport)
-	Server.waitClient() 
-	shutdown()  
+	global Phone
+	try:
+		jeedom_socket.open()
+		thread.start_new_thread(read_socket,(globals.cycle,))
+		#Phone=VoIPPhone(globals.serverhost, globals.serverport,globals.username,globals.userpass, myIP=globals.clienthost, callCallback=answer, sipPort=globals.clientport, rtpPortLow=5000, rtpPortHigh=6000)
+		Phone=VoIPPhone(globals.serverhost, globals.serverport,globals.username,globals.userpass, myIP=globals.clienthost, callCallback=answer, sipPort=globals.clientport)
+		Phone.DEBUG = True
+		Phone.start()
+		while True:
+			if globals.PhoneStatus != Phone.get_status().value:
+				globals.PhoneStatus = Phone.get_status().value
+				action = {}
+				action['RegStatus']= globals.PhoneStatus
+				globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+			time.sleep(1)
+	except:
+		shutdown()
 def shutdown():
-	global Server
+	global Phone
+	Phone.stop()
+	action = {}
+	globals.PhoneStatus = Phone.get_status().value
+	action = {}
+	action['RegStatus']= globals.PhoneStatus
+	globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
 	logging.debug("Shutdown")
 	logging.debug("Removing PID file " + str(globals.pidfile))
 	try:
@@ -63,7 +91,24 @@ def shutdown():
 	logging.debug("Exit 0")
 	sys.stdout.flush()
 	os._exit(0)
-
+def answer(call):
+	try:
+		call.answer()
+		while call.state == CallState.ANSWERED:
+			dtmf = call.get_dtmf()
+			action = {}
+			action['Numero']= call.number
+			action['dtmf']= dtmf
+			action['CallStatus']= call.state.value
+			globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+			call.hangup()
+			time.sleep(0.1)
+		action['CallStatus']= call.state.value
+		globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+	except InvalidStateError:
+		pass
+	except:
+		call.hangup()
 parser = argparse.ArgumentParser(description='SIP RTSP serveur Daemon for Jeedom plugin')
 parser.add_argument("--loglevel", help="Niveau de log daemon", type=str)
 parser.add_argument("--pidfile", help="Value to write", type=str)
@@ -72,7 +117,12 @@ parser.add_argument("--apikey", help="Identification jeedom plugin", type=str)
 parser.add_argument("--jeedomId", help="Identification équipement jeedom", type=str)
 parser.add_argument("--socketport", help="Socket Port", type=str)
 parser.add_argument("--sockethost", help="Socket Host", type=str)
-parser.add_argument("--RTSPport", help="RTSP Port", type=str)
+parser.add_argument("--serverport", help="Server Port", type=str)
+parser.add_argument("--serverhost", help="Sertver Host", type=str)
+parser.add_argument("--username", help="User name", type=str)
+parser.add_argument("--userpass", help="User password", type=str)
+parser.add_argument("--clientport", help="Client Port", type=str)
+parser.add_argument("--clienthost", help="Client host", type=str)
 args = parser.parse_args()
 
 if args.loglevel:
@@ -89,8 +139,18 @@ if args.socketport:
 	globals.socketport = int(args.socketport)
 if args.sockethost:
 	globals.sockethost = args.sockethost
-if args.RTSPport:
-	globals.RTSPport = int(args.RTSPport)
+if args.serverport:
+	globals.serverport = int(args.serverport)
+if args.serverhost:
+	globals.serverhost = args.serverhost
+if args.username:
+	globals.username = args.username
+if args.userpass:
+	globals.userpass = args.userpass	
+if args.clientport:
+	globals.clientport = int(args.clientport)
+if args.clienthost:
+	globals.clienthost = args.clienthost
 
 jeedom_utils.set_log_level(globals.log_level)
 logging.info("Start Face Detection Daemon for Jeedom plugin")
@@ -100,7 +160,8 @@ logging.info("Apikey : " + str(globals.apikey))
 logging.info("Callback : " + str(globals.callback))
 logging.info("Cycle : " + str(globals.cycle))
 logging.info("Deamon Socket connexion : " + str(globals.sockethost) + ":" + str(globals.socketport))
-logging.info("RTSP connexion : 127.0.0.1:" + str(globals.RTSPport))
+logging.info("Server connexion : "+ str(globals.username)+":"+ str(globals.userpass)+"@"+ str(globals.serverhost)+":" + str(globals.serverport))
+logging.info("Client connexion : "+ str(globals.clienthost)+":" + str(globals.clientport))
 try:
 	jeedom_utils.write_pid(str(globals.pidfile))
 	globals.JEEDOM_COM = jeedom_com(apikey = globals.apikey,url = globals.callback,cycle=0)
