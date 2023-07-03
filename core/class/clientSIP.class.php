@@ -5,40 +5,31 @@ class clientSIP extends eqLogic {
 		$return = array();
 		$return['log'] = 'clientSIP';
 		$return['launchable'] = 'ok';
-		$return['state'] = 'ok';
+		$return['state'] = 'nok';
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
 			$pid_file = jeedom::getTmpFolder('clientSIP') . '/clientSIP_'.$clientSIP->getId().'.pid';
 			if (file_exists($pid_file)) {
-				if (!@posix_getsid(trim(file_get_contents($pid_file)))) {
-					$return['state'] = 'nok';
+				if (!@posix_getsid(trim(file_get_contents($pid_file)))) 
 					return $return;	
-				}
-			}else{
-				$return['state'] = 'nok';
+			}else
 				return $return;	
-			}
 		}
 		$return['state'] = 'ok';
 		return $return;
 	}
+
 	public static function deamon_start($_debug = false) {
-		log::remove('clientSIP');
+	log::remove('clientSIP');
 		self::deamon_stop();
 		$deamon_info = self::deamon_info();
 		if ($deamon_info['launchable'] != 'ok') 
 			return;
-		$directory=jeedom::getTmpFolder('clientSIP');
-		$directory = calculPath($directory);
-		if(!file_exists($directory))
-			exec('sudo mkdir -p -m 777 '.$directory);
-		if (!is_writable($directory)) 
-			exec('sudo chmod 777 -R '.$directory);
 		$path = realpath(dirname(__FILE__) . '/../python');
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
 			$cmd = 'sudo /usr/bin/python3 ' . $path . '/clientSIP.py';
 			$cmd .= ' --loglevel ' . log::convertLogLevel(log::getLogLevel('clientSIP'));
 			$cmd .= ' --sockethost 127.0.0.1';
-			$cmd .= ' --socketport 9090';
+			$cmd .= ' --socketport 9091';
 			$cmd .= ' --callback ' . network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/clientSIP/core/php/callback.php';
 			$cmd .= ' --apikey ' . jeedom::getApiKey('clientSIP');
 			$cmd .= ' --pidfile ' . jeedom::getTmpFolder('clientSIP') . '/clientSIP_'.$clientSIP->getId().'.pid';
@@ -102,14 +93,13 @@ class clientSIP extends eqLogic {
 		}
 		return $Commande;
 	}
-	public function call($number, $CallEvents){
+	public function call($number, $CallEvents){			
 		$Message = array();
 		foreach($this->getConfiguration($CallEvents) as $CallEvent){
 			$number = str_replace('sip:','',explode('@', $message->to->addr)[0]);
 			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number)
 				$Message[] = $this->TextToSpeach($CallEvent['Message']);
 		}
-		
 		$value['apikey'] = jeedom::getApiKey('clientSIP');
 		$value['cmd'] = 'call';
 		$value['pause'] = 5;
@@ -172,8 +162,8 @@ class clientSIP extends eqLogic {
 class clientSIPCmd extends cmd {
 	public function execute($_options = null){
 		switch($this->getLogicalId()){
-			case 'call':				
-				$this->getEqLogic()->call($_options['title']);
+			case 'call':			
+				$this->getEqLogic()->call($_options['title'],'OutCallEvent');
 			break;
 			case 'message':				
 				$this->getEqLogic()->sendMessage($_options['title'],$_options['message']);
