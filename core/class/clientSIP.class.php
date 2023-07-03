@@ -17,9 +17,8 @@ class clientSIP extends eqLogic {
 		$return['state'] = 'ok';
 		return $return;
 	}
-
 	public static function deamon_start($_debug = false) {
-	log::remove('clientSIP');
+		log::remove('clientSIP');
 		self::deamon_stop();
 		$deamon_info = self::deamon_info();
 		if ($deamon_info['launchable'] != 'ok') 
@@ -59,7 +58,7 @@ class clientSIP extends eqLogic {
 	public static function socket_connection($value){
 		try {
 			$socket = socket_create(AF_INET, SOCK_STREAM, 0);
-			socket_connect($socket, '127.0.0.1', 9090);
+			socket_connect($socket, '127.0.0.1', 9091);
 			socket_write($socket, $value, strlen($value));
 			socket_close($socket);
 			return true;
@@ -96,13 +95,13 @@ class clientSIP extends eqLogic {
 	public function call($number, $CallEvents){			
 		$Message = array();
 		foreach($this->getConfiguration($CallEvents) as $CallEvent){
-			$number = str_replace('sip:','',explode('@', $message->to->addr)[0]);
 			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number)
 				$Message[] = $this->TextToSpeach($CallEvent['Message']);
 		}
 		$value['apikey'] = jeedom::getApiKey('clientSIP');
 		$value['cmd'] = 'call';
 		$value['pause'] = 5;
+		$value['Numero'] = $number;
 		$value['Message'] = $Message;
 		self::socket_connection(json_encode($value));
 	}
