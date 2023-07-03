@@ -122,30 +122,31 @@ class clientSIP extends eqLogic {
 		$Texte = str_replace(array('[', ']', '#', '{', '}'), '', $Texte);
 		$md5 = md5($Texte);
 		$tts_dir = jeedom::getTmpFolder('clientSIP');
-		$SpeachFile = $tts_dir . '/' . $md5 . '.mp3';
+		$SpeachFile = $tts_dir . '/' . $md5 . '.wav';
 		if (!file_exists($SpeachFile)) {
 			$engine = config::byKey('tts::engine','core','pico');
 			if($engine == 'espeak'){
 				$voice = init('voice', 'fr+f4');
-				$avconv = 'avconv';
-				if(!com_shell::commandExists('avconv')){
-					$avconv = 'ffmpeg';
-				}				
-				$cmd = 'espeak -v' . $voice . ' "' . $Texte . '" --stdout | '.$avconv.' -i - -ar 44100 -ac 2 -ab 192k -f mp3 ' . $SpeachFile;
+				//$avconv = 'avconv';
+				//if(!com_shell::commandExists('avconv')){
+				//	$avconv = 'ffmpeg';
+				//}				
+				$cmd = 'espeak -v' . $voice . ' "' . $Texte . '" --stdout ' . $SpeachFile;
+				//$cmd = 'espeak -v' . $voice . ' "' . $Texte . '" --stdout | '.$avconv.' -i - -ar 44100 -ac 2 -ab 192k -f mp3 ' . $SpeachFile;
 				shell_exec($cmd);			
 				log::add('clientSIP', 'debug', $cmd);
 			}else if($engine == 'pico'){
 				$volume = '-af "volume=' . init('volume', '6') . 'dB"';
 				$lang = str_replace('_','-',init('lang',config::byKey('language')));
-				$avconv = 'avconv';
-				if(!com_shell::commandExists('avconv')){
-					$avconv = 'ffmpeg';
-				}
-				$cmd = 'pico2wave -l=' . $lang . ' -w=' .$SpeachFile .' "' . $Texte . '"';
-				$cmd .= $avconv.' -i ' . $md5 . '.wav -ar 44100 ' . $volume . ' -ac 2 -ab 192k -f mp3 ' . $SpeachFile;
+				//$avconv = 'avconv';
+				//if(!com_shell::commandExists('avconv')){
+				//	$avconv = 'ffmpeg';
+				//}
+				$cmd = 'pico2wave -l=' . $lang . ' -w=' .$SpeachFile .' "' . $Texte . '"';;
+				//$cmd .= $avconv.' -i ' . $md5 . '.wav -ar 44100 ' . $volume . ' -ac 2 -ab 192k -f mp3 ' . $SpeachFile;
 				shell_exec($cmd);
 				log::add('clientSIP', 'debug', $cmd);
-				shell_exec('sudo rm ' . $md5 . '.wav');			
+			//	shell_exec('sudo rm ' . $md5 . '.wav');			
 			}else{
 				$engine::tts($SpeachFile,$Texte);
 			}
