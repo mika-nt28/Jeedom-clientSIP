@@ -55,7 +55,6 @@ def read_socket(cycle):
 							call.write_audio(data)
 							time.sleep(int(message['pause']))
 						dtmf = call.get_dtmf()
-						action['Numero']= call.number
 						action['dtmf']= dtmf
 						globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
 						time.sleep(0.1)
@@ -105,7 +104,6 @@ def answer(call):
 		while call.state == CallState.ANSWERED:
 			dtmf = call.get_dtmf()
 			action = {}
-			action['Numero']= call.number
 			action['dtmf']= dtmf
 			action['CallStatus']= call.state.value
 			globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
