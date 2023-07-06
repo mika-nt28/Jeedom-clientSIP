@@ -9,7 +9,7 @@ $('.eqLogicAction[data-action=gotoMoniteur]').off().on('click', function () {
 	});
 });
 $("body").on('click', ".listAction", function() {
-	var el = $(this).closest('.input-group').find('input');
+	var el = $(this).closest('.input-group').find('.expressionAttr[data-l1key=cmd]');
 	jeedom.getSelectActionModal({}, function (result) {
 		el.value(result.human);
 		jeedom.cmd.displayActionOption(result.human, '', function (html) {
@@ -18,7 +18,7 @@ $("body").on('click', ".listAction", function() {
 	});
 }); 
 $("body").on('click', ".listCmdAction", function() {
-	var el = $(this).closest('.input-group').find('input:first');
+	var el = $(this).closest('.input-group').find('.expressionAttr[data-l1key=cmd]');
 	var type=$(this).attr('data-type');
 	var object_id=$('.eqLogicAttr[data-l1key=object_id]').val();
 	var eqLogic_id=$('.eqLogicAttr[data-l1key=id]').val();
@@ -178,6 +178,9 @@ function addActionDTMF(_action,_el) {
 				.append('{{Activer}}'))
 			.append($('<div class="col-sm-9">')
 				.append($('<div class="input-group">')
+                    .append($('<span class="input-group-addon">')
+                            .text('Message'))
+					.append($('<input class="expressionAttr form-control input-sm cmdAction" data-l1key="message"/>'))
                     .append($('<span class="input-group-addon">')
                             .text('DTMF'))
 					.append($('<input class="expressionAttr form-control input-sm cmdAction" data-l1key="dtmf"/>'))
