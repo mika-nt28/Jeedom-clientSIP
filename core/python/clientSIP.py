@@ -37,33 +37,10 @@ def read_socket(cycle):
 				if message['cmd'] == 'call':
 					logging.debug("Composition du numero : "+str(message['Numero']))
 					call = Phone.call(message['Numero'])
-					action = {}
-					while call.state != CallState.ANSWERED:
-						if globals.CallStatus != call.state.value:
-							globals.CallStatus = call.state.value
-							action['CallStatus']= globals.CallStatus
-							globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
-						time.sleep(0.1)
-					globals.CallStatus = call.state.value
-					action['CallStatus']= globals.CallStatus
-					globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
-					for Message in message['Message']:
-						f = wave.open(Message, 'rb')
-						frames = f.getnframes()
-						data = f.readframes(frames)
-						f.close()
-						call.write_audio(data)
-						time.sleep(int(message['pause']))
-					logging.debug("Reponse diffusion des message")
-					while call.state == CallState.ANSWERED:
-						dtmf = call.get_dtmf()
-						action['dtmf']= dtmf
-						globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
-						time.sleep(0.1)
-					call.hangup()
-					globals.CallStatus = call.state.value
-					action['CallStatus']= globals.CallStatus
-					globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+					callAnswered(call)
+					audioPlay(call, message['Message'],int(message['pause']))
+					waitDTMF(call)
+					hangup(call)
 		except Exception as e:
 			logging.error("Exception on socket : %s" % str(e))
 			logging.debug(traceback.format_exc())
@@ -73,7 +50,6 @@ def listen():
 	try:
 		jeedom_socket.open()
 		thread.start_new_thread(read_socket,(globals.cycle,))
-		#Phone=VoIPPhone(globals.serverhost, globals.serverport,globals.username,globals.userpass, myIP=globals.clienthost, callCallback=answer, sipPort=globals.clientport, rtpPortLow=5000, rtpPortHigh=6000)
 		Phone=VoIPPhone(globals.serverhost, globals.serverport,globals.username,globals.userpass, myIP=globals.clienthost, callCallback=answer, sipPort=globals.clientport)
 		Phone.DEBUG = True
 		Phone.start()
@@ -103,30 +79,58 @@ def shutdown():
 	logging.debug("Exit 0")
 	sys.stdout.flush()
 	os._exit(0)
-def answer(call):
+def callAnswered(call):
 	action = {}
+	while call.state != CallState.ANSWERED:
+		if globals.CallStatus != call.state.value:
+			globals.CallStatus = call.state.value
+			action['CallStatus']= globals.CallStatus
+			globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+		time.sleep(0.1)
+	globals.CallStatus = call.state.value
+	action['CallStatus']= globals.CallStatus
+	globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+def audioPlay(call, Messages, Wait):
+	for Message in Messages:
+		logging.info("Diffusion des message: %s" % str(Message))
+		f = wave.open(Message, 'rb')
+		frames = f.getnframes()
+		data = f.readframes(frames)
+		f.close()
+		call.write_audio(data)
+		time.sleep(Wait)
+def waitDTMF(call):
+	action = {}
+	time.sleep(1)
+	timeWait = time.time()
+	logging.info("Attente de DTMF")
+	while call.state == CallState.ANSWERED:
+		dtmf = call.get_dtmf()
+		if dtmf != '':		
+			timeWait = time.time()
+			action['dtmf']= dtmf
+			action['Numero']= call.answered
+			action['CallStatus']= call.state.value
+			globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+		if time.time() - timeWait > 30:
+			logging.info(">30s sans DTMF: Nous quitton la conversation")
+			break # On quite la boucle d'attente DTMF 30s apres le dernier recus
+		time.sleep(0.1)
+def answer(call):
 	try:
 		call.answer()
-		time.sleep(1)
-		while call.state == CallState.ANSWERED:
-			dtmf = call.get_dtmf()
-			if dtmf != '':
-				action['dtmf']= dtmf
-				action['Numero']= call.answered
-				action['CallStatus']= call.state.value
-				globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
-			time.sleep(0.1)
-		call.hangup()
-		globals.CallStatus = call.state.value
-		action['CallStatus']= globals.CallStatus
-		globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+		waitDTMF(call)
+		hangup(call)
 	except InvalidStateError:
 		pass
 	except:
-		call.hangup()
-		globals.CallStatus = call.state.value
-		action['CallStatus']= globals.CallStatus
-		globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+		hangup(call)
+def hangup(call):
+	action = {}
+	call.hangup()
+	globals.CallStatus = call.state.value
+	action['CallStatus']= globals.CallStatus
+	globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
 parser = argparse.ArgumentParser(description='SIP RTSP serveur Daemon for Jeedom plugin')
 parser.add_argument("--loglevel", help="Niveau de log daemon", type=str)
 parser.add_argument("--pidfile", help="Value to write", type=str)
