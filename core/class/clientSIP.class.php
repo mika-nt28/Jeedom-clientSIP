@@ -95,8 +95,14 @@ class clientSIP extends eqLogic {
 	public function call($number, $CallEvents){			
 		$Message = array();
 		foreach($this->getConfiguration($CallEvents) as $CallEvent){
-			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number)
+			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number){
 				$Message[] = $this->TextToSpeach($CallEvent['Message']);
+				foreach($CallEvent['action'] as $Action){
+					if($Action['enable'])
+						$Message[] = $this->TextToSpeach($Action['message']);
+                }
+            }
+          
 		}
 		$value['apikey'] = jeedom::getApiKey('clientSIP');
 		$value['cmd'] = 'call';
