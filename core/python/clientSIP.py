@@ -38,7 +38,7 @@ def read_socket(cycle):
 					logging.debug("Composition du numero : "+str(message['Numero']))
 					call = Phone.call(message['Numero'])
 					callAnswered(call)
-					audioPlay(call, Messages)
+					audioPlay(call, message['Message'],int(message['pause']))
 					waitDTMF(call)
 					hangup(call)
 		except Exception as e:
@@ -50,7 +50,6 @@ def listen():
 	try:
 		jeedom_socket.open()
 		thread.start_new_thread(read_socket,(globals.cycle,))
-		#Phone=VoIPPhone(globals.serverhost, globals.serverport,globals.username,globals.userpass, myIP=globals.clienthost, callCallback=answer, sipPort=globals.clientport, rtpPortLow=5000, rtpPortHigh=6000)
 		Phone=VoIPPhone(globals.serverhost, globals.serverport,globals.username,globals.userpass, myIP=globals.clienthost, callCallback=answer, sipPort=globals.clientport)
 		Phone.DEBUG = True
 		Phone.start()
@@ -91,19 +90,20 @@ def callAnswered(call):
 	globals.CallStatus = call.state.value
 	action['CallStatus']= globals.CallStatus
 	globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
-def audioPlay(call, Messages):
-	for Message in message['Message']:
-		logging.debug("Reponse diffusion des message: %s" % str(Message))
+def audioPlay(call, Messages, Wait):
+	for Message in Messages:
+		logging.info("Diffusion des message: %s" % str(Message))
 		f = wave.open(Message, 'rb')
 		frames = f.getnframes()
 		data = f.readframes(frames)
 		f.close()
 		call.write_audio(data)
-		time.sleep(int(message['pause']))
+		time.sleep(Wait)
 def waitDTMF(call):
 	action = {}
 	time.sleep(1)
 	timeWait = time.time()
+	logging.info("Attente de DTMF")
 	while call.state == CallState.ANSWERED:
 		dtmf = call.get_dtmf()
 		if dtmf != '':		
@@ -113,6 +113,7 @@ def waitDTMF(call):
 			action['CallStatus']= call.state.value
 			globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
 		if time.time() - timeWait > 30:
+			logging.info(">30s sans DTMF: Nous quitton la conversation")
 			break # On quite la boucle d'attente DTMF 30s apres le dernier recus
 		time.sleep(0.1)
 def answer(call):
