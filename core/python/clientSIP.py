@@ -41,6 +41,8 @@ def read_socket(cycle):
 					audioPlay(call, message['Message'],int(message['pause']))
 					waitDTMF(call)
 					hangup(call)
+				if message['cmd'] == 'call':
+					globals.InCallMessage == message['Message']
 		except Exception as e:
 			logging.error("Exception on socket : %s" % str(e))
 			logging.debug(traceback.format_exc())
@@ -108,17 +110,34 @@ def waitDTMF(call):
 		dtmf = call.get_dtmf()
 		if dtmf != '':		
 			timeWait = time.time()
-			action['dtmf']= dtmf
-			action['Numero']= call.answered
+			action['DTMF']= dtmf
 			action['CallStatus']= call.state.value
+			action['Numero']= ''
 			globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
 		if time.time() - timeWait > 30:
 			logging.info(">30s sans DTMF: Nous quitton la conversation")
 			break # On quite la boucle d'attente DTMF 30s apres le dernier recus
 		time.sleep(0.1)
+def waitInCallMessage(call):
+	action = {}
+	time.sleep(1)
+	timeWait = time.time()
+	logging.info("Attente de Message")
+	if call.state == CallState.ANSWERED:
+		globals.InCallMessage == None
+		action['Answer']= dtmf
+		action['Numero']= ''
+		action['CallStatus']= call.state.value
+		globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+		while globals.InCallMessage == None:
+			time.sleep(0.1)
+		audioPlay(call, globals.InCallMessage, 2)
+		globals.InCallMessage == None
 def answer(call):
 	try:
 		call.answer()
+		callAnswered(call)
+		waitInCallMessage(call)
 		waitDTMF(call)
 		hangup(call)
 	except InvalidStateError:
