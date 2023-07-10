@@ -92,7 +92,7 @@ class clientSIP extends eqLogic {
 		}
 		return $Commande;
 	}
-	public function call($number, $CallEvents){			
+	public function getMessage($number, $CallEvents){			
 		$Message = array();
 		foreach($this->getConfiguration($CallEvents) as $CallEvent){
 			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number){
@@ -102,13 +102,36 @@ class clientSIP extends eqLogic {
 						$Message[] = $this->TextToSpeach($Action['message']);
                 }
             }
-          
+          return $Message;
 		}
+    }
+	public function execDTMF($number, $dtmf){			
+		foreach($this->getConfiguration('InCallEventAttr') as $CallEvent){
+			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number){
+				foreach($CallEvent['action'] as $Action){
+					if($Action['enable'] && $Action['dtmf'] == $dtmf){
+						$cmd = cmd::byId($CallEvent['action']['cmd']);
+						if(is_object($cmd))
+							$cmd->execute();
+                    }
+                }
+            }
+		}
+    }
+	public function call($number, $CallEvents){		
 		$value['apikey'] = jeedom::getApiKey('clientSIP');
 		$value['cmd'] = 'call';
 		$value['pause'] = 5;
 		$value['Numero'] = $number;
-		$value['Message'] = $Message;
+		$value['Message'] = $this->getMessage($number, $CallEvents);
+		self::socket_connection(json_encode($value));
+	}
+	public function answer($number, $CallEvents){		
+		$value['apikey'] = jeedom::getApiKey('clientSIP');
+		$value['cmd'] = 'answer';
+		$value['pause'] = 5;
+		$value['Numero'] = $number;
+		$value['Message'] = $this->getMessage($number, $CallEvents);
 		self::socket_connection(json_encode($value));
 	}
 	public function sendMessage($number, $Message){
