@@ -18,23 +18,10 @@ if (isset($result['devices'])) {
 				$CallStatus = $clientSIP->getCmd(null,'CallStatus');
 				$CallStatus->event($datas['CallStatus']);
 			}
-			if(isset($datas['Numero'])){
-				foreach($clientSIP->getConfiguration('InCallEventAttr') as $CallEvent){
-					if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $datas['Numero']){
-						$Message[] = $this->TextToSpeach($CallEvent['Message']);
-						$value['apikey'] = jeedom::getApiKey('clientSIP');
-						$value['cmd'] = 'call';
-						$value['pause'] = 5;
-						$value['Message'] = $Message;
-						clientSIP::socket_connection(json_encode($value));
-						if(isset($datas['dtmf']) && $CallEvent['action']['enable'] && $CallEvent['action']['dtmf'] == $datas['dtmf']){
-							$cmd = cmd::byId($CallEvent['action']['cmd']);
-							if(is_object($cmd))
-								$cmd->execute();
-						}
-					}
-				}
-			}
+			if(isset($datas['Answer']))
+				$clientSIP->answer($datas['Numero'], 'InCallEventAttr');
+			if(isset($datas['DTMF']))
+				$clientSIP->execDTMF($datas['Numero'], $datas['dtmf']);
 		}
 	}
 }
