@@ -96,14 +96,15 @@ class clientSIP extends eqLogic {
 		$Message = array();
 		foreach($this->getConfiguration($CallEvents) as $CallEvent){
 			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number){
-				$Message[] = $this->TextToSpeach($CallEvent['Message']);
+				$Message[] = $CallEvent['Message'];
 				foreach($CallEvent['action'] as $Action){
 					if($Action['enable'])
-						$Message[] = $this->TextToSpeach($Action['message']);
+						$Message[] = $Action['message'];
                 }
             }
-          return $Message;
+          
 		}
+      return $Message;
     }
 	public function execDTMF($number, $dtmf){			
 		foreach($this->getConfiguration('InCallEventAttr') as $CallEvent){
@@ -146,41 +147,6 @@ class clientSIP extends eqLogic {
 		$value['cmd'] = 'sendDTMF';
 		$value['dtmf'] = $DTMF;
 		self::socket_connection(json_encode($value));
-	}
-	public function TextToSpeach($Texte) {
-		$Texte = str_replace(array('[', ']', '#', '{', '}'), '', $Texte);
-		$md5 = md5($Texte);
-		$tts_dir = jeedom::getTmpFolder('clientSIP');
-		$SpeachFile = $tts_dir . '/' . $md5 . '.wav';
-		if (!file_exists($SpeachFile)) {
-			$engine = config::byKey('tts::engine','core','pico');
-			if($engine == 'espeak'){
-				$voice = init('voice', 'fr+f4');
-				//$avconv = 'avconv';
-				//if(!com_shell::commandExists('avconv')){
-				//	$avconv = 'ffmpeg';
-				//}				
-				$cmd = 'espeak -v' . $voice . ' "' . $Texte . '" --stdout ' . $SpeachFile;
-				//$cmd = 'espeak -v' . $voice . ' "' . $Texte . '" --stdout | '.$avconv.' -i - -ar 44100 -ac 2 -ab 192k -f mp3 ' . $SpeachFile;
-				shell_exec($cmd);			
-				log::add('clientSIP', 'debug', $cmd);
-			}else if($engine == 'pico'){
-				$volume = '-af "volume=' . init('volume', '6') . 'dB"';
-				$lang = str_replace('_','-',init('lang',config::byKey('language')));
-				//$avconv = 'avconv';
-				//if(!com_shell::commandExists('avconv')){
-				//	$avconv = 'ffmpeg';
-				//}
-				$cmd = 'pico2wave -l=' . $lang . ' -w=' .$SpeachFile .' "' . $Texte . '"';;
-				//$cmd .= $avconv.' -i ' . $md5 . '.wav -ar 44100 ' . $volume . ' -ac 2 -ab 192k -f mp3 ' . $SpeachFile;
-				shell_exec($cmd);
-				log::add('clientSIP', 'debug', $cmd);
-			//	shell_exec('sudo rm ' . $md5 . '.wav');			
-			}else{
-				$engine::tts($SpeachFile,$Texte);
-			}
-		}	
-		return $SpeachFile;
 	}
 	public static $_widgetPossibility = array('custom' => array(
 	        'visibility' => true,
