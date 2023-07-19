@@ -1,7 +1,7 @@
 import subprocess
 import os,re,copy
 import logging
-import sys
+import sys,io
 import argparse
 from datetime import *
 import signal
@@ -19,6 +19,7 @@ from pyVoIP import * #https://pyvoip.readthedocs.io/en/v1.6.0/
 from pyVoIP.VoIP import * 
 from pyVoIP.SIP import *
 from picotts import PicoTTS
+import wave
 
 Phone = None
 def read_socket(cycle):
@@ -103,7 +104,22 @@ def audioPlay(call, Messages, Wait):
 		picotts = PicoTTS()
 		picotts.voice = 'fr-FR'
 		wavs = picotts.synth_wav(Message)
-		call.write_audio(wavs)
+        
+		wav = wave.open(io.BytesIO(wavs), 'rb')
+		frames = wav.getnframes()
+		data = wav.readframes(frames)
+		wav.close()
+
+		call.write_audio(data)  # This writes the audio data to the transmit buffer, this must be bytes.
+
+		start = time.time() 
+		duree = frames / 8000  # frames/8000 is the length of the audio in seconds. 8000 is the hertz of PCMU.
+		temps = time.time() - start
+		logging.info("Durée du message: %s" % duree)
+		while temps <= duree and call.state == CallState.ANSWERED:
+			temps = time.time() - start
+			logging.info("Temps écoulé: %s" % temps)
+			time.sleep(0.1)
 		time.sleep(Wait)
 def waitDTMF(call):
 	action = {}
