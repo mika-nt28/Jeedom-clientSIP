@@ -21,7 +21,7 @@ if (isset($result['devices'])) {
 			if(isset($datas['Answer']))
 				$clientSIP->answer($datas['Numero'], 'InCallEvent');
 			if(isset($datas['DTMF']))
-				$clientSIP->execDTMF($datas['Numero'], $datas['dtmf']);
+				$clientSIP->execDTMF($datas['Numero'], $datas['DTMF']);
 		}
 	}
 }
