@@ -18,7 +18,7 @@ except ImportError:
 from pyVoIP import * #https://pyvoip.readthedocs.io/en/v1.6.0/
 from pyVoIP.VoIP import * 
 from pyVoIP.SIP import *
-from picotts import PicoTTS
+import pyttsx3
 import wave
 
 Phone = None
@@ -41,7 +41,8 @@ def read_socket(cycle):
 					callAnswered(call,False)
 					audioPlay(call, message['Message'],int(message['pause']))
 					waitDTMF(call)
-					call.hangup()
+					if call.state == CallState.ANSWERED:
+						call.hangup()
 					getCallStatus(call)
 				if message['cmd'] == 'answer':
 					globals.InCallMessage = message['Message']
@@ -101,11 +102,40 @@ def callAnswered(call, dial):
 def audioPlay(call, Messages, Wait):
 	for Message in Messages:
 		logging.info("TTS: %s" % Message)
-		picotts = PicoTTS()
-		picotts.voice = 'fr-FR'
-		wavs = picotts.synth_wav(Message)
-        
-		wav = wave.open(io.BytesIO(wavs), 'rb')
+		engine = pyttsx3.init() # object creation
+
+		""" RATE"""
+		rate = engine.getProperty('rate')   # getting details of current speaking rate
+		logging.info("TTS rate: %s" % rate)
+		engine.setProperty('rate', 125)     # setting up new voice rate
+
+
+		"""VOLUME"""
+		volume = engine.getProperty('volume')   #getting to know current volume level (min=0 and max=1)
+		logging.info("TTS volume: %s" % volume)
+		engine.setProperty('volume',1.0)    # setting up volume level  between 0 and 1
+
+		"""VOICE"""
+		#voices = engine.getProperty('voices')       #getting details of current voice
+		#for voice in voices:
+		#	logging.info("TTS voice: %s" % str(voice))
+		#engine.setProperty('voice', voices[0].id)  #changing index, changes voices. o for male
+		engine.setProperty('voice', 'french')   #changing index, changes voices. 1 for female
+
+		#engine.say("Hello World!")
+		#engine.say('My current speaking rate is ' + str(rate))
+		#engine.runAndWait()
+		#engine.stop()
+
+		"""Saving Voice to a file"""
+		# On linux make sure that 'espeak' and 'ffmpeg' are installed
+		engine.save_to_file(Message, '/var/www/html/tmp/sample.wav')
+		engine.runAndWait()
+		#picotts = PicoTTS()
+		#picotts.voice = 'fr-FR'
+		#wavs = picotts.synth_wav(Message)
+		os.chmod('/var/www/html/tmp/sample.wav', 0o777)
+		wav = wave.open('/var/www/html/tmp/sample.wav', 'rb')
 		frames = wav.getnframes()
 		data = wav.readframes(frames)
 		wav.close()
@@ -159,7 +189,8 @@ def answer(call):
 		callAnswered(call, True)
 		waitInCallMessage(call)
 		waitDTMF(call)
-		call.hangup()
+		if call.state == CallState.ANSWERED:
+			call.hangup()
 		getCallStatus(call)
 	except InvalidStateError:
 		pass
