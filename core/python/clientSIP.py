@@ -1,7 +1,7 @@
 import subprocess
 import os,re,copy
 import logging
-import sys
+import sys,io
 import argparse
 from datetime import *
 import signal
@@ -19,6 +19,7 @@ from pyVoIP import * #https://pyvoip.readthedocs.io/en/v1.6.0/
 from pyVoIP.VoIP import * 
 from pyVoIP.SIP import *
 from picotts import PicoTTS
+import wave
 
 Phone = None
 def read_socket(cycle):
@@ -40,7 +41,8 @@ def read_socket(cycle):
 					callAnswered(call,False)
 					audioPlay(call, message['Message'],int(message['pause']))
 					waitDTMF(call)
-					call.hangup()
+					if call.state == CallState.ANSWERED:
+						call.hangup()
 					getCallStatus(call)
 				if message['cmd'] == 'answer':
 					globals.InCallMessage = message['Message']
@@ -103,7 +105,30 @@ def audioPlay(call, Messages, Wait):
 		picotts = PicoTTS()
 		picotts.voice = 'fr-FR'
 		wavs = picotts.synth_wav(Message)
-		call.write_audio(wavs)
+		params = (1, 2, 8000, 0, 'NONE', 'not compressed')
+		with wave.open('/var/www/html/tmp/sample.wav', 'wb') as audio_file:
+			audio_file.setparams(params)
+			audio_file.writeframes(wavs)
+		os.chmod('/var/www/html/tmp/sample.wav', 0o777)
+		wav = wave.open('/var/www/html/tmp/sample.wav', 'rb')
+		logging.info("sampwidth: %s" % str(wav.getsampwidth()))
+		logging.info("nchannels: %s" % str(wav.getnchannels()))
+		logging.info("framerate: %s" % str(wav.getframerate()))
+		logging.info("nframes: %s" % str(wav.getnframes()))
+		frames = wav.getnframes()
+		data = wav.readframes(frames)
+		wav.close()
+
+		call.write_audio(data)  # This writes the audio data to the transmit buffer, this must be bytes.
+
+		start = time.time() 
+		duree = frames / 8000  # frames/8000 is the length of the audio in seconds. 8000 is the hertz of PCMU.
+		temps = time.time() - start
+		logging.info("Durée du message: %s" % duree)
+		while temps <= duree and call.state == CallState.ANSWERED:
+			temps = time.time() - start
+			#logging.info("Temps écoulé: %s" % temps)
+			time.sleep(0.1)
 		time.sleep(Wait)
 def waitDTMF(call):
 	action = {}
@@ -143,7 +168,8 @@ def answer(call):
 		callAnswered(call, True)
 		waitInCallMessage(call)
 		waitDTMF(call)
-		call.hangup()
+		if call.state == CallState.ANSWERED:
+			call.hangup()
 		getCallStatus(call)
 	except InvalidStateError:
 		pass

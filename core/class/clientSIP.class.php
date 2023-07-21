@@ -98,27 +98,51 @@ class clientSIP extends eqLogic {
 			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number){
 				$Message[] = $CallEvent['Message'];
 				foreach($CallEvent['action'] as $Action){
-					if($Action['enable'])
+					if($Action['enable']){
+						$Action['message'] = str_replace('#dtmf#',$Action['dtmf'],$Action['message']);
+						$Action['message'] = jeedom::evaluateExpression($Action['message']);
 						$Message[] = $Action['message'];
-                }
-            }
-          
+					}
+				}
+			}
 		}
-      return $Message;
-    }
+		return $Message;
+	}
 	public function execDTMF($number, $dtmf){			
 		foreach($this->getConfiguration('InCallEventAttr') as $CallEvent){
 			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number){
-				foreach($CallEvent['action'] as $Action){
-					if($Action['enable'] && $Action['dtmf'] == $dtmf){
-						$cmd = cmd::byId($CallEvent['action']['cmd']);
-						if(is_object($cmd))
-							$cmd->execute();
-                    }
-                }
-            }
+				foreach($CallEvent['action'] as $Action)
+					$this->ExecuteAction($Action,$dtmf);
+			}
 		}
-    }
+	}	
+	private function CheckIsValid($Element,$dtmf){
+		if(isset($Element['enable']) && $Element['enable'] == 0)
+			return false;	
+		if(isset($Element['dtmf']) && $Element['dtmf'] == $dtmf)
+			return false;		
+		return true;
+	}
+	public function ExecuteAction($Action,$dtmf){	
+		try {				
+			if(!$this->CheckIsValid($Action,$dtmf))
+				return false;
+			$_options=$this->EvaluateOptions($Action);
+			scenarioExpression::createAndExec('action', $Action['cmd'], $_options);
+			log::add('clientSIP','debug',$this->getHumanName().'Exécution de '.jeedom::toHumanReadable($Action['cmd']).' ('.json_encode($_options).')');
+		} catch (Exception $e) {
+			log::add('clientSIP', 'error',$this->getHumanName().''. __('Erreur lors de l\'exécution de ', __FILE__) . jeedom::toHumanReadable($Cmd['cmd']) . __('. Détails : ', __FILE__) . $e->getMessage());
+			return false;
+		}
+	}
+	public function EvaluateOptions($Cmd){
+		$options = null;
+		if(isset($Cmd['options'])){
+			foreach($Cmd['options'] as $key => $option)
+				$options[$key]=jeedom::evaluateExpression($option);
+		}
+		return $options;
+	}
 	public function call($number, $CallEvents){		
 		$value['apikey'] = jeedom::getApiKey('clientSIP');
 		$value['cmd'] = 'call';
