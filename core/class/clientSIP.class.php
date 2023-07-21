@@ -98,22 +98,24 @@ class clientSIP extends eqLogic {
 			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number){
 				$Message[] = $CallEvent['Message'];
 				foreach($CallEvent['action'] as $Action){
-					if($Action['enable'])
+					if($Action['enable']){
+						$Action['message'] = str_replace('#dtmf#',$Action['dtmf'],$Action['message']);
+						$Action['message'] = jeedom::evaluateExpression($Action['message']);
 						$Message[] = $Action['message'];
-                }
-            }
-          
+					}
+				}
+			}
 		}
-      return $Message;
-    }
+		return $Message;
+	}
 	public function execDTMF($number, $dtmf){			
 		foreach($this->getConfiguration('InCallEventAttr') as $CallEvent){
 			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number){
 				foreach($CallEvent['action'] as $Action)
-                  $this->ExecuteAction($Action,$dtmf);
-            }
+					$this->ExecuteAction($Action,$dtmf);
+			}
 		}
-    }	
+	}	
 	private function CheckIsValid($Element,$dtmf){
 		if(isset($Element['enable']) && $Element['enable'] == 0)
 			return false;	
