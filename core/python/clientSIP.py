@@ -18,7 +18,7 @@ except ImportError:
 from pyVoIP import * #https://pyvoip.readthedocs.io/en/v1.6.0/
 from pyVoIP.VoIP import * 
 from pyVoIP.SIP import *
-import pyttsx3
+from picotts import PicoTTS
 import wave
 
 Phone = None
@@ -102,40 +102,19 @@ def callAnswered(call, dial):
 def audioPlay(call, Messages, Wait):
 	for Message in Messages:
 		logging.info("TTS: %s" % Message)
-		engine = pyttsx3.init() # object creation
-
-		""" RATE"""
-		rate = engine.getProperty('rate')   # getting details of current speaking rate
-		logging.info("TTS rate: %s" % rate)
-		engine.setProperty('rate', 125)     # setting up new voice rate
-
-
-		"""VOLUME"""
-		volume = engine.getProperty('volume')   #getting to know current volume level (min=0 and max=1)
-		logging.info("TTS volume: %s" % volume)
-		engine.setProperty('volume',1.0)    # setting up volume level  between 0 and 1
-
-		"""VOICE"""
-		#voices = engine.getProperty('voices')       #getting details of current voice
-		#for voice in voices:
-		#	logging.info("TTS voice: %s" % str(voice))
-		#engine.setProperty('voice', voices[0].id)  #changing index, changes voices. o for male
-		engine.setProperty('voice', 'french')   #changing index, changes voices. 1 for female
-
-		#engine.say("Hello World!")
-		#engine.say('My current speaking rate is ' + str(rate))
-		#engine.runAndWait()
-		#engine.stop()
-
-		"""Saving Voice to a file"""
-		# On linux make sure that 'espeak' and 'ffmpeg' are installed
-		engine.save_to_file(Message, '/var/www/html/tmp/sample.wav')
-		engine.runAndWait()
-		#picotts = PicoTTS()
-		#picotts.voice = 'fr-FR'
-		#wavs = picotts.synth_wav(Message)
+		picotts = PicoTTS()
+		picotts.voice = 'fr-FR'
+		wavs = picotts.synth_wav(Message)
+		params = (1, 2, 8000, 0, 'NONE', 'not compressed')
+		with wave.open('/var/www/html/tmp/sample.wav', 'wb') as audio_file:
+			audio_file.setparams(params)
+			audio_file.writeframes(wavs)
 		os.chmod('/var/www/html/tmp/sample.wav', 0o777)
 		wav = wave.open('/var/www/html/tmp/sample.wav', 'rb')
+		logging.info("sampwidth: %s" % str(wav.getsampwidth()))
+		logging.info("nchannels: %s" % str(wav.getnchannels()))
+		logging.info("framerate: %s" % str(wav.getframerate()))
+		logging.info("nframes: %s" % str(wav.getnframes()))
 		frames = wav.getnframes()
 		data = wav.readframes(frames)
 		wav.close()
@@ -148,7 +127,7 @@ def audioPlay(call, Messages, Wait):
 		logging.info("Durée du message: %s" % duree)
 		while temps <= duree and call.state == CallState.ANSWERED:
 			temps = time.time() - start
-			logging.info("Temps écoulé: %s" % temps)
+			#logging.info("Temps écoulé: %s" % temps)
 			time.sleep(0.1)
 		time.sleep(Wait)
 def waitDTMF(call):
