@@ -105,7 +105,7 @@ def audioPlay(call, Messages, Wait):
 		picotts = PicoTTS()
 		picotts.voice = 'fr-FR'
 		wavs = picotts.synth_wav(Message)
-		params = (1, 2, 8000, 0, 'NONE', 'not compressed')
+		params = (1, 1, 8000, 0, 'ULAW', 'PCMU')
 		with wave.open('/var/www/html/tmp/sample.wav', 'wb') as audio_file:
 			audio_file.setparams(params)
 			audio_file.writeframes(wavs)
