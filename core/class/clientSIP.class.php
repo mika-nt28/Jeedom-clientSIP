@@ -108,8 +108,9 @@ class clientSIP extends eqLogic {
 		}
 		return $Message;
 	}
-	public function execDTMF($number, $dtmf){			
-		foreach($this->getConfiguration('InCallEventAttr') as $CallEvent){
+	public function execDTMF($number, $dtmf){
+		log::add('clientSIP','debug',$clientSIP->getHumanName().' Recherche des action pour le numero ' . $number . ' avec le DTMF ' . $dtmf);
+		foreach($this->getConfiguration('InCallEvent') as $CallEvent){
 			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number){
 				foreach($CallEvent['action'] as $Action)
 					$this->ExecuteAction($Action,$dtmf);
