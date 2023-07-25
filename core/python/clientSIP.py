@@ -18,8 +18,10 @@ except ImportError:
 from pyVoIP import * #https://pyvoip.readthedocs.io/en/v1.6.0/
 from pyVoIP.VoIP import * 
 from pyVoIP.SIP import *
-from picotts import PicoTTS
+#from picotts import PicoTTS
+import pyttsx3
 import wave
+import pywav
 
 Phone = None
 def read_socket(cycle):
@@ -102,27 +104,34 @@ def callAnswered(call, dial):
 def audioPlay(call, Messages, Wait):
 	for Message in Messages:
 		logging.info("TTS: %s" % Message)
-		picotts = PicoTTS()
-		picotts.voice = 'fr-FR'
-		wavs = picotts.synth_wav(Message)
-		params = (1, 1, 8000, 0, 'ULAW', 'PCMU')
-		with wave.open('/var/www/html/tmp/sample.wav', 'wb') as audio_file:
-			audio_file.setparams(params)
-			audio_file.writeframes(wavs)
-		os.chmod('/var/www/html/tmp/sample.wav', 0o777)
-		wav = wave.open('/var/www/html/tmp/sample.wav', 'rb')
-		logging.info("sampwidth: %s" % str(wav.getsampwidth()))
-		logging.info("nchannels: %s" % str(wav.getnchannels()))
-		logging.info("framerate: %s" % str(wav.getframerate()))
-		logging.info("nframes: %s" % str(wav.getnframes()))
-		frames = wav.getnframes()
-		data = wav.readframes(frames)
-		wav.close()
+		#picotts = PicoTTS()
+		#picotts.voice = 'fr-FR'
+		#wavs = picotts.synth_wav(Message)
+		waveFile = '/var/www/html/tmp/sample.wav'
+		engine = pyttsx3.init()
+		#engine.setProperty('rate', 125)
+		engine.setProperty('volume',1.0)
+		engine.setProperty('voice', 'french')   #changing index, changes voices. 1 for female
+		#engine.say(Message)
+		engine.save_to_file(Message, waveFile)
+		engine.runAndWait()
+		wavzTTS = pywav.WavRead(waveFile)
+		wave_write = pywav.WavWrite(waveFile, 1, 8000, 8, 7)
+		# Audio format 1 = PCM (without compression)
+		# Audio format 6 = PCMA (with A-law compression)
+		# Audio format 7 = PCMU (with mu-law compression)
+		wave_write.write(wavzTTS.getdata())
+		wave_write.close()
+		os.chmod(waveFile, 0o777)
+		wav = pywav.WavRead(waveFile)
+		logging.info("sampwidth: %s" % str(wav.getbytespersample()))
+		logging.info("nchannels: %s" % str(wav.getnumofchannels()))
+		logging.info("framerate: %s" % str(wav.getsamplerate()))
 
-		call.write_audio(data)  # This writes the audio data to the transmit buffer, this must be bytes.
+		call.write_audio(wav.getdata()) 
 
 		start = time.time() 
-		duree = frames / 8000  # frames/8000 is the length of the audio in seconds. 8000 is the hertz of PCMU.
+		duree = wav.getsamplelength() / 8000  # frames/8000 is the length of the audio in seconds. 8000 is the hertz of PCMU.
 		temps = time.time() - start
 		logging.info("Durée du message: %s" % duree)
 		while temps <= duree and call.state == CallState.ANSWERED:
