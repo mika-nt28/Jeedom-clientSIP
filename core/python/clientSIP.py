@@ -237,6 +237,7 @@ def answer(_call):
 	global Call
 	try:
 		Call = _call
+		globals.timeout = time.time()
 		thread.start_new_thread(callAnswered,(True,))
 	except InvalidStateError:
 		pass
