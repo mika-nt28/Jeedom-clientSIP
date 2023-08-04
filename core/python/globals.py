@@ -6,4 +6,5 @@ cycle = 0.3
 socketport = 8080
 PhoneStatus = None
 CallStatus = None
-InCallMessage = None
+CallMessages = None
+Voice = 'fr-FR' #[ 'de-DE', 'en-GB', 'en-US', 'es-ES', 'fr-FR', 'it-IT' ]
