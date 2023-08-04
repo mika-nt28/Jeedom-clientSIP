@@ -8,7 +8,9 @@ import signal
 import json
 import traceback
 import threading
+import asyncio
 import globals
+import numpy as np
 
 try:
 	from jeedom.jeedom import *
@@ -18,14 +20,14 @@ except ImportError:
 from pyVoIP import * #https://pyvoip.readthedocs.io/en/v1.6.0/
 from pyVoIP.VoIP import * 
 from pyVoIP.SIP import *
-#from picotts import PicoTTS
-import pyttsx3
-import wave
-import pywav
+import speech_recognition as sr
+import wave, g711
 
 Phone = None
+Call = None
+
 def read_socket(cycle):
-	global Phone
+	global Phone,Call
 	global JEEDOM_SOCKET_MESSAGE
 	while True :
 		try:
@@ -39,15 +41,12 @@ def read_socket(cycle):
 				logging.debug("Received command from jeedom : " + str(message['cmd']))
 				if message['cmd'] == 'call':
 					logging.debug("Composition du numero : " + str(message['Numero']))
-					call = Phone.call(message['Numero'])
-					callAnswered(call,False)
-					audioPlay(call, message['Message'],int(message['pause']))
-					waitDTMF(call)
-					if call.state == CallState.ANSWERED:
-						call.hangup()
-					getCallStatus(call)
+					globals.timeout = time.time()
+					Call = Phone.call(message['Numero'])
+					globals.CallMessages = message['Message']
+					thread.start_new_thread(callAnswered,(False,))
 				if message['cmd'] == 'answer':
-					globals.InCallMessage = message['Message']
+					globals.CallMessages = message['Message']
 		except Exception as e:
 			logging.error("Exception on socket : %s" % str(e))
 			logging.debug(traceback.format_exc())
@@ -86,105 +85,153 @@ def shutdown():
 	logging.debug("Exit 0")
 	sys.stdout.flush()
 	os._exit(0)
-def getCallStatus(call):
+def getCallStatus():
+	global Call
 	action = {}
-	if globals.CallStatus != call.state.value:
-		globals.CallStatus = call.state.value
+	if globals.CallStatus != Call.state.value:
+		globals.CallStatus = Call.state.value
 		action['CallStatus']= globals.CallStatus
 		globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
-		time.sleep(0.1)
-def callAnswered(call, dial):
+def callAnswered(dial):
+	global Call
 	action = {}
-	while call.state != CallState.ANSWERED:
-		getCallStatus(call)
+	while Call.state != CallState.ANSWERED:
+		if time.time() - globals.timeout > 30:
+			logging.info("30s sans envenement, nous quitton la conversation")
+			break
+		getCallStatus()
 		if dial:
-			call.answer()
+			Call.answer()
 		time.sleep(0.1)
-	getCallStatus(call)
-def audioPlay(call, Messages, Wait):
-	for Message in Messages:
-		logging.info("TTS: %s" % Message)
-		#picotts = PicoTTS()
-		#picotts.voice = 'fr-FR'
-		#wavs = picotts.synth_wav(Message)
-		waveFile = '/var/www/html/tmp/sample.wav'
-		engine = pyttsx3.init()
-		#engine.setProperty('rate', 125)
-		engine.setProperty('volume',1.0)
-		engine.setProperty('voice', 'french')   #changing index, changes voices. 1 for female
-		#engine.say(Message)
-		engine.save_to_file(Message, waveFile)
-		engine.runAndWait()
-		wavzTTS = pywav.WavRead(waveFile)
-		wave_write = pywav.WavWrite(waveFile, 1, 8000, 8, 7)
-		# Audio format 1 = PCM (without compression)
-		# Audio format 6 = PCMA (with A-law compression)
-		# Audio format 7 = PCMU (with mu-law compression)
-		wave_write.write(wavzTTS.getdata())
-		wave_write.close()
+	thread.start_new_thread(TextToSpeak,())
+	thread.start_new_thread(waitDTMF,())
+	#thread.start_new_thread(SpeakToText,())
+	while(Call.state == CallState.ANSWERED):
+		getCallStatus()
+		if time.time() - globals.timeout > 30:
+			logging.info("30s sans envenement, nous quitton la conversation")
+			break
+		time.sleep(1)
+	if(dial) and (Call.state == CallState.ANSWERED):
+		Call.hangup()
+	while Call.state != CallState.ENDED:
+		getCallStatus()
+def _picotts_exe(args, sync=False):
+	cmd = ['pico2wave','-l', globals.voice,]
+	cmd.extend(args)
+	logging.debug('picotts: executing %s' % repr(cmd))
+	p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+	res = iter(p.stdout.readline, b'')
+	if not sync:
+		return res
+	res2 = []
+	for line in res:
+		res2.append(line)
+	return res2
+def TextToWave(Message):
+	waveFile = '/var/www/html/tmp/sample.wav'
+	data = []
+	duree = 0
+	try:
+		if os.path.isfile(waveFile):
+			os.remove(waveFile)
+		txte = Message.encode('utf8')
+		args = ['-w', waveFile, txte]
+		_picotts_exe(args, sync=True)
 		os.chmod(waveFile, 0o777)
-		wav = pywav.WavRead(waveFile)
-		logging.info("sampwidth: %s" % str(wav.getbytespersample()))
-		logging.info("nchannels: %s" % str(wav.getnumofchannels()))
-		logging.info("framerate: %s" % str(wav.getsamplerate()))
-
-		call.write_audio(wav.getdata()) 
-
-		start = time.time() 
-		duree = wav.getsamplelength() / 8000  # frames/8000 is the length of the audio in seconds. 8000 is the hertz of PCMU.
-		temps = time.time() - start
+		if os.path.isfile(waveFile):
+			wav = wave.open(waveFile, 'rb')
+			frames = wav.getnframes()
+			data = wav.readframes(frames)
+			data = np.frombuffer(data,np.float32)
+			#data = g711.encode_ulaw(data)
+			data = g711.encode_alaw(data)
+			duree = frames / 8000  # frames/8000 is the length of the audio in seconds. 8000 is the hertz of PCMU.
+		return data,duree
+	except:
+		pass
+def TextToSpeak():
+	global Call
+	waitCallMessages()	
+	while(Call.state == CallState.ANSWERED):
+		if globals.CallMessages != None:
+			audioPlay()
+		time.sleep(1)
+def SpeakToText():
+	global Call
+	r = sr.Recognizer()
+	while(Call.state == CallState.ANSWERED):   
+        # Exception handling to handle
+		# exceptions at the runtime
+		try:
+			# use the microphone as source for input.
+			with Call.read_audio() as source2:
+				# wait for a second to let the recognizer
+				# adjust the energy threshold based on
+				# the surrounding noise level
+				r.adjust_for_ambient_noise(source2, duration=0.2)
+				#listens for the user's input
+				audio2 = r.listen(source2)
+				# Using google to recognize audio
+				MyText = r.recognize_google(audio2)
+				MyText = MyText.lower()
+				action = {}
+				action['SpeakToText']= MyText
+				#action['CallStatus']= call.state.value
+				action['Numero']= ''
+				globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+		except sr.RequestError as e:
+			logging.debug("Could not request results; {0}".format(e))
+		except sr.UnknownValueError:
+			logging.debug("unknown error occurred")
+		time.sleep(1)
+def audioPlay():
+	global Call
+	for Message in globals.CallMessages:
+		logging.info("TTS: %s" % Message)
+		data, duree = TextToWave(Message)
 		logging.info("Durée du message: %s" % duree)
-		while temps <= duree and call.state == CallState.ANSWERED:
+		Call.write_audio(data)
+		start = time.time() 
+		temps = time.time() - start
+		while temps <= duree and Call.state == CallState.ANSWERED:
+			globals.timeout = time.time()
 			temps = time.time() - start
 			#logging.info("Temps écoulé: %s" % temps)
 			time.sleep(0.1)
-		time.sleep(Wait)
-def waitDTMF(call):
+		time.sleep(1)
+	globals.CallMessages == None
+def waitDTMF():
+	global Call
 	action = {}
-	time.sleep(1)
-	timeWait = time.time()
 	logging.info("Attente de DTMF")
-	while call.state == CallState.ANSWERED:
-		getCallStatus(call)
-		dtmf = call.get_dtmf()
-		if dtmf != '':		
-			timeWait = time.time()
+	while Call.state == CallState.ANSWERED:
+		dtmf = Call.get_dtmf()
+		if dtmf != '':
+			globals.timeout = time.time()
 			action['DTMF']= dtmf
-			#action['CallStatus']= call.state.value
+			#action['CallStatus']= Call.state.value
 			action['Numero']= ''
 			globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
-		if time.time() - timeWait > 30:
-			logging.info(">30s sans DTMF: Nous quitton la conversation")
-			break # On quite la boucle d'attente DTMF 30s apres le dernier recus
 		time.sleep(0.1)
-def waitInCallMessage(call):
+def waitCallMessages():
 	action = {}
 	logging.info("Attente de Message")
-	if call.state == CallState.ANSWERED:
-		getCallStatus(call)
-		globals.InCallMessage == None
-		action['Answer']= True
-		action['Numero']= ''
-		#action['CallStatus']= call.state.value
-		globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
-		while globals.InCallMessage == None:
-			logging.info("Attente de Message %s" % str(globals.InCallMessage))
-			time.sleep(0.1)
-		audioPlay(call, globals.InCallMessage, 2)
-		globals.InCallMessage == None
-def answer(call):
+	globals.CallMessages = None
+	action['Answer']= True
+	action['Numero']= ''
+	#action['CallStatus']= call.state.value
+	globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+def answer(_call):
+	global Call
 	try:
-		callAnswered(call, True)
-		waitInCallMessage(call)
-		waitDTMF(call)
-		if call.state == CallState.ANSWERED:
-			call.hangup()
-		getCallStatus(call)
+		Call = _call
+		thread.start_new_thread(callAnswered,(True,))
 	except InvalidStateError:
 		pass
 	except:
-		call.hangup()
-		getCallStatus(call)
+		Call.hangup()
+		getCallStatus()
 parser = argparse.ArgumentParser(description='SIP RTSP serveur Daemon for Jeedom plugin')
 parser.add_argument("--loglevel", help="Niveau de log daemon", type=str)
 parser.add_argument("--pidfile", help="Value to write", type=str)
@@ -227,7 +274,7 @@ if args.clientport:
 	globals.clientport = int(args.clientport)
 if args.clienthost:
 	globals.clienthost = args.clienthost
-
+globals.voice = 'fr-FR' #VOICES = [ 'de-DE', 'en-GB', 'en-US', 'es-ES', 'fr-FR', 'it-IT' ]
 jeedom_utils.set_log_level(globals.log_level)
 logging.info("Start Face Detection Daemon for Jeedom plugin")
 logging.info("Log level : " + str(globals.log_level))
