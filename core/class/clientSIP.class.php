@@ -45,8 +45,8 @@ class clientSIP extends eqLogic {
 	}
 	public static function deamon_stop() {	
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
-			$clientSIP->checkAndUpdateCmd('RegStatus','Inactif');
-			$clientSIP->checkAndUpdateCmd('CallStatus','Racrocher');
+			$clientSIP->checkAndUpdateCmd('RegStatus','INACTIVE');
+			$clientSIP->checkAndUpdateCmd('CallStatus','ENDED');
 			$pid_file = jeedom::getTmpFolder('clientSIP') . '/clientSIP_'.$clientSIP->getId().'.pid';
 			if (file_exists($pid_file)) {
 				$pid = intval(trim(file_get_contents($pid_file)));

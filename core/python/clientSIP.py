@@ -94,30 +94,34 @@ def getCallStatus():
 		globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
 def callAnswered(dial):
 	global Call
-	action = {}
-	while Call.state != CallState.ANSWERED:
-		if time.time() - globals.timeout > 30:
-			logging.info("30s sans envenement, nous quitton la conversation")
-			break
-		getCallStatus()
-		if dial:
-			Call.answer()
-		time.sleep(0.1)
-	thread.start_new_thread(TextToSpeak,())
-	thread.start_new_thread(waitDTMF,())
-	#thread.start_new_thread(SpeakToText,())
-	while(Call.state == CallState.ANSWERED):
-		getCallStatus()
-		if time.time() - globals.timeout > 30:
-			logging.info("30s sans envenement, nous quitton la conversation")
-			break
-		time.sleep(1)
-	if(dial) and (Call.state == CallState.ANSWERED):
-		Call.hangup()
-	while Call.state != CallState.ENDED:
-		getCallStatus()
+	try:
+		action = {}
+		while Call.state != CallState.ANSWERED:
+			if time.time() - globals.timeout > 30:
+				logging.info("30s sans envenement, nous quitton la conversation")
+				break
+			getCallStatus()
+			if dial:
+				Call.answer()
+			time.sleep(0.1)
+		thread.start_new_thread(TextToSpeak,())
+		thread.start_new_thread(waitDTMF,())
+		#thread.start_new_thread(SpeakToText,())
+		while(Call.state == CallState.ANSWERED):
+			getCallStatus()
+			if time.time() - globals.timeout > 30:
+				logging.info("30s sans envenement, nous quitton la conversation")
+				break
+			time.sleep(1)
+		if(dial) and (Call.state == CallState.ANSWERED):
+			Call.hangup()
+		while Call.state != CallState.ENDED:
+			getCallStatus()
+	except Exception as e:
+		logging.error("Erreur sur le processus de conversation : %s" % str(e))
+		logging.debug(traceback.format_exc())
 def _picotts_exe(args, sync=False):
-	cmd = ['pico2wave','-l', globals.voice,]
+	cmd = ['pico2wave','-l', globals.Voice,]
 	cmd.extend(args)
 	logging.debug('picotts: executing %s' % repr(cmd))
 	p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
@@ -184,6 +188,9 @@ def SpeakToText():
 			logging.debug("Could not request results; {0}".format(e))
 		except sr.UnknownValueError:
 			logging.debug("unknown error occurred")
+		except Exception as e:
+			logging.error("Erreur sur le processus de conversation : %s" % str(e))
+			logging.debug(traceback.format_exc())
 		time.sleep(1)
 def audioPlay():
 	global Call
@@ -200,20 +207,24 @@ def audioPlay():
 			#logging.info("Temps écoulé: %s" % temps)
 			time.sleep(0.1)
 		time.sleep(1)
-	globals.CallMessages == None
+	globals.CallMessages = None
 def waitDTMF():
 	global Call
-	action = {}
-	logging.info("Attente de DTMF")
-	while Call.state == CallState.ANSWERED:
-		dtmf = Call.get_dtmf()
-		if dtmf != '':
-			globals.timeout = time.time()
-			action['DTMF']= dtmf
-			#action['CallStatus']= Call.state.value
-			action['Numero']= ''
-			globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
-		time.sleep(0.1)
+	try:
+		action = {}
+		logging.info("Attente de DTMF")
+		while Call.state == CallState.ANSWERED:
+			dtmf = Call.get_dtmf()
+			if dtmf != '':
+				globals.timeout = time.time()
+				action['DTMF']= dtmf
+				#action['CallStatus']= Call.state.value
+				action['Numero']= ''
+				globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+			time.sleep(0.1)
+	except Exception as e:
+		logging.error("Erreur sur le processus de conversation : %s" % str(e))
+		logging.debug(traceback.format_exc())
 def waitCallMessages():
 	action = {}
 	logging.info("Attente de Message")
@@ -274,7 +285,6 @@ if args.clientport:
 	globals.clientport = int(args.clientport)
 if args.clienthost:
 	globals.clienthost = args.clienthost
-globals.voice = 'fr-FR' #VOICES = [ 'de-DE', 'en-GB', 'en-US', 'es-ES', 'fr-FR', 'it-IT' ]
 jeedom_utils.set_log_level(globals.log_level)
 logging.info("Start Face Detection Daemon for Jeedom plugin")
 logging.info("Log level : " + str(globals.log_level))
