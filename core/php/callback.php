@@ -22,6 +22,8 @@ if (isset($result['devices'])) {
 				$clientSIP->answer($datas['Numero'], 'InCallEvent');
 			if(isset($datas['DTMF']))
 				$clientSIP->execDTMF($datas['Numero'], $datas['DTMF']);
+			if(isset($datas['SpeakToText']))
+				interactQuery::tryToReply(datas['SpeakToText']);
 		}
 	}
 }
