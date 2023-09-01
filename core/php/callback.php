@@ -19,7 +19,7 @@ if (isset($result['devices'])) {
 				$CallStatus->event($datas['CallStatus']);
 			}
 			if(isset($datas['Answer']))
-				$clientSIP->answer($datas['Numero'], 'InCallEvent');
+				$clientSIP->answer($datas['Numero'], $datas['Answer']);
 			if(isset($datas['DTMF']))
 				$clientSIP->execDTMF($datas['Numero'], $datas['DTMF']);
 			if(isset($datas['SpeakToText']))

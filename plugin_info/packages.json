@@ -10,9 +10,7 @@
 	"pip3" : { 
 		"requests" : {},
 		"pyVoIP" : {},
-		"pyaudio" : {},
 		"speechrecognition" : {},
-		"pyttsx3" : {},
-		"g711" : {}
+		"pydub" : {}
 	}
 }
