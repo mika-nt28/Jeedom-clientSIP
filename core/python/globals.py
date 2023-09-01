@@ -7,4 +7,5 @@ socketport = 8080
 PhoneStatus = None
 CallStatus = None
 CallMessages = None
+DTMFList = None
 Voice = 'fr-FR' #[ 'de-DE', 'en-GB', 'en-US', 'es-ES', 'fr-FR', 'it-IT' ]

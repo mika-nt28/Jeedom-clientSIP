@@ -21,7 +21,9 @@ from pyVoIP import * #https://pyvoip.readthedocs.io/en/v1.6.0/
 from pyVoIP.VoIP import * 
 from pyVoIP.SIP import *
 import speech_recognition as sr
-import wave, g711
+import wave
+from pydub import AudioSegment
+from pydub.silence import split_on_silence
 
 Phone = None
 Call = None
@@ -42,11 +44,14 @@ def read_socket(cycle):
 				if message['cmd'] == 'call':
 					logging.debug("Composition du numero : " + str(message['Numero']))
 					globals.timeout = time.time()
+					globals.dial = 'To'
 					Call = Phone.call(message['Numero'])
-					globals.CallMessages = message['Message']
 					thread.start_new_thread(callAnswered,(False,))
 				if message['cmd'] == 'answer':
 					globals.CallMessages = message['Message']
+					globals.DTMFList = message['DTMFList']
+					for DTMFMessages in globals.DTMFList:
+						globals.CallMessages.append(DTMFMessages['message'])
 		except Exception as e:
 			logging.error("Exception on socket : %s" % str(e))
 			logging.debug(traceback.format_exc())
@@ -104,17 +109,18 @@ def callAnswered(dial):
 			if dial:
 				Call.answer()
 			time.sleep(0.1)
-		thread.start_new_thread(TextToSpeak,())
+		thread.start_new_thread(writeAudio,())
 		thread.start_new_thread(waitDTMF,())
-		#thread.start_new_thread(SpeakToText,())
+		thread.start_new_thread(readAudio,())
 		while(Call.state == CallState.ANSWERED):
 			getCallStatus()
 			if time.time() - globals.timeout > 30:
-				logging.info("30s sans envenement, nous quitton la conversation")
+				#if dial:
+				Call.hangup()
+				logging.info("30s sans envenement, nous quittons la conversation")
 				break
 			time.sleep(1)
-		if(dial) and (Call.state == CallState.ANSWERED):
-			Call.hangup()
+		getCallStatus()
 		while Call.state != CallState.ENDED:
 			getCallStatus()
 	except Exception as e:
@@ -132,9 +138,9 @@ def _picotts_exe(args, sync=False):
 	for line in res:
 		res2.append(line)
 	return res2
-def TextToWave(Message):
-	waveFile = '/var/www/html/tmp/sample.wav'
-	data = []
+def TextToSpeak(Message):
+	waveFile = '/var/www/html/tmp/TTS.wav'
+	audio = []
 	duree = 0
 	try:
 		if os.path.isfile(waveFile):
@@ -143,47 +149,41 @@ def TextToWave(Message):
 		args = ['-w', waveFile, txte]
 		_picotts_exe(args, sync=True)
 		os.chmod(waveFile, 0o777)
-		if os.path.isfile(waveFile):
-			wav = wave.open(waveFile, 'rb')
-			frames = wav.getnframes()
-			data = wav.readframes(frames)
-			data = np.frombuffer(data,np.float32)
-			#data = g711.encode_ulaw(data)
-			data = g711.encode_alaw(data)
-			duree = frames / 8000  # frames/8000 is the length of the audio in seconds. 8000 is the hertz of PCMU.
-		return data,duree
-	except:
-		pass
-def TextToSpeak():
+			#Note: Audio must be 8 bit, 8000Hz, and Mono/1 channel. You can accomplish this in a free program called Audacity. To make an audio recording Mono, go to Tracks > Mix > Mix Stereo Down to Mono. To make an audio recording 8000 Hz, go to Tracks > Resample… and select 8000, then ensure that your ‘Project Rate’ in the bottom left is also set to 8000. To make an audio recording 8 bit, go to File > Export > Export as WAV, then change ‘Save as type:’ to ‘Other uncompressed files’, then set ‘Header:’ to ‘WAV (Microsoft)’, then set the ‘Encoding:’ to ‘Unsigned 8-bit PCM’
+		sound = AudioSegment.from_file(waveFile)
+		sound = sound.set_frame_rate(8000)
+		sound = sound.set_sample_width(1)
+		sound = sound.set_channels(1)
+		audio = sound.get_array_of_samples()
+		duree = sound.duration_seconds
+		with wave.open(waveFile,'rb') as wav:
+			logging.debug("parmaetr audio : %s" % str(wav.getparams()))
+	except Exception as error:
+		logging.error("Erreur TTS: %s" % str(error))
+	return audio,duree
+def writeAudio():
 	global Call
-	waitCallMessages()	
+	jeedomGetMessages()	
 	while(Call.state == CallState.ANSWERED):
 		if globals.CallMessages != None:
 			audioPlay()
 		time.sleep(1)
-def SpeakToText():
-	global Call
-	r = sr.Recognizer()
-	while(Call.state == CallState.ANSWERED):   
-        # Exception handling to handle
-		# exceptions at the runtime
+def readAudio():
+	sound = AudioSegment.empty()
+	audio2 = bytearray()
+	while(Call.state == CallState.ANSWERED):
 		try:
-			# use the microphone as source for input.
-			with Call.read_audio() as source2:
-				# wait for a second to let the recognizer
-				# adjust the energy threshold based on
-				# the surrounding noise level
-				r.adjust_for_ambient_noise(source2, duration=0.2)
-				#listens for the user's input
-				audio2 = r.listen(source2)
-				# Using google to recognize audio
-				MyText = r.recognize_google(audio2)
-				MyText = MyText.lower()
-				action = {}
-				action['SpeakToText']= MyText
-				#action['CallStatus']= call.state.value
-				action['Numero']= ''
-				globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+			voice = None
+			audio = Call.read_audio(length=160, blocking=True)
+			sound += AudioSegment(audio,frame_rate=8000,sample_width=1,channels=1)
+			audio2.extend(audio)
+			#logging.debug("Ecoute audio data: %s" % str(audio))
+			chunks = split_on_silence (sound, min_silence_len = 2000,silence_thresh = -16)
+			if len(chunks) > 1:
+				sound = chunks[1]
+				voice = chunks[0]
+			if voice != None:
+				thread.start_new_thread(SpeakToText,(Voice))
 		except sr.RequestError as e:
 			logging.debug("Could not request results; {0}".format(e))
 		except sr.UnknownValueError:
@@ -192,11 +192,34 @@ def SpeakToText():
 			logging.error("Erreur sur le processus de conversation : %s" % str(e))
 			logging.debug(traceback.format_exc())
 		time.sleep(1)
+	waveFile = '/var/www/html/tmp/Speak.wav'
+	logging.debug("Ecoute audio data: %s" % str(audio2))
+	sound = AudioSegment(audio2,frame_rate=8000,sample_width=1,channels=1)
+	sound.export(waveFile,format='wav')
+def SpeakToText(Voice):
+	Recognizer = sr.Recognizer()
+	try:
+		CallText = Recognizer.recognize_google(Voice, language = globals.Voice)
+		CallText = CallText.lower()
+		CallText = ''
+		if CallText != '':
+			action = {}
+			action['SpeakToText']= CallText
+			action['CallStatus']= call.state.value
+			action['Numero']= ''
+			globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
+	except sr.RequestError as e:
+		logging.debug("Could not request results; {0}".format(e))
+	except sr.UnknownValueError:
+		logging.debug("unknown error occurred")
+	except Exception as e:
+		logging.error("Erreur sur le processus de conversation : %s" % str(e))
+		logging.debug(traceback.format_exc())
 def audioPlay():
 	global Call
 	for Message in globals.CallMessages:
 		logging.info("TTS: %s" % Message)
-		data, duree = TextToWave(Message)
+		data, duree = TextToSpeak(Message)
 		logging.info("Durée du message: %s" % duree)
 		Call.write_audio(data)
 		start = time.time() 
@@ -218,26 +241,28 @@ def waitDTMF():
 			if dtmf != '':
 				globals.timeout = time.time()
 				action['DTMF']= dtmf
-				#action['CallStatus']= Call.state.value
-				action['Numero']= ''
+				action['Numero']= Call.request.headers[globals.dial]['number']
 				globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
 			time.sleep(0.1)
 	except Exception as e:
 		logging.error("Erreur sur le processus de conversation : %s" % str(e))
 		logging.debug(traceback.format_exc())
-def waitCallMessages():
+def jeedomGetMessages():
 	action = {}
 	logging.info("Attente de Message")
 	globals.CallMessages = None
-	action['Answer']= True
-	action['Numero']= ''
-	#action['CallStatus']= call.state.value
+	if globals.dial == 'From':
+		action['Answer']= 'InCallEvent'
+	else:
+		action['Answer']= 'OutCallEvent'
+	action['Numero']= Call.request.headers[globals.dial]['number']
 	globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
 def answer(_call):
 	global Call
 	try:
 		Call = _call
 		globals.timeout = time.time()
+		globals.dial = 'From'
 		thread.start_new_thread(callAnswered,(True,))
 	except InvalidStateError:
 		pass

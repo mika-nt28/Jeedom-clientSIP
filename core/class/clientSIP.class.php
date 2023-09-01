@@ -70,7 +70,6 @@ class clientSIP extends eqLogic {
 		$this->AddCommande('Etat connexion','RegStatus','info', 'string');
 		$this->AddCommande('Etat appel','CallStatus','info', 'string','CallStatus');
 		$this->AddCommande('Appel','call','action','message','call');
-		$this->AddCommande('Message','message','action','message','notif');
 		$this->checkAndUpdateCmd('RegStatus','Inactif');
 	}
 	public function AddCommande($Name,$_logicalId,$Type="info", $SubType='string',$Template='default') {
@@ -95,18 +94,25 @@ class clientSIP extends eqLogic {
 	public function getMessage($number, $CallEvents){			
 		$Message = array();
 		foreach($this->getConfiguration($CallEvents) as $CallEvent){
-			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number){
+			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number)
 				$Message[] = $CallEvent['Message'];
+		}
+		return $Message;
+	}
+	public function getDtmfList($number, $CallEvents){			
+		$dtmfList = array();
+		foreach($this->getConfiguration($CallEvents) as $CallEvent){
+			if($CallEvent['Numero'] == '' || $CallEvent['Numero'] == $number){
 				foreach($CallEvent['action'] as $Action){
 					if($Action['enable']){
 						$Action['message'] = str_replace('#dtmf#',$Action['dtmf'],$Action['message']);
 						$Action['message'] = jeedom::evaluateExpression($Action['message']);
-						$Message[] = $Action['message'];
+						$dtmfList[] = $Action;
 					}
 				}
 			}
 		}
-		return $Message;
+		return $dtmfList;
 	}
 	public function execDTMF($number, $dtmf){
 		log::add('clientSIP','debug',$this->getHumanName().' Recherche des action pour le numero ' . $number . ' avec le DTMF ' . $dtmf);
@@ -158,13 +164,7 @@ class clientSIP extends eqLogic {
 		$value['pause'] = 5;
 		$value['Numero'] = $number;
 		$value['Message'] = $this->getMessage($number, $CallEvents);
-		self::socket_connection(json_encode($value));
-	}
-	public function sendMessage($number, $Message){
-		$value['apikey'] = jeedom::getApiKey('clientSIP');
-		$value['cmd'] = 'call';
-		$value['pause'] = 5;
-		$value['Message'] = array($this->TextToSpeach($Message));
+		$value['DTMFList'] = $this->getDtmfList($number, $CallEvents);
 		self::socket_connection(json_encode($value));
 	}
 	public function sendDTMF($DTMF) {
@@ -184,9 +184,6 @@ class clientSIPCmd extends cmd {
 		switch($this->getLogicalId()){
 			case 'call':			
 				$this->getEqLogic()->call($_options['title'],'OutCallEvent');
-			break;
-			case 'message':				
-				$this->getEqLogic()->sendMessage($_options['title'],$_options['message']);
 			break;
 		}
 	}
