@@ -17,7 +17,7 @@ try:
 except ImportError:
 	print("Error: importing module from jeedom folder")
 	sys.exit(1)
-from pyVoIP import * #https://pyvoip.readthedocs.io/en/v1.6.0/
+#from pyVoIP import * #https://pyvoip.readthedocs.io/en/v1.6.0/
 from pyVoIP.VoIP import * 
 from pyVoIP.SIP import *
 import speech_recognition as sr
