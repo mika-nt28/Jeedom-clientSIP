@@ -139,6 +139,8 @@ def _picotts_exe(args, sync=False):
 		res2.append(line)
 	return res2
 def TextToSpeak(Message):
+	if not os.path.exists('/var/www/html/tmp'):
+		os.makedirs('/var/www/html/tmp')
 	waveFile = '/var/www/html/tmp/TTS.wav'
 	audio = []
 	duree = 0
@@ -221,14 +223,15 @@ def audioPlay():
 		logging.info("TTS: %s" % Message)
 		data, duree = TextToSpeak(Message)
 		logging.info("Durée du message: %s" % duree)
-		Call.write_audio(data)
-		start = time.time() 
-		temps = time.time() - start
-		while temps <= duree and Call.state == CallState.ANSWERED:
-			globals.timeout = time.time()
+        if duree > 0:
+			Call.write_audio(data)
+			start = time.time() 
 			temps = time.time() - start
-			#logging.info("Temps écoulé: %s" % temps)
-			time.sleep(0.1)
+			while temps <= duree and Call.state == CallState.ANSWERED:
+				globals.timeout = time.time()
+				temps = time.time() - start
+				#logging.info("Temps écoulé: %s" % temps)
+				time.sleep(0.1)
 		time.sleep(1)
 	globals.CallMessages = None
 def waitDTMF():
