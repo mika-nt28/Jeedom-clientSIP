@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
 import subprocess
 import os,re,copy
 import logging
@@ -7,17 +10,18 @@ from datetime import *
 import signal
 import json
 import traceback
-import threading
+import threading, _thread
 import asyncio
 import globals
 import numpy as np
 
 try:
 	from jeedom.jeedom import *
-except ImportError:
-	print("Error: importing module from jeedom folder")
+except ImportError as ex:
+	logging.error(f"Error: importing module from jeedom folder {ex}")
 	sys.exit(1)
-#from pyVoIP import * #https://pyvoip.readthedocs.io/en/v1.6.0/
+#from pyVoIP import * 
+#https://pyvoip.readthedocs.io/en/v1.6.0/
 from pyVoIP.VoIP import * 
 from pyVoIP.SIP import *
 import speech_recognition as sr
@@ -46,7 +50,7 @@ def read_socket(cycle):
 					globals.timeout = time.time()
 					globals.dial = 'To'
 					Call = Phone.call(message['Numero'])
-					thread.start_new_thread(callAnswered,(False,))
+					_thread.start_new_thread(callAnswered,(False,))
 				if message['cmd'] == 'answer':
 					globals.CallMessages = message['Message']
 					globals.DTMFList = message['DTMFList']
@@ -60,7 +64,7 @@ def listen():
 	global Phone
 	try:
 		jeedom_socket.open()
-		thread.start_new_thread(read_socket,(globals.cycle,))
+		_thread.start_new_thread(read_socket,(globals.cycle,))
 		Phone=VoIPPhone(globals.serverhost, globals.serverport,globals.username,globals.userpass, myIP=globals.clienthost, callCallback=answer, sipPort=globals.clientport)
 		Phone.DEBUG = True
 		Phone.start()
@@ -109,9 +113,9 @@ def callAnswered(dial):
 			if dial:
 				Call.answer()
 			time.sleep(0.1)
-		thread.start_new_thread(writeAudio,())
-		thread.start_new_thread(waitDTMF,())
-		thread.start_new_thread(readAudio,())
+		_thread.start_new_thread(writeAudio,())
+		_thread.start_new_thread(waitDTMF,())
+		_thread.start_new_thread(readAudio,())
 		while(Call.state == CallState.ANSWERED):
 			getCallStatus()
 			if time.time() - globals.timeout > 30:
@@ -185,7 +189,7 @@ def readAudio():
 				sound = chunks[1]
 				voice = chunks[0]
 			if voice != None:
-				thread.start_new_thread(SpeakToText,(Voice))
+				_thread.start_new_thread(SpeakToText,(Voice))
 		except sr.RequestError as e:
 			logging.debug("Could not request results; {0}".format(e))
 		except sr.UnknownValueError:
@@ -223,7 +227,7 @@ def audioPlay():
 		logging.info("TTS: %s" % Message)
 		data, duree = TextToSpeak(Message)
 		logging.info("Durée du message: %s" % duree)
-        if duree > 0:
+		if duree > 0:
 			Call.write_audio(data)
 			start = time.time() 
 			temps = time.time() - start
@@ -266,7 +270,7 @@ def answer(_call):
 		Call = _call
 		globals.timeout = time.time()
 		globals.dial = 'From'
-		thread.start_new_thread(callAnswered,(True,))
+		_thread.start_new_thread(callAnswered,(True,))
 	except InvalidStateError:
 		pass
 	except:
