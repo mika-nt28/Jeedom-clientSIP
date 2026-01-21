@@ -25,7 +25,8 @@ class clientSIP extends eqLogic {
 			return;
 		$path = realpath(dirname(__FILE__) . '/../python');
 		foreach(eqLogic::byType('clientSIP') as $clientSIP){
-			$cmd = 'sudo /usr/bin/python3 ' . $path . '/clientSIP.py';
+			//$cmd = 'sudo /usr/bin/python3 ' . $path . '/clientSIP.py';
+			$cmd = 'sudo nice -n 19 ' . realpath(dirname(__FILE__) . '/../../resources') . '/python_venv/bin/python3 ' . $path . '/clientSIP.py';
 			$cmd .= ' --loglevel ' . log::convertLogLevel(log::getLogLevel('clientSIP'));
 			$cmd .= ' --sockethost 127.0.0.1';
 			$cmd .= ' --socketport 9091';

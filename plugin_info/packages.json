@@ -9,8 +9,12 @@
 	},
 	"pip3" : { 
 		"requests" : {},
+		"thread" : {},
+		"pyudev" : {},
+		"numpy" : {},
+		"serial" : {},
 		"pyVoIP" : {},
-		"speechrecognition" : {},
-		"pydub" : {}
+		"pydub" : {},
+		"speechrecognition" : {}
 	}
 }
