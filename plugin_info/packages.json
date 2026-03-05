@@ -5,12 +5,18 @@
 		"python3-requests" : {},
 		"python3-setuptools" : {},
 		"python3-simplejson" : {},
-		"python3-pyaudio" : {}
+		"python3-pyaudio" : {},
+		"espeak-ng" : {}, 
+		"libespeak1" : {}
 	},
 	"pip3" : { 
 		"requests" : {},
+		"thread" : {},
+		"pyudev" : {},
+		"numpy" : {},
+		"serial" : {},
 		"pyVoIP" : {},
-		"speechrecognition" : {},
-		"pydub" : {}
+		"pydub" : {},
+		"speechrecognition" : {}
 	}
 }
