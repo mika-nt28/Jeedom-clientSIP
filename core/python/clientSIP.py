@@ -17,18 +17,18 @@ import numpy as np
 
 try:
 	from jeedom.jeedom import *
+	from espeak.espeak import *
 except ImportError as ex:
 	logging.error(f"Error: importing module from jeedom folder {ex}")
 	sys.exit(1)
-#from pyVoIP import * 
-#https://pyvoip.readthedocs.io/en/v1.6.0/
-from pyVoIP.VoIP import * 
+#from pyVoIP import * #https://pyvoip.readthedocs.io/en/v1.6.0/
+from pyVoIP.VoIP import *
 from pyVoIP.SIP import *
 import speech_recognition as sr
 import wave
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
-
+        
 Phone = None
 Call = None
 
@@ -75,7 +75,8 @@ def listen():
 				action['RegStatus']= globals.PhoneStatus
 				globals.JEEDOM_COM.add_changes('devices::'+globals.jeedomId,action)
 			time.sleep(1)
-	except:
+	except Exception as e:
+		logging.error("Erreur la connexion : %s" % str(e))
 		shutdown()
 def shutdown():
 	global Phone
@@ -130,30 +131,22 @@ def callAnswered(dial):
 	except Exception as e:
 		logging.error("Erreur sur le processus de conversation : %s" % str(e))
 		logging.debug(traceback.format_exc())
-def _picotts_exe(args, sync=False):
-	cmd = ['pico2wave','-l', globals.Voice,]
-	cmd.extend(args)
-	logging.debug('picotts: executing %s' % repr(cmd))
-	p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-	res = iter(p.stdout.readline, b'')
-	if not sync:
-		return res
-	res2 = []
-	for line in res:
-		res2.append(line)
-	return res2
 def TextToSpeak(Message):
 	if not os.path.exists('/var/www/html/tmp'):
 		os.makedirs('/var/www/html/tmp')
+		os.chmod('/var/www/html/tmp', 777)
 	waveFile = '/var/www/html/tmp/TTS.wav'
+
 	audio = []
 	duree = 0
 	try:
 		if os.path.isfile(waveFile):
 			os.remove(waveFile)
-		txte = Message.encode('utf8')
-		args = ['-w', waveFile, txte]
-		_picotts_exe(args, sync=True)
+		es = ESpeak()
+		es.voice = 'fr'
+		es.speed = 200
+		es.pitch = 40
+		es.save(Message.encode('utf8'), waveFile)
 		os.chmod(waveFile, 0o777)
 			#Note: Audio must be 8 bit, 8000Hz, and Mono/1 channel. You can accomplish this in a free program called Audacity. To make an audio recording Mono, go to Tracks > Mix > Mix Stereo Down to Mono. To make an audio recording 8000 Hz, go to Tracks > Resample… and select 8000, then ensure that your ‘Project Rate’ in the bottom left is also set to 8000. To make an audio recording 8 bit, go to File > Export > Export as WAV, then change ‘Save as type:’ to ‘Other uncompressed files’, then set ‘Header:’ to ‘WAV (Microsoft)’, then set the ‘Encoding:’ to ‘Unsigned 8-bit PCM’
 		sound = AudioSegment.from_file(waveFile)
@@ -234,7 +227,7 @@ def audioPlay():
 			while temps <= duree and Call.state == CallState.ANSWERED:
 				globals.timeout = time.time()
 				temps = time.time() - start
-				#logging.info("Temps écoulé: %s" % temps)
+				logging.info("Temps écoulé: %s" % temps)
 				time.sleep(0.1)
 		time.sleep(1)
 	globals.CallMessages = None
